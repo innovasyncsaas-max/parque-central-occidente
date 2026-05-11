@@ -135,6 +135,7 @@ body {
 .asistencia-info { flex: 1; min-width: 0; }
 .estado-badge { display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px; }
 .estado-activa { background:#dbeafe;color:#1d4ed8; }
+.estado-pendiente { background:#fef3c7;color:#92400e; }
 .estado-confirmada,.estado-pagada { background:#d1fae5;color:#065f46; }
 .btn-confirmar-asist { background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:transform .15s; }
 .btn-confirmar-asist:active { transform:scale(.96); }
@@ -569,6 +570,7 @@ function cambiarFechaFiltro(nuevaFecha) {
       : `Personas que asisten el ${_labelFechaPiscina(nuevaFecha)}`;
   }
   cargarReservasAforo();
+  cargarListaLlamada();
 }
 
 function toAMPM(hora24) {
@@ -805,7 +807,7 @@ window.registrarMovimiento = async function(tipo) {
 
 async function cargarReservasAforo() {
   const hoy = fechaFiltro;
-  const q = query(collection(db,'reservas'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi'), where('estado','in',['activa','confirmada','pagada']));
+  const q = query(collection(db,'reservas'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi'), where('estado','in',['activa','confirmada','pagada','pendiente']));
   try {
     const snap = await getDocs(q);
     STATE.reservasHoy = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -828,7 +830,7 @@ function renderListaAsistencia(reservas) {
     const ini    = nombre !== '—' ? nombre.charAt(0).toUpperCase() : '?';
     const torre  = r.torre || '—';
     const apto   = r.apto || r.apartamento || '—';
-    const franja = toAMPM(r.franja) || r.hora || '—';
+    const franja = r.franja ? toAMPM(r.franja) : (r.hora ? toAMPM(r.hora) : '—');
     const estado = r.estado || 'activa';
     const np     = parseInt(r.personas_total || r.numPersonas || r.num_personas || 1);
     const yaConf = estado === 'confirmada' || estado === 'pagada';
@@ -885,8 +887,9 @@ window.cargarListaLlamada = async function() {
   try {
     const aSnap = await getDocs(query(collection(db,'asistencias'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi')));
     aSnap.forEach(d => { const a = d.data(); if (a.key && a.asiste != null) _asistState[a.key] = a.asiste ? 'asiste' : 'no_asiste'; });
-    const rSnap = await getDocs(query(collection(db,'reservas'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi'), where('estado','in',['activa','confirmada','pagada'])));
-    if (rSnap.empty) { cont.innerHTML = '<div class="empty-state"><p>Sin reservas para hoy</p></div>'; counter.textContent = '0 / 0'; return; }
+    const rSnap = await getDocs(query(collection(db,'reservas'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi'), where('estado','in',['activa','confirmada','pagada','pendiente'])));
+    const lblHoy = hoy === fechaHoy() ? 'hoy' : _labelFechaPiscina(hoy);
+    if (rSnap.empty) { cont.innerHTML = `<div class="empty-state"><p>Sin reservas para ${lblHoy}</p></div>`; counter.textContent = '0 / 0'; return; }
     let html = '';
     rSnap.forEach(d => {
       const r = d.data(); const rid = d.id;
@@ -896,7 +899,7 @@ window.cargarListaLlamada = async function() {
           🏢 Torre ${r.torre||'—'} · Apto ${r.apto||r.apartamento||'—'}<span style="float:right;font-weight:400;color:var(--muted)">${1+inv.length} persona${1+inv.length!==1?'s':''}</span>
         </div>`;
       const k0 = `${rid}_0`;
-      html += _renderPersonaRow(k0, r.nombre||'Residente', 'Titular de reserva', 'residente', _asistState[k0]||null);
+      html += _renderPersonaRow(k0, r.nombre||r.nombre_residente||r.nombreResidente||'Residente', 'Titular de reserva', 'residente', _asistState[k0]||null);
       inv.forEach((iv, i) => {
         const ki = `${rid}_${i+1}`;
         html += _renderPersonaRow(ki, `${iv.nombre||''} ${iv.apellido||''}`.trim(), `Doc: ${iv.documento||'—'}`, 'invitado', _asistState[ki]||null);
