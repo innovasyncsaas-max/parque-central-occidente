@@ -327,6 +327,7 @@ body {
       <div class="card-header">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         <h2>Reservas activas</h2>
+        <input type="date" id="filtroFechaPiscina" onchange="cambiarFechaFiltro(this.value)" style="margin-left:auto;padding:4px 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);cursor:pointer">
       </div>
       <div class="card-body">
         <div style="margin-bottom:10px"><input type="text" class="search-input" placeholder="Buscar por nombre o apto..." oninput="filtrarAsistencia(this.value)"></div>
@@ -340,7 +341,7 @@ body {
       </div>
       <div class="card-body">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <span style="font-size:13px;color:var(--muted)">Personas que asisten hoy</span>
+          <span style="font-size:13px;color:var(--muted)" id="labelFechaLista">Personas que asisten hoy</span>
           <span class="lista-counter" id="listaCounter">— / —</span>
         </div>
         <div id="listaLlamada"><div class="empty-state"><p>Toca "Actualizar" para cargar la lista</p></div></div>
@@ -551,6 +552,25 @@ function fechaHoy() {
   return new Date().toLocaleDateString('en-CA', {timeZone:'America/Bogota'});
 }
 
+let fechaFiltro = fechaHoy();
+
+function _labelFechaPiscina(f) {
+  if (!f) return 'hoy';
+  const [y,m,d] = f.split('-').map(Number);
+  return new Date(y, m-1, d).toLocaleDateString('es-CO', {weekday:'short', day:'numeric', month:'short'});
+}
+
+function cambiarFechaFiltro(nuevaFecha) {
+  fechaFiltro = nuevaFecha;
+  const lbl = document.getElementById('labelFechaLista');
+  if (lbl) {
+    lbl.textContent = nuevaFecha === fechaHoy()
+      ? 'Personas que asisten hoy'
+      : `Personas que asisten el ${_labelFechaPiscina(nuevaFecha)}`;
+  }
+  cargarReservasAforo();
+}
+
 function toAMPM(hora24) {
   if (!hora24) return '—';
   const [h, m] = hora24.split(':').map(Number);
@@ -588,7 +608,7 @@ window.irA = function(sec, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`sec-${sec}`).classList.add('active');
   btn.classList.add('active');
-  if (sec === 'aforo')    { verificarLockAforo(); cargarReservasAforo(); cargarListaLlamada(); }
+  if (sec === 'aforo')    { verificarLockAforo(); const _fi=document.getElementById('filtroFechaPiscina'); if(_fi&&!_fi.value){_fi.value=fechaFiltro;} cargarReservasAforo(); cargarListaLlamada(); }
   if (sec === 'rondas')   { verificarLockRondas(); cargarHistorialRondas(); }
   if (sec === 'cierre')   { verificarLockCierre(); }
   if (sec === 'novedades'){ cargarNovedades(); }
@@ -784,7 +804,7 @@ window.registrarMovimiento = async function(tipo) {
 };
 
 async function cargarReservasAforo() {
-  const hoy = fechaHoy();
+  const hoy = fechaFiltro;
   const q = query(collection(db,'reservas'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi'), where('estado','in',['activa','confirmada','pagada']));
   try {
     const snap = await getDocs(q);
@@ -801,7 +821,8 @@ async function cargarReservasAforo() {
 
 function renderListaAsistencia(reservas) {
   const lista = document.getElementById('listaAsistencia');
-  if (!reservas.length) { lista.innerHTML = '<div class="empty-state"><p>No hay reservas para hoy</p></div>'; return; }
+  const lblFecha = fechaFiltro === fechaHoy() ? 'hoy' : _labelFechaPiscina(fechaFiltro);
+  if (!reservas.length) { lista.innerHTML = `<div class="empty-state"><p>No hay reservas para ${lblFecha}</p></div>`; return; }
   lista.innerHTML = reservas.map(r => {
     const nombre = r.nombre || r.nombre_residente || r.nombreResidente || '—';
     const ini    = nombre !== '—' ? nombre.charAt(0).toUpperCase() : '?';
@@ -860,7 +881,7 @@ window.cargarListaLlamada = async function() {
   const cont = document.getElementById('listaLlamada');
   const counter = document.getElementById('listaCounter');
   cont.innerHTML = '<div class="loader">Cargando...</div>';
-  const hoy = fechaHoy();
+  const hoy = fechaFiltro;
   try {
     const aSnap = await getDocs(query(collection(db,'asistencias'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi')));
     aSnap.forEach(d => { const a = d.data(); if (a.key && a.asiste != null) _asistState[a.key] = a.asiste ? 'asiste' : 'no_asiste'; });
