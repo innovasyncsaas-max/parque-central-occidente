@@ -186,6 +186,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </div>
 
 <div class="section" id="sec-acceso">
+  <div class="card">
+    <div class="card-header">
+      <span>🚪</span><h2>Registrar salida</h2>
+      <button onclick="cargarAccesosSalida()" style="margin-left:auto;background:none;border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">🔄 Actualizar</button>
+    </div>
+    <div class="card-body">
+      <input type="text" class="search-input" placeholder="Buscar por nombre, placa o empresa..." oninput="filtrarAccesosSalida(this.value)">
+      <div id="listaSalidas"><div class="loader">Cargando...</div></div>
+    </div>
+  </div>
   <div class="acc-tabs">
     <button class="acc-tab active" onclick="selAccTab('visitante',this)">🚶 Visitante</button>
     <button class="acc-tab" onclick="selAccTab('vehiculo',this)">🚗 Vehículo</button>
@@ -236,13 +246,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         </div>
         <button class="btn btn-primary" onclick="registrarAcceso('domicilio')">✅ Registrar ingreso</button>
       </div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-header"><span>🚪</span><h2>Registrar salida</h2></div>
-    <div class="card-body">
-      <input type="text" class="search-input" placeholder="Buscar por nombre, placa o empresa..." oninput="filtrarAccesosSalida(this.value)">
-      <div id="listaSalidas"><div class="loader">Cargando...</div></div>
     </div>
   </div>
 </div>
@@ -326,6 +329,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
   </div>
   <div id="listaTareas"><div class="loader">Cargando...</div></div>
+  <div style="margin:16px 0 8px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px">
+    <span>📋</span> Tareas de Supervisor
+  </div>
+  <div id="listaSegTareas"><div class="loader">Cargando...</div></div>
 </div>
 
 <div class="section" id="sec-bitacora">
@@ -406,7 +413,7 @@ const STATE = {
   rondaFotoBlob:null, severidadNov:null,
   timerIntervalId:null, timerNovedadId:null,
   accesosCacheHoy:[], bitacoraCache:[],
-  tareas:[], filtroTareas:'pendiente'
+  tareas:[], segTareas:[], filtroTareas:'pendiente'
 };
 
 // FIX 1: zona horaria Bogotá
@@ -497,6 +504,8 @@ window.filtrarAccesosSalida=function(term){
   const t=term.toLowerCase();
   renderListaSalidas(t?STATE.accesosCacheHoy.filter(a=>(a.nombre||'').toLowerCase().includes(t)||(a.empresa||'').toLowerCase().includes(t)||(a.placa||'').toLowerCase().includes(t)):STATE.accesosCacheHoy);
 };
+
+window.cargarAccesosSalida = cargarAccesosSalida;
 
 window.registrarSalida = async function(id){
   try{ await updateDoc(doc(db,'accesos',id),{estado:'salida',hora_salida:serverTimestamp()}); showToast('🚪 Salida registrada'); cargarAccesosSalida(); cargarDashboard(); }
@@ -665,12 +674,14 @@ async function cargarNovedades(){
       const sevRaw=(n.nivel||n.severidad||'').toLowerCase();
       const sevClass=sevRaw.includes('crit')?'critico':sevRaw.includes('medi')?'medio':'bajo';
       const sevDisp=(n.nivel||n.severidad||'').toUpperCase();
+      const estadoNov={abierta:'🔵 ABIERTA',en_atencion:'🟡 EN ATENCIÓN',listo_cierre:'🟣 LISTO CIERRE',cerrada:'✅ CERRADA'}[n.estado]||(estaAbierta?'ABIERTA':'CERRADA');
       return `<div class="nov-item ${sevClass}">
         <div class="nov-sev ${sevClass}">${sevDisp} · ${n.tipo||''}</div>
         <div class="nov-desc">${n.descripcion}</div>
-        <div class="nov-meta">${n.ubicacion||n.area?`📍 ${n.ubicacion||n.area} · `:''}${formatHora(n.timestamp||n.creado_en)} · ${estaAbierta?'ABIERTA':'CERRADA'}
+        <div class="nov-meta">${n.ubicacion||n.area?`📍 ${n.ubicacion||n.area} · `:''}${formatHora(n.timestamp||n.creado_en)} · ${estadoNov}
           ${n.asignado_nombre?' · Asignado: '+n.asignado_nombre:''}
         </div>
+        ${n.observacion_cierre?`<div style="margin-top:5px;background:#f0fdf4;border-radius:6px;padding:6px 8px;font-size:11px;color:#065f46">✅ Cierre: ${n.observacion_cierre}</div>`:''}
       </div>`;
     }).join('');
     document.getElementById('statNovedades').textContent=abiertas;
@@ -823,7 +834,9 @@ function escucharTareas(){
 }
 
 function actualizarBadgeTareas(){
-  const pend=STATE.tareas.filter(t=>t.estado==='pendiente'||t.estado==='en_proceso').length;
+  const pendMant=STATE.tareas.filter(t=>t.estado==='pendiente'||t.estado==='en_proceso').length;
+  const pendSeg=STATE.segTareas.filter(t=>t.estado==='pendiente'||t.estado==='en_proceso').length;
+  const pend=pendMant+pendSeg;
   const badge=document.getElementById('badgeTareas');
   if(pend>0){badge.textContent=pend;badge.classList.add('show');}else badge.classList.remove('show');
 }
@@ -894,12 +907,63 @@ window.completarTarea=async function(id){
   }catch(e){showToast('Error','error');}
 };
 
+// ── SEG_TAREAS asignadas por SUPSEC a este vigilante ───────────────
+function escucharSegTareas(){
+  const q=query(collection(db,'seg_tareas'),where('fecha','==',fechaHoy()),where('asignado_a_id','==',SESSION.uid));
+  onSnapshot(q, snap=>{
+    STATE.segTareas=snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.creado_en?.toDate?.()?.getTime()||0)-(a.creado_en?.toDate?.()?.getTime()||0));
+    actualizarBadgeTareas();
+    renderSegTareas();
+  }, err=>{ console.error('❌ SegTareas VIG:', err.code, err.message); });
+}
+
+function renderSegTareas(){
+  const cont=document.getElementById('listaSegTareas');
+  if(!cont) return;
+  if(!STATE.segTareas.length){cont.innerHTML='<div class="empty-state">Sin tareas asignadas por el Supervisor</div>';return;}
+  cont.innerHTML=STATE.segTareas.map(t=>{
+    const prioClass={alta:'prio-alta',media:'prio-media',baja:'prio-baja'}[t.prioridad]||'prio-baja';
+    const estadoLabel={pendiente:'⏳ Pendiente',en_proceso:'🔄 En proceso',completada:'✅ Completada'}[t.estado]||t.estado;
+    const hora=t.creado_en?.toDate?t.creado_en.toDate().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}):'--';
+    return `<div class="tarea-card ${t.prioridad||'baja'}" id="starea-${t.id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+        <div class="tarea-titulo">📋 ${t.titulo}</div>
+        <span class="prio-badge ${prioClass}">${t.prioridad||'baja'}</span>
+      </div>
+      ${t.descripcion?`<div class="tarea-meta">${t.descripcion}</div>`:''}
+      <div class="tarea-meta" style="margin-top:4px">📍 ${t.area||'—'} · ${hora} · ${estadoLabel}</div>
+      ${t.asignado_por_nombre?`<div class="tarea-meta">👮 Supervisor: ${t.asignado_por_nombre}</div>`:''}
+      ${t.instrucciones?`<div class="tarea-meta" style="color:var(--primary);margin-top:3px">📝 ${t.instrucciones}</div>`:''}
+      ${t.estado==='pendiente'?`<button onclick="iniciarSegTarea('${t.id}')" style="margin-top:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%">▶ Iniciar tarea</button>`:''}
+      ${t.estado==='en_proceso'?`<button onclick="completarSegTarea('${t.id}')" style="margin-top:10px;background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%">✅ Marcar completada</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+window.iniciarSegTarea=async function(id){
+  try{
+    await updateDoc(doc(db,'seg_tareas',id),{estado:'en_proceso',iniciado_por:SESSION.uid,iniciado_por_nombre:SESSION.nombre,iniciado_en:serverTimestamp()});
+    showToast('▶ Tarea iniciada','success');
+  }catch(e){showToast('Error','error');}
+};
+
+window.completarSegTarea=async function(id){
+  const notas=prompt('Notas de cierre (opcional):');
+  if(notas===null) return;
+  try{
+    await updateDoc(doc(db,'seg_tareas',id),{estado:'completada',completado_por:SESSION.uid,completado_por_nombre:SESSION.nombre,completado_en:serverTimestamp(),completado_notas:notas||''});
+    showToast('✅ Tarea completada','success');
+  }catch(e){showToast('Error','error');}
+};
+
 async function init(){
   await cargarDashboard();
   await cargarHistorialRondas();
   renderTiposRonda();
   escucharNovedadesAsignadas();
   escucharTareas();
+  escucharSegTareas();
 }
 init().catch(console.error);
 </script>

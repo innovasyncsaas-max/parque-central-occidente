@@ -140,6 +140,12 @@
     <div class="card-title">⚡ Últimas novedades</div>
     <div id="ultimas-novedades-inicio"><div class="empty"><div class="icon">✅</div><p>Sin novedades activas</p></div></div>
   </div>
+  <div class="card">
+    <div class="card-title">📋 Tareas asignadas hoy
+      <button onclick="abrirCrearTarea()" style="margin-left:auto;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">+ Asignar tarea</button>
+    </div>
+    <div id="lista-seg-tareas-sup"><div class="empty"><div class="icon">📋</div><p>Sin tareas asignadas hoy</p></div></div>
+  </div>
 </div>
 
 <div id="sec-novedades" class="section">
@@ -231,11 +237,45 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-cerrar">
+  <div class="modal">
+    <div class="modal-header" style="background:#065f46"><h3>✅ Cerrar Novedad</h3><button class="modal-close" onclick="cerrarModal('modal-cerrar')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="label">Novedad</label><div id="cerrar-titulo" style="font-weight:600;font-size:13px;padding:8px;background:var(--bg);border-radius:8px"></div></div>
+      <div class="form-group"><label class="label">Observación de cierre *</label><textarea class="input" id="cerrar-obs" rows="4" placeholder="Describe cómo se resolvió el caso..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-cerrar')">Cancelar</button>
+      <button class="btn btn-success btn-sm" style="flex:1" onclick="confirmarCerrar()">✅ Cerrar definitivamente</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-crear-tarea">
+  <div class="modal">
+    <div class="modal-header"><h3>📋 Asignar Tarea a VIG</h3><button class="modal-close" onclick="cerrarModal('modal-crear-tarea')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="label">Vigilante *</label><select class="select" id="tarea-vig"><option value="">Seleccionar VIG...</option></select></div>
+      <div class="form-group"><label class="label">Título *</label><input type="text" class="input" id="tarea-titulo" placeholder="Título de la tarea"></div>
+      <div class="form-group"><label class="label">Descripción</label><textarea class="input" id="tarea-desc" rows="2" placeholder="Detalle de la tarea..."></textarea></div>
+      <div class="form-group"><label class="label">Área / Ubicación</label><input type="text" class="input" id="tarea-area" placeholder="Ej: Parqueadero, Torre 1..."></div>
+      <div class="form-group"><label class="label">Prioridad</label>
+        <select class="select" id="tarea-prioridad"><option value="alta">🔴 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">🟢 Baja</option></select>
+      </div>
+      <div class="form-group"><label class="label">Instrucciones para el VIG</label><textarea class="input" id="tarea-instrucciones" rows="2" placeholder="Instrucciones específicas..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-crear-tarea')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="confirmarCrearTarea()">Asignar tarea</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey:"AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek", authDomain:"registro-residentes.firebaseapp.com",
@@ -250,7 +290,7 @@ const STATE = {
   accesos:[], novSeg:[], novPool:[], novGym:[],
   rondas:[], vigs:[],
   tabModulo:'seg', filtroNov:'todas', filtroAcceso:'todos',
-  novSeleccionada:null
+  novSeleccionada:null, segTareas:[]
 };
 
 // FIX 1: zona horaria Bogotá
@@ -327,6 +367,8 @@ function iniciarListeners() {
     s=>{STATE.rondas=s.docs.map(d=>({id:d.id,...d.data()}));actualizarStats();renderRondas();},'seg_rondas');
   escuchar(query(collection(db,'seg_turnos'),where('fecha','==',hoy)),
     s=>{STATE.vigs=s.docs.map(d=>({id:d.id,...d.data()}));renderVigsInicio();poblarSelectVig();},'seg_turnos');
+  escuchar(query(collection(db,'seg_tareas'),where('fecha','==',hoy)),
+    s=>{STATE.segTareas=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.creado_en?.toDate?.()?.getTime()||0)-(a.creado_en?.toDate?.()?.getTime()||0));renderSegTareasSupervision();},'seg_tareas');
 }
 
 function actualizarStats() {
@@ -400,7 +442,10 @@ function renderNovedades() {
         ${esSeguridad?`<button class="btn-sm btn-warning" onclick="abrirAsignar('${n.id}','${n._modulo}')">Asignar VIG</button>`:''}
         <button class="btn-sm" style="background:#7c3aed;color:#fff" onclick="abrirListoCierre('${n.id}','${n._modulo}')">Listo cierre</button>
         <button class="btn-sm btn-secondary" onclick="verDetalle('${n.id}','${n._modulo}')">Detalle</button>
-      </div>`:`<div style="margin-top:8px"><button class="btn-sm btn-secondary" onclick="verDetalle('${n.id}','${n._modulo}')">Ver detalle</button></div>`}
+      </div>`:`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${n.estado==='listo_cierre'?`<button class="btn-sm btn-success" onclick="abrirCerrar('${n.id}','${n._modulo}')">✅ Cerrar caso</button>`:''}
+        <button class="btn-sm btn-secondary" onclick="verDetalle('${n.id}','${n._modulo}')">Ver detalle</button>
+      </div>`}
     </div>`;
   }).join('');
 }
@@ -508,7 +553,8 @@ window.verDetalle = function(id,modulo) {
   const activa=n.estado==='abierta'||n.estado==='en_atencion';
   document.getElementById('modal-acc-footer').innerHTML=`<button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-accionar')">Cerrar</button>
     ${activa&&modulo==='seg'?`<button class="btn btn-warning btn-sm" style="flex:1" onclick="cerrarModal('modal-accionar');abrirAsignar('${n.id}','${n._modulo}')">Asignar VIG</button>`:''}
-    ${activa?`<button class="btn btn-sm" style="flex:1;background:#7c3aed;color:#fff" onclick="cerrarModal('modal-accionar');abrirListoCierre('${n.id}','${n._modulo}')">Listo cierre</button>`:''}`;
+    ${activa?`<button class="btn btn-sm" style="flex:1;background:#7c3aed;color:#fff" onclick="cerrarModal('modal-accionar');abrirListoCierre('${n.id}','${n._modulo}')">Listo cierre</button>`:''}
+    ${n.estado==='listo_cierre'?`<button class="btn btn-success btn-sm" style="flex:1" onclick="cerrarModal('modal-accionar');abrirCerrar('${n.id}','${n._modulo}')">✅ Cerrar caso</button>`:''}`;
   document.getElementById('modal-accionar').classList.add('open');
 };
 
@@ -582,6 +628,83 @@ function renderBitacora() {
         ${a.observacion?`<div style="font-size:11px;color:var(--muted)">📝 ${a.observacion}</div>`:''}
       </div>
     </div>`).join('');
+}
+
+// ── CIERRE DEFINITIVO DE NOVEDADES ─────────────────────────────────
+window.abrirCerrar = function(id, modulo) {
+  const lista=modulo==='pool'?STATE.novPool:modulo==='gym'?STATE.novGym:STATE.novSeg;
+  const n=lista.find(x=>x.id===id); if(!n) return;
+  STATE.novSeleccionada=n;
+  document.getElementById('cerrar-titulo').textContent=`${n.nivel} · ${n.tipo} · ${n.area||''}`;
+  document.getElementById('cerrar-obs').value='';
+  document.getElementById('modal-cerrar').classList.add('open');
+};
+
+window.confirmarCerrar = async function() {
+  const obs=document.getElementById('cerrar-obs').value.trim();
+  if(!obs){showToast('Escribe la observación de cierre');return;}
+  const n=STATE.novSeleccionada; if(!n) return;
+  try{
+    await updateDoc(doc(db,getColeccion(n._modulo),n.id),{
+      estado:'cerrada', status:'CERRADO',
+      observacion_cierre:obs,
+      cerrado_por:STATE.uid, cerrado_por_nombre:STATE.nombre,
+      cerrado_en:serverTimestamp()
+    });
+    cerrarModal('modal-cerrar'); showToast('✅ Novedad cerrada definitivamente');
+  }catch(e){showToast('Error al cerrar');}
+};
+
+// ── ASIGNACIÓN DE TAREAS A VIGILANTES ──────────────────────────────
+window.abrirCrearTarea = function() {
+  const sel=document.getElementById('tarea-vig');
+  sel.innerHTML='<option value="">Seleccionar VIG...</option>'+STATE.vigs.map(v=>`<option value="${v.uid}">${v.nombre||v.uid}</option>`).join('');
+  ['tarea-titulo','tarea-desc','tarea-area','tarea-instrucciones'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('tarea-prioridad').value='media';
+  document.getElementById('modal-crear-tarea').classList.add('open');
+};
+
+window.confirmarCrearTarea = async function() {
+  const vigUid=document.getElementById('tarea-vig').value;
+  const titulo=document.getElementById('tarea-titulo').value.trim();
+  if(!vigUid){showToast('Selecciona un VIG');return;}
+  if(!titulo){showToast('Escribe el título');return;}
+  const vigData=STATE.vigs.find(v=>v.uid===vigUid);
+  try{
+    await addDoc(collection(db,'seg_tareas'),{
+      titulo,
+      descripcion:document.getElementById('tarea-desc').value.trim(),
+      area:document.getElementById('tarea-area').value.trim(),
+      prioridad:document.getElementById('tarea-prioridad').value,
+      instrucciones:document.getElementById('tarea-instrucciones').value.trim(),
+      estado:'pendiente',
+      fecha:fechaHoy(),
+      asignado_a_id:vigUid,
+      asignado_a_nombre:vigData?.nombre||vigUid,
+      asignado_por:STATE.uid,
+      asignado_por_nombre:STATE.nombre,
+      creado_en:serverTimestamp()
+    });
+    cerrarModal('modal-crear-tarea'); showToast('✅ Tarea asignada al VIG');
+  }catch(e){showToast('Error al asignar tarea');}
+};
+
+function renderSegTareasSupervision() {
+  const cont=document.getElementById('lista-seg-tareas-sup');
+  if(!cont) return;
+  if(!STATE.segTareas.length){
+    cont.innerHTML='<div class="empty"><div class="icon">📋</div><p>Sin tareas asignadas hoy</p></div>';return;
+  }
+  const lbl={pendiente:'⏳ Pendiente',en_proceso:'🔄 En proceso',completada:'✅ Completada'};
+  cont.innerHTML=STATE.segTareas.map(t=>`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="font-weight:600;font-size:13px">${t.titulo}</div>
+      <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;${t.prioridad==='alta'?'background:#fee2e2;color:#b91c1c':t.prioridad==='media'?'background:#fef3c7;color:#92400e':'background:#d1fae5;color:#065f46'}">${t.prioridad||'—'}</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">👮 ${t.asignado_a_nombre||'—'} · ${lbl[t.estado]||t.estado}</div>
+    ${t.descripcion?`<div style="font-size:12px;color:var(--muted)">${t.descripcion}</div>`:''}
+    ${t.completado_notas?`<div style="font-size:11px;color:#065f46;margin-top:3px">📝 ${t.completado_notas}</div>`:''}
+  </div>`).join('');
 }
 
 window.navTo = function(sec,btn) {
