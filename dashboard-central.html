@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Central — PCO3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#1e3a5f; --primary-light:#2d5a8e; --primary-dark:#152d4a;
+  --accent:#2563eb; --gbtn:linear-gradient(135deg,#1e3a5f,#2563eb);
+  --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --purple:#7c3aed;
+  --bg:#f0f4f8; --card:#fff; --text:#1a202c; --muted:#64748b;
+  --border:#e2e8f0; --radius:12px;
+  --font:'DM Sans',sans-serif; --fd:'DM Serif Display',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ─────────────────────────────────────────── */
+#login-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px 16px;
+  background:linear-gradient(160deg,#0f1f3d 0%,#1e3a5f 50%,#2a5298 100%);
+}
+.login-card{
+  background:#fff;border-radius:20px;padding:36px 28px 32px;
+  width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.35);
+}
+.login-logo{
+  width:72px;height:72px;background:var(--gbtn);border-radius:18px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:34px;margin:0 auto 20px;box-shadow:0 8px 24px rgba(37,99,235,.35);
+}
+.login-title{font-family:var(--fd);font-size:26px;color:var(--primary);text-align:center;margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px;line-height:1.5}
+.field-lbl{display:block;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.field-inp{
+  width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;
+  font-family:var(--font);font-size:15px;color:var(--text);background:var(--bg);
+  outline:none;transition:border-color .2s;margin-bottom:14px;
+}
+.field-inp:focus{border-color:var(--accent);background:#fff}
+.btn-login{
+  width:100%;padding:14px;background:var(--gbtn);border:none;border-radius:11px;
+  color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 14px rgba(37,99,235,.4);transition:all .2s;margin-top:4px;
+}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,235,.5)}
+.btn-login:disabled{background:var(--border);color:var(--muted);box-shadow:none;transform:none;cursor:not-allowed}
+.login-error{
+  background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;
+  padding:10px 14px;font-size:13px;color:#b91c1c;margin-bottom:12px;display:none;
+}
+.login-redirect{
+  background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;
+  padding:12px 14px;font-size:13px;color:#1e40af;margin-bottom:12px;display:none;text-align:center;
+}
+
+/* ── HUB ────────────────────────────────────────────── */
+#hub-screen{display:none}
+.hub-header{
+  background:var(--gbtn);color:#fff;padding:16px 24px;
+  display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+.hub-logo{
+  width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.hub-title{font-family:var(--fd);font-size:19px}
+.hub-subtitle{font-size:11px;opacity:.7;margin-top:1px}
+.hub-user{margin-left:auto;text-align:right;font-size:12px;opacity:.85}
+.hub-user strong{display:block;font-size:13px;font-weight:700;opacity:1}
+.btn-logout{
+  padding:7px 14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+  border-radius:8px;color:#fff;font-family:var(--font);font-size:12px;font-weight:600;
+  cursor:pointer;margin-left:12px;flex-shrink:0;transition:.2s;
+}
+.btn-logout:hover{background:rgba(255,255,255,.22)}
+
+.hub-main{padding:20px 16px 48px;max-width:1100px;margin:0 auto}
+@media(min-width:768px){.hub-main{padding:28px 28px 48px}}
+
+/* Welcome banner */
+.hub-banner{
+  background:var(--gbtn);border-radius:16px;padding:20px 24px;
+  margin-bottom:28px;display:flex;align-items:center;gap:16px;
+  box-shadow:0 4px 16px rgba(30,58,95,.2);
+}
+.hub-banner-icon{font-size:42px;flex-shrink:0}
+.hub-banner-text h2{font-family:var(--fd);font-size:20px;color:#fff;margin-bottom:4px}
+.hub-banner-text p{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5}
+.hub-date{margin-left:auto;text-align:right;color:rgba(255,255,255,.8);font-size:12px;flex-shrink:0}
+.hub-date strong{display:block;font-size:16px;font-weight:700;color:#fff}
+
+/* Section */
+.section-label{
+  font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--muted);margin:28px 0 14px;display:flex;align-items:center;gap:8px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Module grid */
+.mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:520px){.mod-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.mod-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1100px){.mod-grid{grid-template-columns:repeat(5,1fr)}}
+
+.mod-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px 14px 16px;display:flex;flex-direction:column;align-items:flex-start;
+  gap:10px;cursor:pointer;transition:all .2s;text-decoration:none;position:relative;
+  overflow:hidden;
+}
+.mod-card::before{
+  content:'';position:absolute;inset:0;opacity:0;
+  background:linear-gradient(135deg,rgba(30,58,95,.05),rgba(37,99,235,.08));
+  transition:opacity .2s;
+}
+.mod-card:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(37,99,235,.15);transform:translateY(-2px)}
+.mod-card:hover::before{opacity:1}
+.mod-card:active{transform:translateY(0)}
+.mod-icon{
+  width:46px;height:46px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:22px;flex-shrink:0;
+}
+.ic-blue{background:#dbeafe} .ic-indigo{background:#e0e7ff}
+.ic-green{background:#d1fae5} .ic-teal{background:#ccfbf1}
+.ic-yellow{background:#fef9c3} .ic-orange{background:#ffedd5}
+.ic-red{background:#fee2e2} .ic-purple{background:#f3e8ff}
+.ic-pink{background:#fce7f3} .ic-sky{background:#e0f2fe}
+.ic-gray{background:#f1f5f9}
+
+.mod-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
+.mod-role{font-size:11px;color:var(--muted);margin-top:1px;line-height:1.4}
+.mod-badge{
+  display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;
+  background:#eff6ff;color:var(--accent);margin-top:auto;
+}
+.btn-abrir{
+  width:100%;padding:9px;background:var(--gbtn);border:none;border-radius:8px;
+  color:#fff;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;
+  margin-top:6px;transition:.2s;
+}
+.btn-abrir:hover{opacity:.9}
+
+/* Página de acceso rapido */
+.quick-access{
+  display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;
+}
+.quick-btn{
+  padding:8px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:8px;
+  font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;
+  text-decoration:none;transition:.15s;display:inline-flex;align-items:center;gap:6px;
+}
+.quick-btn:hover{border-color:var(--accent);color:var(--accent);background:#eff6ff}
+
+/* Footer */
+.hub-footer{
+  text-align:center;padding:24px 16px;color:var(--muted);font-size:11px;
+  border-top:1px solid var(--border);margin-top:32px;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ LOGIN ══════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🏢</div>
+    <h1 class="login-title">Dashboard Central</h1>
+    <p class="login-sub">Ciudadela Parque Central de Occidente 3<br>Ingresa con tus credenciales de acceso</p>
+
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos.</div>
+    <div class="login-redirect" id="login-redirect">✅ Acceso correcto. Redirigiendo a tu módulo...</div>
+
+    <label class="field-lbl" for="inp-uid">Usuario</label>
+    <input class="field-inp" type="text" id="inp-uid" placeholder="Ej: asistente" autocomplete="username" autocapitalize="none">
+
+    <label class="field-lbl" for="inp-pwd">Contraseña</label>
+    <input class="field-inp" type="password" id="inp-pwd" placeholder="••••••••" autocomplete="current-password">
+
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Ingresar →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ HUB ══════════════════════ -->
+<div id="hub-screen">
+  <header class="hub-header">
+    <div class="hub-logo">🏢</div>
+    <div>
+      <div class="hub-title">Dashboard Central</div>
+      <div class="hub-subtitle">Ciudadela Parque Central de Occidente 3</div>
+    </div>
+    <div class="hub-user">
+      <strong id="hub-nombre">Administradora</strong>
+      Módulo F — Control Total
+    </div>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </header>
+
+  <div class="hub-main">
+
+    <!-- Banner -->
+    <div class="hub-banner">
+      <div class="hub-banner-icon">🏗️</div>
+      <div class="hub-banner-text">
+        <h2>Bienvenida al sistema PCO3</h2>
+        <p>Desde aquí accedes a todos los módulos operativos del conjunto. Haz clic en cualquier tarjeta para abrir el módulo en una nueva pestaña.</p>
+      </div>
+      <div class="hub-date">
+        <strong id="hub-fecha">—</strong>
+        <span id="hub-hora">—</span>
+      </div>
+    </div>
+
+    <!-- Acceso rápido -->
+    <div class="quick-access">
+      <a class="quick-btn" href="Pagina%20Principal.html" target="_blank">🔐 Credenciales del sistema</a>
+      <a class="quick-btn" href="Simulador.html" target="_blank">🏗️ Simulador de datos</a>
+      <a class="quick-btn" href="Panel%20Registros%20Administrador.html?uid=admin&nombre=Admin" target="_blank">📊 Panel de registros</a>
+    </div>
+
+    <!-- ── ADMINISTRACIÓN ── -->
+    <div class="section-label">🏛️ Administración</div>
+    <div class="mod-grid">
+
+      <div class="mod-card" onclick="abrirModulo('Asistente.html?uid=asistente&nombre=Asistente')">
+        <div class="mod-icon ic-blue">💼</div>
+        <div>
+          <div class="mod-name">Asistente Administrativa</div>
+          <div class="mod-role">PQR · Reservas · Mora · Novedades</div>
+        </div>
+        <span class="mod-badge">Módulo D2</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Coordinador.html?uid=coordinador&nombre=Coordinador')">
+        <div class="mod-icon ic-indigo">📋</div>
+        <div>
+          <div class="mod-name">Coordinador</div>
+          <div class="mod-role">Novedades · Servicios · Tareas · PQR</div>
+        </div>
+        <span class="mod-badge">Módulo D1</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Control%20Mora.html')">
+        <div class="mod-icon ic-yellow">💰</div>
+        <div>
+          <div class="mod-name">Control de Mora</div>
+          <div class="mod-role">Estado de cartera por apto</div>
+        </div>
+        <span class="mod-badge">Admin</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Panel%20Registros%20Administrador.html?uid=admin&nombre=Admin')">
+        <div class="mod-icon ic-teal">📊</div>
+        <div>
+          <div class="mod-name">Panel de Registros</div>
+          <div class="mod-role">Base de datos residentes · CSV</div>
+        </div>
+        <span class="mod-badge">Admin</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Comunicados.html?uid=admin&nombre=Admin')">
+        <div class="mod-icon ic-sky">📢</div>
+        <div>
+          <div class="mod-name">Comunicados</div>
+          <div class="mod-role">Avisos y comunicaciones al conjunto</div>
+        </div>
+        <span class="mod-badge">Admin</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+    </div><!-- /grid admin -->
+
+    <!-- ── AMENIDADES ── -->
+    <div class="section-label">🏊 Amenidades</div>
+    <div class="mod-grid">
+
+      <div class="mod-card" onclick="abrirModulo('Administrador%20Piscina.html?uid=admin-piscina&nombre=AdminPiscina')">
+        <div class="mod-icon ic-sky">⚙️</div>
+        <div>
+          <div class="mod-name">Admin Piscina</div>
+          <div class="mod-role">Supervisión · Historial · Químicos</div>
+        </div>
+        <span class="mod-badge">Módulo A</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Operador%20Piscina.html?uid=op-piscina&nombre=OperadorPiscina')">
+        <div class="mod-icon ic-blue">🏖️</div>
+        <div>
+          <div class="mod-name">Operador Piscina</div>
+          <div class="mod-role">Aforo · Apertura · Rondas · Cierre</div>
+        </div>
+        <span class="mod-badge">Módulo B2</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Piscinero.html?uid=piscinero&nombre=Piscinero')">
+        <div class="mod-icon ic-teal">🏊</div>
+        <div>
+          <div class="mod-name">Piscinero</div>
+          <div class="mod-role">Checklist · Químicos · Reservas activas</div>
+        </div>
+        <span class="mod-badge">Módulo A</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Admin%20GYM.html?uid=op-gimnasio&nombre=OperadorGYM')">
+        <div class="mod-icon ic-orange">🏋️</div>
+        <div>
+          <div class="mod-name">Admin GYM</div>
+          <div class="mod-role">Turno · Aforo · Rondas · Equipos</div>
+        </div>
+        <span class="mod-badge">Módulo B1</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Operador%20GYM.html?uid=op-gimnasio&nombre=OperadorGYM')">
+        <div class="mod-icon ic-green">💪</div>
+        <div>
+          <div class="mod-name">Operador GYM</div>
+          <div class="mod-role">Aforo · Apertura · Novedades</div>
+        </div>
+        <span class="mod-badge">Módulo B1</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+    </div><!-- /grid amenidades -->
+
+    <!-- ── SEGURIDAD ── -->
+    <div class="section-label">🛡️ Seguridad</div>
+    <div class="mod-grid">
+
+      <div class="mod-card" onclick="abrirModulo('Supervisor%20Seguridad.html?uid=supsec&nombre=SupervisorSeg')">
+        <div class="mod-icon ic-red">⭐</div>
+        <div>
+          <div class="mod-name">Supervisor Seguridad</div>
+          <div class="mod-role">Panel · Novedades · Accesos · Rondas</div>
+        </div>
+        <span class="mod-badge">Módulo C</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Seguridad%20Visor%20General.html?uid=visor&nombre=Visor')">
+        <div class="mod-icon ic-indigo">🖥️</div>
+        <div>
+          <div class="mod-name">Visor General</div>
+          <div class="mod-role">Monitor 24h · Accesos · Bitácora</div>
+        </div>
+        <span class="mod-badge">Módulo C</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Seguridad%20Vigilante.html?uid=vig&nombre=Vigilante')">
+        <div class="mod-icon ic-purple">🛡️</div>
+        <div>
+          <div class="mod-name">Vigilante</div>
+          <div class="mod-role">Acceso · Rondas · Novedades · Tareas</div>
+        </div>
+        <span class="mod-badge">Módulo C</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+    </div><!-- /grid seguridad -->
+
+    <!-- ── MANTENIMIENTO ── -->
+    <div class="section-label">🔧 Mantenimiento y Aseo</div>
+    <div class="mod-grid">
+
+      <div class="mod-card" onclick="abrirModulo('Todero.html?uid=todero&nombre=Todero')">
+        <div class="mod-icon ic-orange">🔧</div>
+        <div>
+          <div class="mod-name">Todero</div>
+          <div class="mod-role">Mis tareas · Reportar · Historial</div>
+        </div>
+        <span class="mod-badge">Módulo E1</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Aseo.html?uid=aseo&nombre=Aseo')">
+        <div class="mod-icon ic-green">🧹</div>
+        <div>
+          <div class="mod-name">Personal de Aseo</div>
+          <div class="mod-role">Tareas · Checklist · Reportar</div>
+        </div>
+        <span class="mod-badge">Módulo E2</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+    </div><!-- /grid mantenimiento -->
+
+    <!-- ── RESIDENTES ── -->
+    <div class="section-label">👥 Residentes</div>
+    <div class="mod-grid">
+
+      <div class="mod-card" onclick="abrirModulo('Portal%20Residente.html')">
+        <div class="mod-icon ic-blue">🏠</div>
+        <div>
+          <div class="mod-name">Portal Residente</div>
+          <div class="mod-role">PQR · Reservas · Correspondencia · Mora</div>
+        </div>
+        <span class="mod-badge">Módulo G</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('paginas/Registro%20Residentes.html')">
+        <div class="mod-icon ic-pink">📝</div>
+        <div>
+          <div class="mod-name">Registro de Residentes</div>
+          <div class="mod-role">Alta de nuevos residentes — 10 pasos</div>
+        </div>
+        <span class="mod-badge">Módulo G</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+      <div class="mod-card" onclick="abrirModulo('Mis%20Reservas.html')">
+        <div class="mod-icon ic-teal">📅</div>
+        <div>
+          <div class="mod-name">Mis Reservas</div>
+          <div class="mod-role">Historial de reservas del residente</div>
+        </div>
+        <span class="mod-badge">Módulo G</span>
+        <button class="btn-abrir">Abrir módulo →</button>
+      </div>
+
+    </div><!-- /grid residentes -->
+
+    <div class="hub-footer">
+      PCO3 · Ciudadela Parque Central de Occidente 3 · Dashboard Central v1.0
+    </div>
+  </div><!-- /hub-main -->
+</div><!-- /hub-screen -->
+
+<script>
+// ── Credenciales ──────────────────────────────────────────────────────────
+const USUARIOS = {
+  'piscinero':      { pwd:'Pis@2026',  nombre:'Piscinero',            url:'Piscinero.html?uid=piscinero&nombre=Piscinero',                           hub:false },
+  'op-piscina':     { pwd:'Opc@2026',  nombre:'Operador Piscina',     url:'Operador%20Piscina.html?uid=op-piscina&nombre=OperadorPiscina',            hub:false },
+  'admin-piscina':  { pwd:'Adp@2026',  nombre:'Admin Piscina',        url:'Administrador%20Piscina.html?uid=admin-piscina&nombre=AdminPiscina',       hub:false },
+  'op-gimnasio':    { pwd:'Gym@2026',  nombre:'Operador Gimnasio',    url:'Admin%20GYM.html?uid=op-gimnasio&nombre=OperadorGYM',                     hub:false },
+  'supsec':         { pwd:'Sec@2026',  nombre:'Supervisor Seg.',      url:'Supervisor%20Seguridad.html?uid=supsec&nombre=SupervisorSeg',              hub:false },
+  'visor':          { pwd:'Vis@2026',  nombre:'Visor 24h',            url:'Seguridad%20Visor%20General.html?uid=visor&nombre=Visor',                  hub:false },
+  'vig':            { pwd:'Vig@2026',  nombre:'Vigilante',            url:'Seguridad%20Vigilante.html?uid=vig&nombre=Vigilante',                      hub:false },
+  'coordinador':    { pwd:'Coo@2026',  nombre:'Coordinador',          url:'Coordinador.html?uid=coordinador&nombre=Coordinador',                     hub:true  },
+  'asistente':      { pwd:'Asi@2026',  nombre:'Asistente',            url:'Asistente.html?uid=asistente&nombre=Asistente',                           hub:false },
+  'administradora': { pwd:'Adm@2026',  nombre:'Administradora',       url:'',                                                                        hub:true  },
+  'todero':         { pwd:'Tod@2026',  nombre:'Todero',               url:'Todero.html?uid=todero&nombre=Todero',                                    hub:false },
+  'aseo':           { pwd:'Ase@2026',  nombre:'Aseo',                 url:'Aseo.html?uid=aseo&nombre=Aseo',                                          hub:false },
+};
+
+// ── Enter para login ──────────────────────────────────────────────────────
+document.getElementById('inp-pwd').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('inp-uid').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('inp-pwd').focus();
+});
+
+// ── Login ─────────────────────────────────────────────────────────────────
+function doLogin() {
+  const uid = document.getElementById('inp-uid').value.trim().toLowerCase();
+  const pwd = document.getElementById('inp-pwd').value;
+  const err = document.getElementById('login-error');
+  const redir = document.getElementById('login-redirect');
+  const btn = document.getElementById('btn-login');
+
+  err.style.display = 'none';
+  redir.style.display = 'none';
+
+  if (!uid || !pwd) { err.textContent = 'Completa usuario y contraseña.'; err.style.display = 'block'; return; }
+
+  const user = USUARIOS[uid];
+  if (!user || user.pwd !== pwd) { err.style.display = 'block'; err.textContent = 'Usuario o contraseña incorrectos.'; return; }
+
+  btn.disabled = true;
+  localStorage.setItem('pco3_uid', uid);
+  localStorage.setItem('pco3_nombre', user.nombre);
+
+  if (user.hub) {
+    // Admin / Coordinador → mostrar hub
+    document.getElementById('hub-nombre').textContent = user.nombre;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('hub-screen').style.display = 'block';
+    actualizarReloj();
+    setInterval(actualizarReloj, 30000);
+  } else {
+    // Resto de roles → redirigir a su módulo
+    redir.style.display = 'block';
+    redir.textContent = `✅ Bienvenido/a, ${user.nombre}. Redirigiendo a tu módulo...`;
+    setTimeout(() => { window.location.href = user.url; }, 1400);
+  }
+}
+
+// ── Logout ────────────────────────────────────────────────────────────────
+function logout() {
+  localStorage.removeItem('pco3_uid');
+  localStorage.removeItem('pco3_nombre');
+  document.getElementById('hub-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('inp-uid').value = '';
+  document.getElementById('inp-pwd').value = '';
+  document.getElementById('btn-login').disabled = false;
+}
+
+// ── Abrir módulo en nueva pestaña ─────────────────────────────────────────
+function abrirModulo(url) {
+  window.open(url, '_blank');
+}
+
+// ── Reloj ─────────────────────────────────────────────────────────────────
+function actualizarReloj() {
+  const ahora = new Date();
+  document.getElementById('hub-fecha').textContent =
+    ahora.toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('hub-hora').textContent =
+    ahora.toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' });
+}
+
+// ── Auto-login si sesión activa ───────────────────────────────────────────
+(function() {
+  const uid = localStorage.getItem('pco3_uid');
+  const user = uid && USUARIOS[uid];
+  if (user && user.hub) {
+    document.getElementById('hub-nombre').textContent = user.nombre;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('hub-screen').style.display = 'block';
+    actualizarReloj();
+    setInterval(actualizarReloj, 30000);
+  }
+})();
+</script>
+</body>
+</html>
