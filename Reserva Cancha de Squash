@@ -299,17 +299,17 @@
             tel:    s.tel    || '',
             nombre: s.nombre || ''
           });
-          return `modulo-g-portal.html?${p.toString()}`;
+          return `Portal%20Residente?${p.toString()}`;
         }
       } catch (_) {}
 
       // Fallback: pass through current params
       const cur = new URLSearchParams(window.location.search);
       if (cur.get('torre')) {
-        return `modulo-g-portal.html?${cur.toString()}`;
+        return `Portal%20Residente?${cur.toString()}`;
       }
 
-      return 'modulo-g-portal.html';
+      return 'Portal%20Residente';
     }
 
     function volver(e) {
