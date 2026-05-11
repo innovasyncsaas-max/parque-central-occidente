@@ -311,7 +311,7 @@
       apiKey:            "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
       authDomain:        "registro-residentes.firebaseapp.com",
       projectId:         "registro-residentes",
-      storageBucket:     "registro-residentes.appspot.com",
+      storageBucket:     "registro-residentes.firebasestorage.app",
       messagingSenderId: "396188616265",
       appId:             "1:646123326163:web:8b35b955e7b3692536a226"
     };

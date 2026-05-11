@@ -306,6 +306,24 @@ nav button.active{color:var(--primary);font-weight:700}
           <option value="escrito">Escrito</option>
         </select>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">Prioridad</label>
+          <select class="select" id="pqr-prioridad">
+            <option value="Bajo">🟢 Bajo</option>
+            <option value="Medio" selected>🟡 Medio</option>
+            <option value="Crítico">🔴 Crítico</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">Asignado a</label>
+          <select class="select" id="pqr-asignado">
+            <option value="Asistente">Asistente</option>
+            <option value="Coordinador">Coordinador</option>
+            <option value="Jurídico">⚖️ Jurídico</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-pqr')">Cancelar</button>
@@ -683,6 +701,8 @@ window.guardarPQR = async function() {
       tipo: document.getElementById('pqr-tipo').value,
       torre_apto: apto, nombre_residente: nombre, descripcion: desc,
       canal: document.getElementById('pqr-canal').value,
+      prioridad: document.getElementById('pqr-prioridad').value,
+      asignado_a: document.getElementById('pqr-asignado').value,
       estado: 'abierto', fecha: fechaHoy(),
       creado_por: S.uid, creado_por_nombre: S.nombre, creado_en: serverTimestamp()
     });
@@ -698,13 +718,17 @@ function renderPQR() {
   const tipoIcon = {consulta:'❓',queja:'😠',reclamo:'📢',sugerencia:'💡',solicitud:'📋'};
   const estColor = {abierto:'#ef4444',en_gestion:'#f59e0b',listo_cierre:'#7c3aed',cerrado:'#10b981'};
   const estLabel = {abierto:'Abierto',en_gestion:'En gestión',listo_cierre:'Listo cierre',cerrado:'Cerrado'};
+  const prioColor = {'Crítico':'#ef4444','Medio':'#f59e0b','Bajo':'#10b981'};
+  const prioBg = {'Crítico':'#fee2e2','Medio':'#fef3c7','Bajo':'#d1fae5'};
   cont.innerHTML = lista.map(p=>`
     <div class="list-item" style="border-left:4px solid ${estColor[p.estado]||'#94a3b8'}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
         <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
             <span style="font-size:16px">${tipoIcon[p.tipo]||'📋'}</span>
             <span style="font-weight:700;font-size:12px;text-transform:capitalize">${p.tipo}</span>
+            ${p.prioridad?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:${prioBg[p.prioridad]||'#f1f5f9'};color:${prioColor[p.prioridad]||'#475569'}">${p.prioridad}</span>`:''}
+            ${p.asignado_a&&p.asignado_a!=='Asistente'?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:#f3e8ff;color:#7c3aed">${p.asignado_a}</span>`:''}
           </div>
           <div class="list-item-title">${p.nombre_residente||'—'} · ${p.torre_apto||'—'}</div>
           <div class="list-item-sub">${(p.descripcion||'').substring(0,70)}${(p.descripcion||'').length>70?'...':''}</div>
@@ -727,6 +751,7 @@ window.gestionarPQR = function(id) {
   document.getElementById('pqr-gestionar-body').innerHTML = `
     <div class="form-group"><span class="label">Tipo · Torre/Apto</span><div style="font-weight:600">${tipoIcon[p.tipo]||''} ${p.tipo} · ${p.torre_apto}</div></div>
     <div class="form-group"><span class="label">Residente</span><div>${p.nombre_residente} · ${ffd(p.creado_en)}</div></div>
+    <div class="form-row" style="gap:8px"><div class="form-group"><span class="label">Prioridad</span><div style="font-weight:600">${p.prioridad||'—'}</div></div><div class="form-group"><span class="label">Asignado a</span><div style="font-weight:600">${p.asignado_a||'Asistente'}</div></div></div>
     <div class="form-group"><span class="label">Descripción</span><div style="font-size:13px">${p.descripcion}</div></div>
     <hr style="border-color:var(--border);margin:12px 0">
     <div class="form-group"><label class="label">Respuesta / Gestión</label>
