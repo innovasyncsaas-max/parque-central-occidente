@@ -129,9 +129,16 @@ body {
 .foto-req-inner { text-align: center; color: var(--muted); }
 .foto-req-inner svg { margin-bottom: 6px; opacity: .5; }
 .foto-req-inner p { font-size: 12px; }
-.asistencia-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.asistencia-item { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .asistencia-item:last-child { border-bottom: none; }
-.asistencia-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.asistencia-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+.asistencia-info { flex: 1; min-width: 0; }
+.estado-badge { display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px; }
+.estado-activa { background:#dbeafe;color:#1d4ed8; }
+.estado-confirmada,.estado-pagada { background:#d1fae5;color:#065f46; }
+.btn-confirmar-asist { background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:transform .15s; }
+.btn-confirmar-asist:active { transform:scale(.96); }
+.btn-confirmado { background:#d1fae5;color:#065f46;border:1.5px solid #6ee7b7;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0; }
 .asistencia-info { flex: 1; min-width: 0; }
 .asistencia-nombre { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .asistencia-meta { font-size: 11px; color: var(--muted); }
@@ -493,7 +500,7 @@ body {
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs,
-         query, where, orderBy, onSnapshot, serverTimestamp, increment }
+         updateDoc, query, where, orderBy, onSnapshot, serverTimestamp, increment }
   from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -540,11 +547,15 @@ const QUIMICOS_CIERRE = [
   { nombre: 'Estabilizador',   unidad: 'kg' }
 ];
 
-// ── FIX 1: zona horaria Bogotá ──────────────────────────────
 function fechaHoy() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
+  return new Date().toLocaleDateString('en-CA', {timeZone:'America/Bogota'});
+}
+
+function toAMPM(hora24) {
+  if (!hora24) return '—';
+  const [h, m] = hora24.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${String(m || 0).padStart(2,'0')} ${ampm}`;
 }
 
 function horaActual() { return new Date().getHours(); }
@@ -778,7 +789,7 @@ async function cargarReservasAforo() {
   try {
     const snap = await getDocs(q);
     STATE.reservasHoy = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const total = STATE.reservasHoy.reduce((s, r) => s + parseInt(r.numPersonas || r.num_personas || 1), 0);
+    const total = STATE.reservasHoy.reduce((s, r) => s + parseInt(r.personas_total || r.numPersonas || r.num_personas || 1), 0);
     const inp = document.getElementById('ci_totalPersonas');
     if (inp) inp.value = total;
     renderListaAsistencia(STATE.reservasHoy);
@@ -792,18 +803,47 @@ function renderListaAsistencia(reservas) {
   const lista = document.getElementById('listaAsistencia');
   if (!reservas.length) { lista.innerHTML = '<div class="empty-state"><p>No hay reservas para hoy</p></div>'; return; }
   lista.innerHTML = reservas.map(r => {
-    const np = parseInt(r.numPersonas || r.num_personas || 1);
-    const ini = (r.nombre || r.nombreResidente || '?').charAt(0).toUpperCase();
-    return `<div class="asistencia-item">
+    const nombre = r.nombre || r.nombre_residente || r.nombreResidente || '—';
+    const ini    = nombre !== '—' ? nombre.charAt(0).toUpperCase() : '?';
+    const torre  = r.torre || '—';
+    const apto   = r.apto || r.apartamento || '—';
+    const franja = toAMPM(r.franja) || r.hora || '—';
+    const estado = r.estado || 'activa';
+    const np     = parseInt(r.personas_total || r.numPersonas || r.num_personas || 1);
+    const yaConf = estado === 'confirmada' || estado === 'pagada';
+    return `<div class="asistencia-item" id="res-${r.id}">
       <div class="asistencia-avatar">${ini}</div>
       <div class="asistencia-info">
-        <div class="asistencia-nombre">${r.nombre || r.nombreResidente || '—'}</div>
-        <div class="asistencia-meta">🏢 ${r.torre||'—'} · Apto ${r.apartamento||r.apto||'—'} · ${r.hora||'—'}</div>
+        <div class="asistencia-nombre">${nombre}</div>
+        <div class="asistencia-meta">🏢 Torre ${torre} · Apto ${apto} · 🕐 ${franja}</div>
+        <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap">
+          <span class="estado-badge estado-${estado}">${estado}</span>
+          <span style="font-size:11px;color:var(--muted)">👥 ${np} persona${np>1?'s':''}</span>
+        </div>
       </div>
-      <div class="asistencia-personas">👥 ${np}</div>
+      ${yaConf
+        ? `<span class="btn-confirmado">✅ Asistencia</span>`
+        : `<button class="btn-confirmar-asist" onclick="confirmarAsistencia('${r.id}')">Confirmar</button>`
+      }
     </div>`;
   }).join('');
 }
+
+window.confirmarAsistencia = async function(docId) {
+  const btn = document.querySelector(`#res-${docId} .btn-confirmar-asist`);
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    await updateDoc(doc(db, 'reservas', docId), { estado: 'confirmada' });
+    const idx = STATE.reservasHoy.findIndex(r => r.id === docId);
+    if (idx !== -1) STATE.reservasHoy[idx].estado = 'confirmada';
+    renderListaAsistencia(STATE.reservasHoy);
+    showToast('Asistencia confirmada ✅');
+  } catch(e) {
+    console.error(e);
+    showToast('Error al confirmar', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirmar'; }
+  }
+};
 
 window.filtrarAsistencia = function(term) {
   const t = term.toLowerCase();
