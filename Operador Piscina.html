@@ -561,7 +561,7 @@ function _labelFechaPiscina(f) {
   return new Date(y, m-1, d).toLocaleDateString('es-CO', {weekday:'short', day:'numeric', month:'short'});
 }
 
-function cambiarFechaFiltro(nuevaFecha) {
+window.cambiarFechaFiltro = function cambiarFechaFiltro(nuevaFecha) {
   fechaFiltro = nuevaFecha;
   const lbl = document.getElementById('labelFechaLista');
   if (lbl) {
@@ -571,7 +571,7 @@ function cambiarFechaFiltro(nuevaFecha) {
   }
   cargarReservasAforo();
   cargarListaLlamada();
-}
+};
 
 function toAMPM(hora24) {
   if (!hora24) return '—';
