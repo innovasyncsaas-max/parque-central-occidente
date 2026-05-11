@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCO3 · SUPSEC Seguridad</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary:#1e3a5f; --primary-light:#2d5a8e; --primary-dark:#152d4a;
+    --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+    --bg:#f0f4f8; --card:#fff; --text:#1a202c; --muted:#64748b;
+    --border:#e2e8f0; --radius:12px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+  header{background:linear-gradient(135deg,#152d4a,#1e3a5f);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  header .badge{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.5);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:.5px;color:#fbbf24}
+  header h1{font-size:17px;font-weight:700}
+  header p{font-size:12px;opacity:.8}
+  .user-info{margin-left:auto;text-align:right;font-size:12px;opacity:.85}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+  nav button{flex:1;padding:10px 4px 8px;border:none;background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:9.5px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.2s}
+  nav button .icon{font-size:19px}
+  nav button.active{color:var(--primary);font-weight:700}
+  .section{display:none;padding:16px}
+  .section.active{display:block}
+  .card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+  .card-title{font-weight:700;font-size:14px;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .stat-box{background:var(--card);border-radius:var(--radius);padding:12px 8px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+  .stat-box .num{font-size:22px;font-weight:700;color:var(--primary)}
+  .stat-box .lbl{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.3}
+  .stat-box.alerta .num{color:var(--danger)}
+  .badge-estado{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge-critico{background:#fee2e2;color:#b91c1c}
+  .badge-medio{background:#fef3c7;color:#b45309}
+  .badge-bajo{background:#d1fae5;color:#065f46}
+  .badge-abierta{background:#dbeafe;color:#1d4ed8}
+  .badge-listo{background:#e9d5ff;color:#6b21a8}
+  .badge-cerrada{background:#f1f5f9;color:#475569}
+  .btn{width:100%;padding:12px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-success{background:var(--success);color:#fff}
+  .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s;flex-shrink:0}
+  .btn-warning{background:var(--warning);color:#fff}
+  .btn-secondary{background:var(--border);color:var(--text)}
+  .btn-purple{background:#7c3aed;color:#fff}
+  .input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);transition:.2s}
+  .input:focus{outline:none;border-color:var(--primary)}
+  .label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block}
+  .form-group{margin-bottom:12px}
+  .list-item{padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--card)}
+  .list-item.critico{border-left:4px solid var(--danger)}
+  .list-item.medio{border-left:4px solid var(--warning)}
+  .list-item.bajo{border-left:4px solid var(--success)}
+  .list-item-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .list-item-title{font-weight:600;font-size:13px}
+  .list-item-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .tabs{display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:16px}
+  .tab{flex:1;padding:8px;text-align:center;border:none;background:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s}
+  .tab.active{background:var(--card);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--text)}
+  .select:focus{outline:none;border-color:var(--primary)}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;display:flex;flex-direction:column}
+  .modal-header{padding:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .modal-header h3{font-size:15px;font-weight:700}
+  .modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
+  .modal-body{padding:16px;overflow-y:auto}
+  .modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+  .filter-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+  .filter-bar::-webkit-scrollbar{display:none}
+  .chip{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:.2s}
+  .chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .empty{text-align:center;padding:30px 20px;color:var(--muted)}
+  .empty .icon{font-size:36px;margin-bottom:8px}
+  .empty p{font-size:13px}
+  .search-bar{display:flex;gap:8px;margin-bottom:12px}
+  .search-bar .input{flex:1}
+  .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1}
+  .module-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase}
+  .module-seguridad{background:#dbeafe;color:#1d4ed8}
+  .module-piscina{background:#e0f2fe;color:#0369a1}
+  .module-gimnasio{background:#f3e8ff;color:#7c3aed}
+  .vig-card{border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+  .vig-avatar{width:40px;height:40px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0}
+  .vig-info{flex:1}
+  .vig-name{font-weight:600;font-size:13px}
+  .vig-status{font-size:12px;color:var(--muted)}
+  .acceso-tipo{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase}
+  .tipo-visitante{background:#dbeafe;color:#1d4ed8}
+  .tipo-vehiculo{background:#f3e8ff;color:#7c3aed}
+  .tipo-domicilio{background:#fef3c7;color:#b45309}
+  .section-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .section-header h2{font-size:16px;font-weight:700;color:var(--primary)}
+  .section-header .live-indicator{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--success);font-weight:600}
+  .alert-critical{background:#fef2f2;border:2px solid var(--danger);border-radius:12px;padding:14px;margin-bottom:12px}
+  .alert-critical-title{font-weight:700;font-size:14px;color:var(--danger);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="badge">⭐ SUPSEC · SUPERVISOR</div>
+    <h1>PCO3 Ciudadela</h1>
+    <p id="headerFecha">Cargando...</p>
+  </div>
+  <div class="user-info">
+    <div id="headerNombre">SUPSEC</div>
+    <div>Supervisión 24h</div>
+  </div>
+</header>
+
+<div id="sec-inicio" class="section active">
+  <div class="section-header">
+    <h2>Panel de Supervisión</h2>
+    <div class="live-indicator"><div class="live-dot"></div>EN VIVO</div>
+  </div>
+  <div id="alertas-criticas-container"></div>
+  <div class="stat-grid">
+    <div class="stat-box" id="stat-box-seg-abiertas"><div class="num" id="stat-seg-abiertas">0</div><div class="lbl">Nov. seguridad</div></div>
+    <div class="stat-box" id="stat-box-pool-abiertas"><div class="num" id="stat-pool-abiertas">0</div><div class="lbl">Nov. piscina</div></div>
+    <div class="stat-box" id="stat-box-gym-abiertas"><div class="num" id="stat-gym-abiertas">0</div><div class="lbl">Nov. gimnasio</div></div>
+    <div class="stat-box"><div class="num" id="stat-accesos">0</div><div class="lbl">Accesos hoy</div></div>
+    <div class="stat-box"><div class="num" id="stat-activos">0</div><div class="lbl">Dentro ahora</div></div>
+    <div class="stat-box"><div class="num" id="stat-rondas">0</div><div class="lbl">Rondas hoy</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">👮 VIGs en turno</div>
+    <div id="lista-vigs-inicio"><div class="empty"><div class="icon">👥</div><p>Sin datos</p></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">⚡ Últimas novedades</div>
+    <div id="ultimas-novedades-inicio"><div class="empty"><div class="icon">✅</div><p>Sin novedades activas</p></div></div>
+  </div>
+</div>
+
+<div id="sec-novedades" class="section">
+  <div class="section-header"><h2>Todas las Novedades</h2></div>
+  <div class="tabs" id="tabs-modulo">
+    <button class="tab active" onclick="setTabModulo('seg',this)">🔒 Seguridad</button>
+    <button class="tab" onclick="setTabModulo('pool',this)">🏊 Piscina</button>
+    <button class="tab" onclick="setTabModulo('gym',this)">💪 Gimnasio</button>
+  </div>
+  <div class="filter-bar" id="filtro-nov-chips">
+    <div class="chip active" data-val="todas" onclick="setFiltroNov(this)">Todas</div>
+    <div class="chip" data-val="abiertas" onclick="setFiltroNov(this)">Abiertas</div>
+    <div class="chip" data-val="criticas" onclick="setFiltroNov(this)">Críticas</div>
+    <div class="chip" data-val="medias" onclick="setFiltroNov(this)">Medias</div>
+    <div class="chip" data-val="listo" onclick="setFiltroNov(this)">Listo cierre</div>
+    <div class="chip" data-val="cerradas" onclick="setFiltroNov(this)">Cerradas</div>
+  </div>
+  <div id="lista-novedades"><div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div></div>
+</div>
+
+<div id="sec-accesos" class="section">
+  <div class="section-header"><h2>Accesos del Día</h2><div class="live-indicator"><div class="live-dot"></div>EN VIVO</div></div>
+  <div class="search-bar"><input type="text" class="input" id="buscar-acceso" placeholder="Buscar nombre, placa, empresa..." oninput="filtrarAccesos()"></div>
+  <div class="filter-bar" id="filtro-acceso-tipo">
+    <div class="chip active" data-val="todos" onclick="setFiltroAcceso(this)">Todos</div>
+    <div class="chip" data-val="visitante" onclick="setFiltroAcceso(this)">Visitantes</div>
+    <div class="chip" data-val="vehiculo" onclick="setFiltroAcceso(this)">Vehículos</div>
+    <div class="chip" data-val="domicilio" onclick="setFiltroAcceso(this)">Domicilios</div>
+    <div class="chip" data-val="activos" onclick="setFiltroAcceso(this)">Activos</div>
+  </div>
+  <div id="lista-accesos"><div class="empty"><div class="icon">🔄</div><p>Cargando accesos...</p></div></div>
+</div>
+
+<div id="sec-rondas" class="section">
+  <div class="section-header"><h2>Rondas del Día</h2></div>
+  <div class="card"><div class="card-title">📊 Resumen</div><div id="resumen-rondas"></div></div>
+  <div id="lista-rondas-detalle"></div>
+</div>
+
+<div id="sec-bitacora" class="section">
+  <div class="section-header"><h2>Bitácora del Día</h2></div>
+  <div class="search-bar"><input type="text" class="input" id="buscar-bitacora" placeholder="Buscar en bitácora..." oninput="filtrarBitacora()"></div>
+  <div id="lista-bitacora"><div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div></div>
+</div>
+
+<nav>
+  <button class="active" onclick="navTo('inicio',this)"><span class="icon">🖥️</span>Panel</button>
+  <button onclick="navTo('novedades',this)" id="nav-novedades-btn"><span class="icon">🚨</span>Novedades</button>
+  <button onclick="navTo('accesos',this)"><span class="icon">🚪</span>Accesos</button>
+  <button onclick="navTo('rondas',this)"><span class="icon">🔍</span>Rondas</button>
+  <button onclick="navTo('bitacora',this)"><span class="icon">📋</span>Bitácora</button>
+</nav>
+
+<div class="modal-overlay" id="modal-accionar">
+  <div class="modal">
+    <div class="modal-header"><h3 id="modal-acc-title">Accionar Novedad</h3><button class="modal-close" onclick="cerrarModal('modal-accionar')">✕</button></div>
+    <div class="modal-body" id="modal-acc-body"></div>
+    <div class="modal-footer" id="modal-acc-footer"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-asignar">
+  <div class="modal">
+    <div class="modal-header"><h3>Asignar Novedad a VIG</h3><button class="modal-close" onclick="cerrarModal('modal-asignar')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="label">Novedad</label><div id="asig-titulo" style="font-weight:600;font-size:13px;padding:8px;background:var(--bg);border-radius:8px"></div></div>
+      <div class="form-group"><label class="label">Asignar a</label><select class="select" id="asig-vig"><option value="">Seleccionar vigilante...</option></select></div>
+      <div class="form-group"><label class="label">Instrucción</label><textarea class="input" id="asig-comentario" rows="3" placeholder="Instrucciones para el VIG..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-asignar')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="confirmarAsignar()">Asignar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-listo-cierre">
+  <div class="modal">
+    <div class="modal-header" style="background:#6d28d9"><h3>Marcar Listo para Cierre</h3><button class="modal-close" onclick="cerrarModal('modal-listo-cierre')">✕</button></div>
+    <div class="modal-body">
+      <div style="background:#f5f3ff;border-color:#c4b5fd;color:#6d28d9;border-radius:10px;padding:10px;margin-bottom:12px;font-size:13px">ℹ️ Solo el Administrador puede cerrar definitivamente.</div>
+      <div class="form-group"><label class="label">Novedad a marcar</label><div id="listo-titulo" style="font-weight:600;font-size:13px;padding:8px;background:var(--bg);border-radius:8px"></div></div>
+      <div class="form-group"><label class="label">Comentario de supervisión *</label><textarea class="input" id="listo-comentario" rows="4" placeholder="Describe qué se hizo, cómo se resolvió..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-listo-cierre')">Cancelar</button>
+      <button class="btn btn-sm btn-purple" style="flex:1;background:#7c3aed;color:#fff" onclick="confirmarListoCierre()">Marcar Listo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek", authDomain:"registro-residentes.firebaseapp.com",
+  projectId:"registro-residentes", storageBucket:"registro-residentes.firebasestorage.app",
+  messagingSenderId:"646123326163", appId:"1:646123326163:web:8b35b955e7b3692536a226"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const STATE = {
+  uid:'', nombre:'SUPSEC',
+  accesos:[], novSeg:[], novPool:[], novGym:[],
+  rondas:[], vigs:[],
+  tabModulo:'seg', filtroNov:'todas', filtroAcceso:'todos',
+  novSeleccionada:null
+};
+
+// FIX 1: zona horaria Bogotá
+function fechaHoy() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+function formatHora(ts) { if(!ts) return '--'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); }
+function formatFechaHora(ts) { if(!ts) return '--'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); }
+
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+window.cerrarModal = cerrarModal;
+
+// FIX 3: sin tilde en comparaciones
+function getNivelClass(nivel) {
+  const n=(nivel||'').toLowerCase();
+  return n.includes('crit')?'critico':n.includes('medi')?'medio':'bajo';
+}
+function getNivelBadge(nivel) {
+  const n=(nivel||'').toLowerCase();
+  return n.includes('crit')?'badge-critico':n.includes('medi')?'badge-medio':'badge-bajo';
+}
+function getEstadoBadge(e) { return ({abierta:'badge-abierta',en_atencion:'badge-medio',listo_cierre:'badge-listo',cerrada:'badge-cerrada'}[e]||'badge-cerrada'); }
+function getEstadoLabel(e) { return ({abierta:'Abierta',en_atencion:'En atención',listo_cierre:'Listo cierre',cerrada:'Cerrada'}[e]||e); }
+function getColeccion(m) { return m==='pool'?'pool_novedades':m==='gym'?'gym_novedades':'seg_novedades'; }
+function getModuleTag(m) {
+  return m==='pool'?'<span class="module-tag module-piscina">PISCINA</span>':
+         m==='gym'?'<span class="module-tag module-gimnasio">GIMNASIO</span>':
+         '<span class="module-tag module-seguridad">SEGURIDAD</span>';
+}
+// Normalizar novedad (lee ambos formatos)
+function normalizarNov(d, m) {
+  let nivel = d.nivel;
+  if(!nivel && d.severidad) nivel = d.severidad.toLowerCase().includes('crít')?'critica':d.severidad.toLowerCase().includes('medi')?'media':'baja';
+  nivel = nivel||'baja';
+  let estado = d.estado;
+  if(!estado && d.status) estado = d.status==='ABIERTO'?'abierta':d.status==='CERRADO'?'cerrada':d.status.toLowerCase();
+  estado = estado||'abierta';
+  return {...d, nivel, estado, _modulo:m, creado_en:d.creado_en||d.timestamp};
+}
+
+(()=>{
+  const p=new URLSearchParams(window.location.search);
+  STATE.uid=p.get('uid')||localStorage.getItem('pco3_uid')||'supsec_demo';
+  STATE.nombre=p.get('nombre')||localStorage.getItem('pco3_nombre')||'SUPSEC';
+  if(p.get('uid')) localStorage.setItem('pco3_uid',STATE.uid);
+  if(p.get('nombre')) localStorage.setItem('pco3_nombre',STATE.nombre);
+  document.getElementById('headerNombre').textContent=STATE.nombre;
+  document.getElementById('headerFecha').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+})();
+
+// FIX 2: wrapper con error handler
+function escuchar(q, onData, etiqueta) {
+  return onSnapshot(q, onData, error => {
+    console.error(`❌ "${etiqueta}":`, error.code, error.message);
+    if(error.code==='failed-precondition') console.error(`🔧 Falta índice compuesto para "${etiqueta}"`);
+  });
+}
+
+function iniciarListeners() {
+  const hoy = fechaHoy();
+  escuchar(query(collection(db,'accesos'),where('fecha','==',hoy),orderBy('timestamp','desc')),
+    s=>{STATE.accesos=s.docs.map(d=>({id:d.id,...d.data()}));actualizarStats();renderAccesos();renderBitacora();},'accesos');
+  escuchar(query(collection(db,'seg_novedades'),where('fecha','==',hoy),orderBy('timestamp','desc')),
+    s=>{STATE.novSeg=s.docs.map(d=>normalizarNov({id:d.id,...d.data()},'seg'));actualizarStats();renderNovedades();renderAlertas();renderUltimasNovedades();},'seg_novedades');
+  escuchar(query(collection(db,'pool_novedades'),where('fecha','==',hoy),orderBy('timestamp','desc')),
+    s=>{STATE.novPool=s.docs.map(d=>normalizarNov({id:d.id,...d.data()},'pool'));actualizarStats();renderNovedades();renderAlertas();renderUltimasNovedades();},'pool_novedades');
+  escuchar(query(collection(db,'gym_novedades'),where('fecha','==',hoy),orderBy('timestamp','desc')),
+    s=>{STATE.novGym=s.docs.map(d=>normalizarNov({id:d.id,...d.data()},'gym'));actualizarStats();renderNovedades();renderAlertas();renderUltimasNovedades();},'gym_novedades');
+  escuchar(query(collection(db,'seg_rondas'),where('fecha','==',hoy),orderBy('timestamp','desc')),
+    s=>{STATE.rondas=s.docs.map(d=>({id:d.id,...d.data()}));actualizarStats();renderRondas();},'seg_rondas');
+  escuchar(query(collection(db,'seg_turnos'),where('fecha','==',hoy)),
+    s=>{STATE.vigs=s.docs.map(d=>({id:d.id,...d.data()}));renderVigsInicio();poblarSelectVig();},'seg_turnos');
+}
+
+function actualizarStats() {
+  const segAb=STATE.novSeg.filter(n=>n.estado==='abierta'||n.estado==='en_atencion').length;
+  const poolAb=STATE.novPool.filter(n=>n.estado==='abierta'||n.estado==='en_atencion').length;
+  const gymAb=STATE.novGym.filter(n=>n.estado==='abierta'||n.estado==='en_atencion').length;
+  document.getElementById('stat-seg-abiertas').textContent=segAb;
+  document.getElementById('stat-pool-abiertas').textContent=poolAb;
+  document.getElementById('stat-gym-abiertas').textContent=gymAb;
+  document.getElementById('stat-box-seg-abiertas').className='stat-box'+(segAb>0?' alerta':'');
+  document.getElementById('stat-box-pool-abiertas').className='stat-box'+(poolAb>0?' alerta':'');
+  document.getElementById('stat-box-gym-abiertas').className='stat-box'+(gymAb>0?' alerta':'');
+  document.getElementById('stat-accesos').textContent=STATE.accesos.length;
+  document.getElementById('stat-activos').textContent=STATE.accesos.filter(a=>!a.salida).length;
+  document.getElementById('stat-rondas').textContent=STATE.rondas.length;
+  const totalCrit=[...STATE.novSeg,...STATE.novPool,...STATE.novGym].filter(n=>n.nivel==='critica'&&n.estado==='abierta').length;
+  document.getElementById('nav-novedades-btn').querySelector('.icon').textContent=totalCrit>0?'🔴':'🚨';
+}
+
+function renderAlertas() {
+  const criticas=[...STATE.novSeg,...STATE.novPool,...STATE.novGym].filter(n=>n.nivel==='critica'&&(n.estado==='abierta'||n.estado==='en_atencion'));
+  const cont=document.getElementById('alertas-criticas-container');
+  if(!criticas.length){cont.innerHTML='';return;}
+  const modLabel={seg:'🔒 Seguridad',pool:'🏊 Piscina',gym:'💪 Gimnasio'};
+  cont.innerHTML=criticas.map(n=>`<div class="alert-critical">
+    <div class="alert-critical-title">🚨 CRÍTICO — ${modLabel[n._modulo]||n._modulo}</div>
+    <div style="font-size:13px;font-weight:600">${n.tipo||'—'} · ${n.area||''}</div>
+    <div style="font-size:12px;color:#b91c1c;margin-top:2px">${n.descripcion||''}</div>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      ${n._modulo==='seg'?`<button class="btn-sm btn-warning" onclick="abrirAsignar('${n.id}','${n._modulo}')">Asignar VIG</button>`:''}
+      <button class="btn-sm btn-purple" onclick="abrirListoCierre('${n.id}','${n._modulo}')">Listo Cierre</button>
+    </div>
+  </div>`).join('');
+}
+
+window.setTabModulo = function(mod,el) {
+  STATE.tabModulo=mod; STATE.filtroNov='todas';
+  document.querySelectorAll('#tabs-modulo .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  document.querySelectorAll('#filtro-nov-chips .chip').forEach(c=>c.classList.remove('active'));
+  document.querySelector('#filtro-nov-chips .chip[data-val="todas"]').classList.add('active');
+  renderNovedades();
+};
+window.setFiltroNov = function(el) {
+  STATE.filtroNov=el.dataset.val;
+  document.querySelectorAll('#filtro-nov-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderNovedades();
+};
+
+function renderNovedades() {
+  let lista=STATE.tabModulo==='pool'?STATE.novPool:STATE.tabModulo==='gym'?STATE.novGym:STATE.novSeg;
+  const f=STATE.filtroNov;
+  if(f==='abiertas') lista=lista.filter(n=>n.estado==='abierta'||n.estado==='en_atencion');
+  else if(f==='criticas') lista=lista.filter(n=>n.nivel==='critica');
+  else if(f==='medias') lista=lista.filter(n=>n.nivel==='media');
+  else if(f==='listo') lista=lista.filter(n=>n.estado==='listo_cierre');
+  else if(f==='cerradas') lista=lista.filter(n=>n.estado==='cerrada');
+  const cont=document.getElementById('lista-novedades');
+  if(!lista.length){cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin novedades</p></div>';return;}
+  const esSeguridad=STATE.tabModulo==='seg';
+  cont.innerHTML=lista.map(n=>{
+    const activa=n.estado==='abierta'||n.estado==='en_atencion';
+    return `<div class="list-item ${getNivelClass(n.nivel)}">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        ${getModuleTag(n._modulo)}<span class="badge-estado ${getNivelBadge(n.nivel)}">${n.nivel}</span>
+        <span class="badge-estado ${getEstadoBadge(n.estado)}">${getEstadoLabel(n.estado)}</span>
+      </div>
+      <div class="list-item-title">${n.tipo||'Sin tipo'} · ${n.area||'--'}</div>
+      <div class="list-item-sub">${n.descripcion||''}</div>
+      <div class="list-item-sub" style="margin-top:2px">${formatFechaHora(n.creado_en)}${n.asignado_nombre?' · Asignado: '+n.asignado_nombre:''}</div>
+      ${activa?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${esSeguridad?`<button class="btn-sm btn-warning" onclick="abrirAsignar('${n.id}','${n._modulo}')">Asignar VIG</button>`:''}
+        <button class="btn-sm" style="background:#7c3aed;color:#fff" onclick="abrirListoCierre('${n.id}','${n._modulo}')">Listo cierre</button>
+        <button class="btn-sm btn-secondary" onclick="verDetalle('${n.id}','${n._modulo}')">Detalle</button>
+      </div>`:`<div style="margin-top:8px"><button class="btn-sm btn-secondary" onclick="verDetalle('${n.id}','${n._modulo}')">Ver detalle</button></div>`}
+    </div>`;
+  }).join('');
+}
+
+function renderUltimasNovedades() {
+  const todas=[...STATE.novSeg,...STATE.novPool,...STATE.novGym].filter(n=>n.estado==='abierta'||n.estado==='en_atencion').sort((a,b)=>(b.creado_en?.toDate?.()?.getTime()||0)-(a.creado_en?.toDate?.()?.getTime()||0));
+  const cont=document.getElementById('ultimas-novedades-inicio');
+  if(!todas.length){cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin novedades activas</p></div>';return;}
+  cont.innerHTML=todas.slice(0,5).map(n=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span class="badge-estado ${getNivelBadge(n.nivel)}" style="flex-shrink:0">${n.nivel}</span>
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:2px">${getModuleTag(n._modulo)}</div>
+      <div style="font-weight:600;font-size:13px">${n.tipo||'--'} · ${n.area||''}</div>
+      <div style="font-size:11px;color:var(--muted)">${formatFechaHora(n.creado_en)}</div>
+    </div>
+  </div>`).join('')+(todas.length>5?`<div style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px">+${todas.length-5} más</div>`:'');
+}
+
+function renderVigsInicio() {
+  const cont=document.getElementById('lista-vigs-inicio');
+  if(!STATE.vigs.length){cont.innerHTML='<div class="empty"><div class="icon">👥</div><p>Sin datos de VIG</p></div>';return;}
+  cont.innerHTML=STATE.vigs.map(v=>{
+    const ultima=STATE.rondas.filter(r=>r.vig_uid===v.uid)[0];
+    const novAsig=STATE.novSeg.filter(n=>n.asignado_a===v.uid&&(n.estado==='abierta'||n.estado==='en_atencion')).length;
+    return `<div class="vig-card">
+      <div class="vig-avatar">${(v.nombre||'V').charAt(0).toUpperCase()}</div>
+      <div class="vig-info">
+        <div class="vig-name">${v.nombre||v.uid}</div>
+        <div class="vig-status">${novAsig>0?`<span style="color:var(--warning)">⚠️ ${novAsig} novedad(es)</span>`:'<span style="color:var(--success)">✅ Sin novedades</span>'}</div>
+        ${ultima?`<div style="font-size:11px;color:var(--muted);margin-top:2px">Última ronda: ${formatHora(ultima.timestamp||ultima.registrado_en)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function poblarSelectVig() {
+  const sel=document.getElementById('asig-vig');
+  sel.innerHTML='<option value="">Seleccionar vigilante...</option>'+STATE.vigs.map(v=>`<option value="${v.uid}">${v.nombre||v.uid}</option>`).join('');
+}
+
+window.abrirAsignar = function(id,modulo) {
+  const lista=modulo==='pool'?STATE.novPool:modulo==='gym'?STATE.novGym:STATE.novSeg;
+  const n=lista.find(x=>x.id===id); if(!n) return;
+  STATE.novSeleccionada=n;
+  document.getElementById('asig-titulo').textContent=`${n.nivel} · ${n.tipo} · ${n.area}`;
+  document.getElementById('asig-comentario').value='';
+  document.getElementById('modal-asignar').classList.add('open');
+};
+
+window.confirmarAsignar = async function() {
+  const vigUid=document.getElementById('asig-vig').value;
+  const comentario=document.getElementById('asig-comentario').value.trim();
+  if(!vigUid){showToast('Selecciona un VIG');return;}
+  const n=STATE.novSeleccionada; if(!n) return;
+  const vigData=STATE.vigs.find(v=>v.uid===vigUid);
+  try {
+    await updateDoc(doc(db,getColeccion(n._modulo),n.id),{
+      asignado_a:vigUid,asignado_nombre:vigData?.nombre||vigUid,
+      instruccion_asignacion:comentario,asignado_por:STATE.uid,
+      asignado_por_nombre:STATE.nombre,asignado_en:serverTimestamp()
+    });
+    cerrarModal('modal-asignar'); showToast('Novedad asignada al VIG');
+  }catch(e){showToast('Error al asignar');}
+};
+
+window.abrirListoCierre = function(id,modulo) {
+  const lista=modulo==='pool'?STATE.novPool:modulo==='gym'?STATE.novGym:STATE.novSeg;
+  const n=lista.find(x=>x.id===id); if(!n) return;
+  STATE.novSeleccionada=n;
+  document.getElementById('listo-titulo').textContent=`${n.nivel} · ${n.tipo} · ${n.area||''}`;
+  document.getElementById('listo-comentario').value='';
+  document.getElementById('modal-listo-cierre').classList.add('open');
+};
+
+window.confirmarListoCierre = async function() {
+  const comentario=document.getElementById('listo-comentario').value.trim();
+  if(!comentario){showToast('Escribe un comentario de supervisión');return;}
+  const n=STATE.novSeleccionada; if(!n) return;
+  try {
+    // FIX 4: dual-write estado + status
+    await updateDoc(doc(db,getColeccion(n._modulo),n.id),{
+      estado:'listo_cierre',
+      status:'EN_ATENCION',
+      comentario_supervision:comentario,
+      marcado_listo_por:STATE.uid,
+      marcado_listo_nombre:STATE.nombre,
+      marcado_listo_en:serverTimestamp()
+    });
+    cerrarModal('modal-listo-cierre'); showToast('Novedad marcada como lista para cierre');
+  }catch(e){showToast('Error al marcar');}
+};
+
+window.verDetalle = function(id,modulo) {
+  const lista=modulo==='pool'?STATE.novPool:modulo==='gym'?STATE.novGym:STATE.novSeg;
+  const n=lista.find(x=>x.id===id); if(!n) return;
+  STATE.novSeleccionada=n;
+  document.getElementById('modal-acc-title').textContent='Detalle Novedad';
+  document.getElementById('modal-acc-body').innerHTML=`
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${getModuleTag(modulo)}<span class="badge-estado ${getNivelBadge(n.nivel)}">${n.nivel}</span><span class="badge-estado ${getEstadoBadge(n.estado)}">${getEstadoLabel(n.estado)}</span></div>
+    <div class="form-group"><span class="label">Tipo / Área</span><div style="font-weight:600">${n.tipo||'--'} · ${n.area||'--'}</div></div>
+    <div class="form-group"><span class="label">Descripción</span><div style="font-size:13px">${n.descripcion||'Sin descripción'}</div></div>
+    <div class="form-group"><span class="label">Registrado</span><div style="font-size:13px">${n.vig_nombre||n.piscinero_nombre||n.operador_nombre||n.creado_por||'--'} · ${formatFechaHora(n.creado_en)}</div></div>
+    ${n.asignado_a?`<div class="form-group"><span class="label">Asignado a</span><div style="font-size:13px">${n.asignado_nombre||n.asignado_a}${n.instruccion_asignacion?' · "'+n.instruccion_asignacion+'"':''}</div></div>`:''}
+    ${n.foto_url?`<div class="form-group"><span class="label">Foto</span><img src="${n.foto_url}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;cursor:pointer" onclick="window.open('${n.foto_url}','_blank')"></div>`:''} `;
+  const activa=n.estado==='abierta'||n.estado==='en_atencion';
+  document.getElementById('modal-acc-footer').innerHTML=`<button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-accionar')">Cerrar</button>
+    ${activa&&modulo==='seg'?`<button class="btn btn-warning btn-sm" style="flex:1" onclick="cerrarModal('modal-accionar');abrirAsignar('${n.id}','${n._modulo}')">Asignar VIG</button>`:''}
+    ${activa?`<button class="btn btn-sm" style="flex:1;background:#7c3aed;color:#fff" onclick="cerrarModal('modal-accionar');abrirListoCierre('${n.id}','${n._modulo}')">Listo cierre</button>`:''}`;
+  document.getElementById('modal-accionar').classList.add('open');
+};
+
+function getTipoClass(t){return t==='visitante'?'tipo-visitante':t==='vehiculo'?'tipo-vehiculo':'tipo-domicilio';}
+function getTipoLabel(t){return t==='visitante'?'Visitante':t==='vehiculo'?'Vehículo':'Domicilio';}
+function getAccesoTitulo(a){return a.tipo==='vehiculo'?`${a.placa||''} · ${a.marca||''} ${a.color||''}`.trim():a.tipo==='domicilio'?`${a.empresa||''} · ${a.repartidor||''}`.trim():a.nombre||'Sin nombre';}
+
+window.setFiltroAcceso = function(el) {
+  STATE.filtroAcceso=el.dataset.val;
+  document.querySelectorAll('#filtro-acceso-tipo .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderAccesos();
+};
+window.filtrarAccesos = function(){renderAccesos();};
+
+function renderAccesos() {
+  const busq=document.getElementById('buscar-acceso').value.toLowerCase();
+  let lista=[...STATE.accesos];
+  if(STATE.filtroAcceso==='activos') lista=lista.filter(a=>!a.salida);
+  else if(STATE.filtroAcceso!=='todos') lista=lista.filter(a=>a.tipo===STATE.filtroAcceso);
+  if(busq) lista=lista.filter(a=>[a.nombre,a.placa,a.empresa,a.repartidor,a.torre_apto,a.marca].join(' ').toLowerCase().includes(busq));
+  const cont=document.getElementById('lista-accesos');
+  if(!lista.length){cont.innerHTML='<div class="empty"><div class="icon">🚪</div><p>Sin resultados</p></div>';return;}
+  cont.innerHTML=lista.map(a=>`<div class="list-item">
+    <div class="list-item-header">
+      <div>
+        <span class="acceso-tipo ${getTipoClass(a.tipo)}">${getTipoLabel(a.tipo)}</span>
+        <div class="list-item-title" style="margin-top:4px">${getAccesoTitulo(a)}</div>
+        <div class="list-item-sub">Entrada: ${formatHora(a.timestamp||a.entrada)}${a.salida?' · Salida: '+formatHora(a.salida):' · Activo'} · ${a.torre_apto||a.torre||'--'}</div>
+        ${a.observacion?`<div class="list-item-sub">📝 ${a.observacion}</div>`:''}
+      </div>
+      ${!a.salida?'<div style="background:#d1fae5;color:#065f46;font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px">DENTRO</div>':''}
+    </div>
+  </div>`).join('');
+}
+
+const TIPOS_RONDA_LABEL={infraestructura:'🏗️ Infraestructura',vehicular:'🚗 Vehicular',perimetral:'🔍 Perimetral',parqueaderos:'🅿️ Parqueaderos',corredores:'🏢 Corredores',terrazas:'🏔️ Terrazas'};
+
+function renderRondas() {
+  const porVig={};
+  STATE.rondas.forEach(r=>{const k=r.vig_uid||'desconocido';if(!porVig[k])porVig[k]={nombre:r.vig_nombre||k,rondas:[]};porVig[k].rondas.push(r);});
+  document.getElementById('resumen-rondas').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:13px;color:var(--muted)">Total rondas hoy</span><span style="font-weight:700;font-size:18px;color:var(--primary)">${STATE.rondas.length}</span></div>`+
+    Object.values(porVig).map(d=>`<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span>${d.nombre}</span><span style="font-weight:600;color:var(--primary)">${d.rondas.length}</span></div>`).join('')+
+    (!Object.keys(porVig).length?'<div style="text-align:center;color:var(--muted);font-size:12px">Sin rondas</div>':'');
+  document.getElementById('lista-rondas-detalle').innerHTML=Object.entries(porVig).map(([uid,data])=>`<div class="card"><div class="card-title">👮 ${data.nombre}</div>`+
+    data.rondas.map(r=>`<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="min-width:45px;font-size:11px;color:var(--muted);padding-top:2px">${formatHora(r.timestamp||r.registrado_en)}</div>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${TIPOS_RONDA_LABEL[r.tipo_ronda]||TIPOS_RONDA_LABEL[r.tipo]||r.tipo_ronda||r.tipo}</div>
+      ${r.observacion?`<div style="font-size:12px;color:var(--muted)">${r.observacion}</div>`:''}</div>
+    </div>`).join('')+'</div>').join('');
+}
+
+window.filtrarBitacora = function(){renderBitacora();};
+function renderBitacora() {
+  const busq=document.getElementById('buscar-bitacora').value.toLowerCase();
+  let lista=[...STATE.accesos].sort((a,b)=>(b.timestamp?.toDate?.()?.getTime()||0)-(a.timestamp?.toDate?.()?.getTime()||0));
+  if(busq) lista=lista.filter(a=>[a.nombre,a.placa,a.empresa,a.repartidor,a.torre_apto,a.observacion].join(' ').toLowerCase().includes(busq));
+  const cont=document.getElementById('lista-bitacora');
+  if(!lista.length){cont.innerHTML='<div class="empty"><div class="icon">📋</div><p>Sin registros</p></div>';return;}
+  cont.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${lista.length} registros</div>`+
+    lista.map(a=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="min-width:42px;text-align:center">
+        <div style="font-size:12px;font-weight:700;color:var(--primary)">${formatHora(a.timestamp||a.entrada)}</div>
+        ${a.salida?`<div style="font-size:10px;color:var(--muted)">${formatHora(a.salida)}</div>`:'<div style="font-size:10px;color:var(--success)">activo</div>'}
+      </div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="acceso-tipo ${getTipoClass(a.tipo)}" style="font-size:10px">${getTipoLabel(a.tipo)}</span>
+          <span style="font-weight:600;font-size:13px">${getAccesoTitulo(a)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Torre/Apto: ${a.torre_apto||a.torre||'--'} · VIG: ${a.vig_nombre||'--'}</div>
+        ${a.observacion?`<div style="font-size:11px;color:var(--muted)">📝 ${a.observacion}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+window.navTo = function(sec,btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active'); btn.classList.add('active');
+};
+
+iniciarListeners();
+</script>
+</body>
+</html>

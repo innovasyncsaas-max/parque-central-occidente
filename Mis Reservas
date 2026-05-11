@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Mis Reservas — PCO3</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --accent:#1e3a5f; --accent2:#2563eb; --gbtn:linear-gradient(135deg,#1e3a5f,#2563eb); --bg:#eef2f7; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); min-height:100vh; padding-bottom:40px; }
+    .header { background:var(--gbtn); padding:20px 20px 28px; color:#fff; position:relative; overflow:hidden; }
+    .header::after { content:''; position:absolute; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,0.06); top:-70px; right:-50px; pointer-events:none; }
+    .header-top { display:flex; align-items:center; gap:12px; margin-bottom:4px; }
+    .btn-back-header { background:rgba(255,255,255,0.15); border:none; border-radius:10px; color:#fff; width:38px; height:38px; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; text-decoration:none; transition:background .15s; }
+    .btn-back-header:active { background:rgba(255,255,255,0.25); }
+    .header-title { font-family:'DM Serif Display',serif; font-size:22px; flex:1; }
+    .header-sub { font-size:13px; opacity:.75; padding-left:50px; }
+    .filter-bar { background:#fff; padding:14px 16px; display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; border-bottom:1px solid #e8edf3; position:sticky; top:0; z-index:10; }
+    .filter-bar::-webkit-scrollbar { display:none; }
+    .chip { flex-shrink:0; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; border:2px solid transparent; cursor:pointer; transition:all .15s; white-space:nowrap; background:#f1f5f9; color:#475569; }
+    .chip.active { background:var(--gbtn); color:#fff; box-shadow:0 2px 10px rgba(30,58,95,0.18); }
+    .content { padding:16px; max-width:600px; margin:0 auto; }
+    .state-msg { text-align:center; padding:60px 20px; color:#94a3b8; }
+    .state-msg .icon { font-size:48px; margin-bottom:12px; }
+    .state-msg h3 { font-family:'DM Serif Display',serif; color:#64748b; margin-bottom:8px; }
+    .state-msg p  { font-size:14px; line-height:1.6; }
+    .spinner { width:40px; height:40px; border:4px solid #e2e8f0; border-top-color:var(--accent2); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .res-card { background:#fff; border-radius:16px; margin-bottom:12px; overflow:hidden; box-shadow:0 2px 12px rgba(30,58,95,0.07); }
+    .res-stripe { height:4px; }
+    .stripe-activa     { background:linear-gradient(90deg,#1d4ed8,#3b82f6); }
+    .stripe-pendiente  { background:linear-gradient(90deg,#b45309,#f59e0b); }
+    .stripe-cancelada  { background:linear-gradient(90deg,#94a3b8,#cbd5e1); }
+    .stripe-completada { background:linear-gradient(90deg,#059669,#10b981); }
+    .res-body { padding:14px 16px 16px; }
+    .res-top { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
+    .space-icon { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#eff6ff,#dbeafe); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+    .res-info { flex:1; min-width:0; }
+    .res-space { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#94a3b8; margin-bottom:2px; }
+    .res-title { font-family:'DM Serif Display',serif; font-size:17px; color:var(--accent); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .status-badge { flex-shrink:0; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
+    .badge-activa     { background:#dbeafe; color:#1d4ed8; }
+    .badge-pendiente  { background:#fef3c7; color:#92400e; }
+    .badge-cancelada  { background:#f1f5f9; color:#94a3b8; }
+    .badge-completada { background:#d1fae5; color:#065f46; }
+    .res-details { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px; }
+    .detail-item { font-size:13px; color:#475569; }
+    .detail-item span { font-weight:600; color:#1e293b; }
+    .res-footer { padding-top:10px; border-top:1px solid #f1f5f9; }
+    .btn-cancel { width:100%; padding:11px; background:linear-gradient(135deg,#fee2e2,#fecaca); color:#dc2626; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:transform .15s; }
+    .btn-cancel:active { transform:scale(0.98); }
+    .cancel-note { font-size:12px; color:#94a3b8; text-align:center; margin-top:6px; }
+    .pago-note { font-size:12px; color:#92400e; background:#fef3c7; border-radius:8px; padding:7px 10px; line-height:1.5; }
+    .footer-nav { max-width:600px; margin:8px auto 0; padding:0 16px; }
+    .btn-portal { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:15px; background:var(--gbtn); color:#fff; border:none; border-radius:14px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:700; cursor:pointer; text-decoration:none; box-shadow:0 4px 16px rgba(37,99,235,0.25); transition:transform .15s; }
+    .btn-portal:active { transform:scale(0.98); }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:100; align-items:flex-end; justify-content:center; }
+    .modal-overlay.open { display:flex; animation:fadeIn .2s; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .modal { background:#fff; border-radius:24px 24px 0 0; padding:28px 24px 40px; width:100%; max-width:460px; animation:slideUp .25s ease; text-align:center; }
+    @keyframes slideUp { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .modal-icon  { font-size:44px; margin-bottom:12px; }
+    .modal-title { font-family:'DM Serif Display',serif; font-size:20px; color:var(--accent); margin-bottom:8px; }
+    .modal-body  { font-size:14px; color:#64748b; line-height:1.6; margin-bottom:24px; }
+    .modal-btns  { display:flex; gap:10px; }
+    .modal-btns button { flex:1; padding:13px; border-radius:12px; border:none; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:700; cursor:pointer; }
+    .btn-confirm-cancel { background:linear-gradient(135deg,#dc2626,#ef4444); color:#fff; }
+    .btn-no { background:#f1f5f9; color:#475569; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <a id="btnBack" href="#" class="btn-back-header" onclick="volver(event)">←</a>
+    <div class="header-title">Mis Reservas</div>
+  </div>
+  <div class="header-sub" id="headerSub">Ciudadela Parque Central de Occidente 3</div>
+</div>
+
+<div class="filter-bar">
+  <button class="chip active" data-f="todas"      onclick="filtrar(this)">Todas</button>
+  <button class="chip"        data-f="activa"     onclick="filtrar(this)">✅ Activas</button>
+  <button class="chip"        data-f="pendiente"  onclick="filtrar(this)">⏳ Pendientes</button>
+  <button class="chip"        data-f="completada" onclick="filtrar(this)">🏁 Completadas</button>
+  <button class="chip"        data-f="cancelada"  onclick="filtrar(this)">❌ Canceladas</button>
+</div>
+
+<div class="content" id="content">
+  <div class="state-msg">
+    <div class="spinner"></div>
+    <p>Cargando reservas…</p>
+  </div>
+</div>
+
+<div class="footer-nav">
+  <a id="btnPortal" href="#" class="btn-portal" onclick="volver(event)">← Volver al Portal</a>
+</div>
+
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal">
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-title">Cancelar Reserva</div>
+    <div class="modal-body" id="cancelModalBody">¿Estás seguro que deseas cancelar esta reserva?<br>Esta acción no se puede deshacer.</div>
+    <div class="modal-btns">
+      <button class="btn-no" onclick="closeCancelModal()">No, volver</button>
+      <button class="btn-confirm-cancel" onclick="executeCancellation()">Sí, cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getFirestore, collection, getDocs, query, where, updateDoc, doc, Timestamp }
+    from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+    authDomain:        "registro-residentes.firebaseapp.com",
+    projectId:         "registro-residentes",
+    storageBucket:     "registro-residentes.firebasestorage.app",
+    messagingSenderId: "646123326163",
+    appId:             "1:646123326163:web:8b35b955e7b3692536a226"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  /*
+   * CORRECCIÓN PRINCIPAL:
+   * Los formularios de reserva guardan TODO en una sola colección "reservas"
+   * usando el campo "espacio" para distinguir (ej: "Piscina & Jacuzzi", "Gimnasio").
+   * El código anterior buscaba en colecciones separadas que no existen.
+   *
+   * También se corrige el campo de estado: los formularios usan "estado",
+   * no "estadoReserva".
+   */
+  window._fbGetReservas = async (torre, apto) => {
+    const q    = query(
+      collection(db, 'reservas'),
+      where('torre', '==', String(torre)),
+      where('apto',  '==', String(apto))
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({
+      id:        d.id,
+      coleccion: 'reservas',   // siempre la misma colección
+      ...d.data()
+    }));
+  };
+
+  window._fbCancelarReserva = async (coleccion, docId) => {
+    // Actualizamos el campo "estado" (no "estadoReserva") para ser
+    // consistentes con cómo los formularios guardan el dato
+    await updateDoc(doc(db, coleccion, docId), {
+      estado:           'cancelada',
+      fechaCancelacion: Timestamp.now(),
+      canceladaPor:     'residente',
+    });
+  };
+</script>
+
+<script>
+  /* ── Mapeo de espacios ────────────────────────────────────────────── */
+  // Los formularios guardan el nombre del espacio como cadena exacta en el campo "espacio"
+  // Mapeamos esa cadena a icono y etiqueta legible
+  function getSpaceIcon(espacio) {
+    const e = (espacio || '').toLowerCase();
+    if (e.includes('piscina') || e.includes('jacuzzi')) return '🏊';
+    if (e.includes('gimnasio') || e.includes('gym'))    return '🏋️';
+    if (e.includes('bbq') || e.includes('parrilla'))    return '🍖';
+    if (e.includes('sal') || e.includes('social'))      return '🎉';
+    return '📅';
+  }
+
+  function getSpaceLabel(espacio) {
+    return espacio || 'Zona común';
+  }
+
+  /* ── State ──────────────────────────────────────────────────────── */
+  let allReservas  = [];
+  let activeFilter = 'todas';
+  let pendingCancel = null;
+
+  /* ── Session / URL ──────────────────────────────────────────────── */
+  function getParams() {
+    try {
+      const s = JSON.parse(sessionStorage.getItem('residente_pco3') || '{}');
+      if (s.torre) return s;
+    } catch (_) {}
+    const p = new URLSearchParams(window.location.search);
+    return { torre:p.get('torre')||'', apto:p.get('apto')||'', nombre:p.get('nombre')||'', tel:p.get('tel')||'' };
+  }
+
+  function getPortalURL() {
+    const p = getParams();
+    if (p.torre) {
+      const qs = new URLSearchParams({ torre:p.torre, apto:p.apto||'', tel:p.tel||'', nombre:p.nombre||'' });
+      return `https://my.innovasync.org/v2/preview/Vd2uWSeIIuPxUX95nQaO?${qs}`;
+    }
+    return 'https://my.innovasync.org/v2/preview/Vd2uWSeIIuPxUX95nQaO';
+  }
+
+  function volver(e) { e.preventDefault(); window.location.href = getPortalURL(); }
+
+  /* ── Reglas de cancelación ──────────────────────────────────────── */
+  function canCancel(r) {
+    // Soporta "estado" (nuevo) y "estadoReserva" (legacy)
+    const est = (r.estado || r.estadoReserva || '').toLowerCase();
+    if (est === 'cancelada' || est === 'completada') return false;
+    const fechaStr = r.fecha || r.fechaReserva || '';
+    if (!fechaStr) return false;
+    const [y, m, d] = fechaStr.split('-').map(Number);
+    if (!y) return false;
+    const deadline = new Date(y, m - 1, d - 1, 12, 0, 0);
+    return Date.now() < deadline.getTime();
+  }
+
+  function cancelDeadlineText(r) {
+    const fechaStr = r.fecha || r.fechaReserva || '';
+    if (!fechaStr) return '';
+    const [y, m, d] = fechaStr.split('-').map(Number);
+    const deadline  = new Date(y, m - 1, d - 1, 12, 0, 0);
+    return `Plazo para cancelar: ${deadline.toLocaleDateString('es-CO',{weekday:'long',day:'2-digit',month:'long'})} a las 12:00 m.`;
+  }
+
+  /* ── Estado calculado ───────────────────────────────────────────── */
+  function computeStatus(r) {
+    // Soporta "estado" (nuevo) y "estadoReserva" (legacy)
+    const stored = (r.estado || r.estadoReserva || '').toLowerCase();
+    if (stored === 'cancelada') return 'cancelada';
+    const fechaStr = r.fecha || r.fechaReserva || '';
+    if (fechaStr) {
+      const [y, m, d] = fechaStr.split('-').map(Number);
+      const resDate   = new Date(y, m - 1, d, 23, 59, 59);
+      if (Date.now() > resDate.getTime()) return 'completada';
+    }
+    return stored || 'activa';
+  }
+
+  /* ── Helpers ────────────────────────────────────────────────────── */
+  function fmtFecha(str) {
+    if (!str) return '—';
+    const [y, m, d] = str.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('es-CO',{weekday:'short',day:'2-digit',month:'long',year:'numeric'});
+  }
+
+  function fmtFranja(f) {
+    const map = { manana:'Mañana', tarde:'Tarde', noche:'Noche', 'dia-completo':'Día Completo', morning:'Mañana', afternoon:'Tarde', por_confirmar:'Por confirmar' };
+    return map[f] || f || '—';
+  }
+
+  function sortReservas(list) {
+    return [...list].sort((a, b) => {
+      const fa = a.fecha || a.fechaReserva || '';
+      const fb = b.fecha || b.fechaReserva || '';
+      return fb.localeCompare(fa);
+    });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ── Render ─────────────────────────────────────────────────────── */
+  function renderCards(list) {
+    const container = document.getElementById('content');
+
+    if (list.length === 0) {
+      container.innerHTML = `
+        <div class="state-msg">
+          <div class="icon">📋</div>
+          <h3>Sin reservas</h3>
+          <p>No tienes reservas${activeFilter !== 'todas' ? ' en esta categoría' : ''} registradas aún.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = sortReservas(list).map(r => {
+      const status  = computeStatus(r);
+      const icon    = getSpaceIcon(r.espacio);
+      const label   = getSpaceLabel(r.espacio);
+      const fecha   = r.fecha || r.fechaReserva || '';
+      const franja  = fmtFranja(r.franja || r.horario || '');
+      const personas = r.personas_total || r.personas || '';
+
+      const badgeText = { activa:'Activa', pendiente:'Pago pendiente', cancelada:'Cancelada', completada:'Completada' }[status] || status;
+      const canc   = canCancel(r);
+      const dlText = canc ? cancelDeadlineText(r) : '';
+      const pago   = (r.estadoPago || '').toLowerCase();
+
+      let footerHtml = '';
+      if (canc) {
+        footerHtml = `
+          <div class="res-footer">
+            <button class="btn-cancel"
+              onclick="promptCancel('${r.coleccion}','${r.id}','${escHtml(label)}','${fecha}','${escHtml(franja)}')">
+              Cancelar Reserva
+            </button>
+            <div class="cancel-note">${dlText}</div>
+          </div>`;
+      } else if (pago === 'pendiente' && status !== 'cancelada' && status !== 'completada') {
+        footerHtml = `
+          <div class="res-footer">
+            <div class="pago-note">⏳ Pago pendiente de validación por la administración.</div>
+          </div>`;
+      }
+
+      // Invitados (los formularios guardan el array en "invitados")
+      const invitadosHtml = (r.invitados && r.invitados.length)
+        ? `<div class="detail-item" style="grid-column:1/-1">Invitados: <span>${r.invitados.map(i=>`${escHtml(i.nombre)} ${escHtml(i.apellido)}`).join(', ')}</span></div>`
+        : '';
+
+      return `
+      <div class="res-card">
+        <div class="res-stripe stripe-${status}"></div>
+        <div class="res-body">
+          <div class="res-top">
+            <div class="space-icon">${icon}</div>
+            <div class="res-info">
+              <div class="res-space">${escHtml(label)}</div>
+              <div class="res-title">${fmtFecha(fecha)}</div>
+            </div>
+            <div class="status-badge badge-${status}">${badgeText}</div>
+          </div>
+          <div class="res-details">
+            <div class="detail-item">Franja: <span>${escHtml(franja)}</span></div>
+            ${personas ? `<div class="detail-item">Personas: <span>${escHtml(String(personas))}</span></div>` : '<div></div>'}
+            ${r.nombreEPS ? `<div class="detail-item">EPS: <span>${escHtml(r.nombreEPS)}</span></div>` : ''}
+            ${invitadosHtml}
+          </div>
+          ${footerHtml}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ── Filter ─────────────────────────────────────────────────────── */
+  function filtrar(el) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    activeFilter = el.dataset.f;
+    const filtered = activeFilter === 'todas'
+      ? allReservas
+      : allReservas.filter(r => computeStatus(r) === activeFilter);
+    renderCards(filtered);
+  }
+
+  /* ── Cancel modal ───────────────────────────────────────────────── */
+  function promptCancel(coleccion, id, spaceLabel, fecha, franja) {
+    pendingCancel = { coleccion, id };
+    document.getElementById('cancelModalBody').innerHTML =
+      `¿Cancelar la reserva de <strong>${escHtml(spaceLabel)}</strong> para el <strong>${fmtFecha(fecha)}</strong>`
+      + (franja ? `, franja <strong>${escHtml(franja)}</strong>` : '') + `?<br><br>Esta acción no se puede deshacer.`;
+    document.getElementById('cancelModal').classList.add('open');
+  }
+
+  function closeCancelModal() {
+    document.getElementById('cancelModal').classList.remove('open');
+    pendingCancel = null;
+  }
+
+  async function executeCancellation() {
+    if (!pendingCancel) return;
+    const { coleccion, id } = pendingCancel;
+    const btn = document.querySelector('.btn-confirm-cancel');
+    btn.textContent = 'Cancelando…'; btn.disabled = true;
+    try {
+      await window._fbCancelarReserva(coleccion, id);
+      const idx = allReservas.findIndex(r => r.id === id && r.coleccion === coleccion);
+      if (idx !== -1) {
+        allReservas[idx].estado = 'cancelada';
+        allReservas[idx].estadoReserva = 'cancelada'; // compatibilidad legacy
+      }
+      closeCancelModal();
+      const filtered = activeFilter === 'todas' ? allReservas : allReservas.filter(r => computeStatus(r) === activeFilter);
+      renderCards(filtered);
+    } catch (e) {
+      console.error(e);
+      alert('Ocurrió un error al cancelar. Intenta de nuevo.');
+    } finally {
+      btn.textContent = 'Sí, cancelar'; btn.disabled = false;
+    }
+  }
+
+  /* ── Load ───────────────────────────────────────────────────────── */
+  async function load() {
+    const p = getParams();
+    if (p.nombre) document.getElementById('headerSub').textContent = `${p.nombre} · Torre ${p.torre} Apto ${p.apto}`;
+    const url = getPortalURL();
+    document.getElementById('btnBack').href   = url;
+    document.getElementById('btnPortal').href = url;
+
+    if (!p.torre || !p.apto) {
+      document.getElementById('content').innerHTML = `
+        <div class="state-msg">
+          <div class="icon">🔒</div>
+          <h3>Sesión no encontrada</h3>
+          <p>Ingresa desde el portal para ver tus reservas.</p>
+        </div>`;
+      return;
+    }
+
+    // Esperar Firebase
+    let n = 0;
+    while (!window._fbGetReservas && n++ < 60) await new Promise(r => setTimeout(r, 100));
+
+    if (!window._fbGetReservas) {
+      document.getElementById('content').innerHTML = `
+        <div class="state-msg">
+          <div class="icon">⚠️</div>
+          <h3>Error de conexión</h3>
+          <p>No se pudo conectar con el servidor. Intenta de nuevo.</p>
+        </div>`;
+      return;
+    }
+
+    try {
+      allReservas = await window._fbGetReservas(p.torre, p.apto);
+      renderCards(allReservas);
+    } catch (e) {
+      console.error(e);
+      document.getElementById('content').innerHTML = `
+        <div class="state-msg">
+          <div class="icon">⚠️</div>
+          <h3>Error al cargar</h3>
+          <p>Ocurrió un problema al obtener tus reservas. Intenta más tarde.</p>
+        </div>`;
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

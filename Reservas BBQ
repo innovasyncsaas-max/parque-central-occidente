@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Reserva — BBQ</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f7;--white:#fff;--text:#0f172a;--text2:#475569;--border:#cbd5e1;--accent:#1e3a5f;--accent2:#2563eb;--accent-light:#dbeafe;--gbtn:linear-gradient(135deg,#1e3a5f,#2563eb);--red:#dc2626;--red-light:#fef2f2;--yellow:#f59e0b;--yellow-light:#fffbeb;--green:#16a34a;--green-light:#f0fdf4;--font:'DM Sans',sans-serif;--fd:'DM Serif Display',serif}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:100vh}
+.progress-wrap{position:sticky;top:0;z-index:100;background:var(--accent);padding:14px 20px;box-shadow:0 4px 20px rgba(15,23,42,.3)}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.progress-title{font-size:13px;font-weight:600;color:rgba(255,255,255,.9)}
+.progress-count{font-size:12px;color:rgba(255,255,255,.6)}
+.progress-bar{height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#60a5fa,#3b82f6,#2563eb);border-radius:2px;transition:width .4s ease}
+.container{max-width:520px;margin:0 auto;padding:24px 16px 40px}
+.step{display:none}.step.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.step-header{margin-bottom:24px}
+.step-icon{width:52px;height:52px;background:var(--gbtn);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.step-title{font-family:var(--fd);font-size:26px;color:var(--accent);margin-bottom:6px}
+.step-sub{font-size:14px;color:var(--text2);line-height:1.6}
+.card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.card-title{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.field{margin-bottom:16px}.field:last-child{margin-bottom:0}
+.field-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.field-label span{color:var(--red);margin-left:2px}
+.field-input{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:15px;color:var(--text);outline:none;transition:border-color .2s;appearance:none;-webkit-appearance:none}
+.field-input:focus{border-color:var(--accent2);background:var(--white)}
+select.field-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23475569' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.reglamento-box{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px;max-height:300px;overflow-y:auto}
+.reglamento-section{font-size:13px;font-weight:700;color:var(--accent);margin:12px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.reglamento-section:first-child{margin-top:0}
+.reglamento-item{font-size:12.5px;color:var(--text2);line-height:1.7;padding:2px 0 2px 18px;position:relative}
+.reglamento-item::before{content:'•';position:absolute;left:4px;color:var(--accent2);font-weight:700}
+.checkbox-single{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.checkbox-single input[type="checkbox"]{width:20px;height:20px;flex-shrink:0;accent-color:var(--accent2);margin-top:2px}
+.checkbox-label{font-size:13px;font-weight:600;color:var(--accent);line-height:1.4}
+.radio-group{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.radio-btn{padding:12px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);background:var(--bg);transition:all .2s;user-select:none}
+.radio-btn.selected{border-color:var(--accent2);background:var(--accent-light);color:var(--accent)}
+.radio-btn.disabled-slot{opacity:.45;cursor:not-allowed;background:#f8fafc}
+.info-box{background:var(--accent-light);border:1.5px solid var(--accent2);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.info-box-title{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.info-box-text{font-size:12px;color:var(--accent);line-height:1.6}
+.warn-box{background:var(--yellow-light);border:1.5px solid var(--yellow);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.warn-box-title{font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.warn-box-text{font-size:12px;color:#78350f;line-height:1.6}
+.pago-box{background:var(--yellow-light);border:2px solid var(--yellow);border-radius:14px;padding:20px;margin-bottom:16px;text-align:center}
+.pago-icon{font-size:32px;margin-bottom:8px}
+.pago-title{font-size:15px;font-weight:700;color:#92400e;margin-bottom:6px}
+.pago-text{font-size:12px;color:#78350f;line-height:1.6}
+.resumen-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.resumen-row:last-child{border-bottom:none}
+.resumen-label{color:var(--text2);font-weight:500}
+.resumen-val{color:var(--text);font-weight:700}
+.btn-row{display:flex;gap:10px;margin-top:24px}
+.btn-next{flex:1;padding:15px;background:var(--gbtn);border:none;border-radius:12px;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.btn-next:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(37,99,235,.4)}
+.btn-back{padding:15px 20px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;color:var(--text2);font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-back:hover{border-color:var(--accent2);color:var(--accent)}
+.error-msg{background:var(--red-light);border:1px solid var(--red);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-top:6px;display:none}
+.error-msg.show{display:block}
+.success-screen{text-align:center;padding:40px 20px}
+.success-icon{width:80px;height:80px;background:var(--gbtn);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;animation:popIn .4s ease;box-shadow:0 8px 24px rgba(37,99,235,.3)}
+@keyframes popIn{0%{transform:scale(.5);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.success-title{font-family:var(--fd);font-size:26px;color:var(--accent);margin-bottom:10px}
+.success-text{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:24px}
+.success-pending{background:var(--yellow-light);border:1.5px solid var(--yellow);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left}
+.success-pending-title{font-size:13px;font-weight:700;color:#92400e;margin-bottom:6px}
+.success-pending-text{font-size:12px;color:#78350f;line-height:1.6}
+.btn-wa-success{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:12px;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(22,163,74,.3);transition:all .2s}
+.btn-wa-success:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(22,163,74,.4)}
+.btn-portal{display:block;margin-top:12px;padding:13px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;color:var(--text2);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;text-align:center}
+.loading-overlay{position:fixed;inset:0;background:rgba(238,242,247,.92);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:1000}
+.loading-overlay.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--text2);font-weight:500}
+.slot-loading{text-align:center;padding:16px;font-size:13px;color:var(--text2)}
+.slot-spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
+</style>
+</head>
+<body>
+
+<div class="progress-wrap">
+  <div class="progress-top">
+    <span class="progress-title" id="progress-title">Verificación</span>
+    <span class="progress-count" id="progress-count">1 de 4</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:25%"></div></div>
+</div>
+
+<div class="loading-overlay" id="loading"><div class="spinner"></div><div class="loading-text">Registrando reserva...</div></div>
+
+<div class="container">
+
+<!-- PASO 1: VERIFICACIÓN / DATOS -->
+<div class="step active" id="step-1">
+  <div class="step-header">
+    <div class="step-icon">🔥</div>
+    <div class="step-title">Reserva de BBQ</div>
+    <div class="step-sub">Confirma tus datos de residente para continuar.</div>
+  </div>
+  <div class="card">
+    <div class="field">
+      <label class="field-label">Nombre completo <span>*</span></label>
+      <input type="text" class="field-input" id="s1-nombre" placeholder="Nombre y apellidos">
+    </div>
+    <div class="field">
+      <label class="field-label">Torre <span>*</span></label>
+      <select class="field-input" id="s1-torre">
+        <option value="">-- Seleccionar --</option>
+        <option value="1">Torre 1</option><option value="2">Torre 2</option>
+        <option value="3">Torre 3</option><option value="4">Torre 4</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="field-label">Apartamento <span>*</span></label>
+      <input type="text" class="field-input" id="s1-apto" placeholder="Ej: 301">
+    </div>
+    <div class="field">
+      <label class="field-label">Teléfono <span>*</span></label>
+      <input type="tel" class="field-input" id="s1-tel" placeholder="Ej: 3001234567" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')">
+    </div>
+  </div>
+  <div id="mora-block" style="display:none">
+    <div style="background:var(--red-light);border:2px solid var(--red);border-radius:14px;padding:20px;text-align:center">
+      <div style="font-size:36px;margin-bottom:10px">🚫</div>
+      <div style="font-size:15px;font-weight:700;color:var(--red);margin-bottom:6px">Reservas Suspendidas</div>
+      <div style="font-size:13px;color:#7f1d1d;line-height:1.6">Tu apartamento tiene una obligación pendiente.<br>Comunícate con administración para regularizar.</div>
+    </div>
+  </div>
+  <div class="error-msg" id="err-1">Por favor completa todos los campos.</div>
+  <div class="btn-row"><button class="btn-next" onclick="step1Next()">Continuar →</button></div>
+</div>
+
+<!-- PASO 2: REGLAMENTO -->
+<div class="step" id="step-2">
+  <div class="step-header">
+    <div class="step-icon">📋</div>
+    <div class="step-title">Reglamento</div>
+    <div class="step-sub">Lee las normas de uso del BBQ antes de reservar.</div>
+  </div>
+  <div class="reglamento-box">
+    <div class="reglamento-section">🔥 Uso del BBQ</div>
+    <div class="reglamento-item">Uso exclusivo para residentes y propietarios registrados</div>
+    <div class="reglamento-item">Reserva mínima con 24 horas de anticipación</div>
+    <div class="reglamento-item">El pago debe realizarse antes del uso del espacio</div>
+    <div class="reglamento-item">Aforo máximo: 20 personas</div>
+    <div class="reglamento-item">Horario: disponible según franjas asignadas</div>
+    <div class="reglamento-item">El espacio debe entregarse limpio al finalizar</div>
+    <div class="reglamento-item">Prohibido el uso de elementos de vidrio fuera del área techada</div>
+    <div class="reglamento-item">No se permite música a alto volumen después de las 10pm</div>
+    <div class="reglamento-item">El residente es responsable por daños causados por sus invitados</div>
+    <div class="reglamento-item">No se permite el ingreso de animales al área del BBQ</div>
+    <div class="reglamento-item">El incumplimiento puede ocasionar restricción de futuras reservas</div>
+    <div class="reglamento-section">🗑 Limpieza post-evento</div>
+    <div class="reglamento-item">Retirar todos los residuos al finalizar el evento</div>
+    <div class="reglamento-item">Limpiar la parrilla y utensilios usados</div>
+    <div class="reglamento-item">Dejar el área en las mismas condiciones en que fue recibida</div>
+    <div class="reglamento-item">Reportar cualquier daño o novedad a administración</div>
+  </div>
+  <div class="card">
+    <label class="checkbox-single">
+      <input type="checkbox" id="acepta-reglamento">
+      <span class="checkbox-label">He leído y acepto el reglamento de uso del BBQ. Me comprometo a entregar el espacio en las condiciones acordadas.</span>
+    </label>
+  </div>
+  <div class="error-msg" id="err-2">Debes aceptar el reglamento para continuar.</div>
+  <div class="btn-row">
+    <button class="btn-back" onclick="goStep('1')">← Atrás</button>
+    <button class="btn-next" onclick="step2Next()">Continuar →</button>
+  </div>
+</div>
+
+<!-- PASO 3: FECHA Y FRANJA -->
+<div class="step" id="step-3">
+  <div class="step-header">
+    <div class="step-icon">📅</div>
+    <div class="step-title">Fecha y Horario</div>
+    <div class="step-sub">Selecciona el día y la franja horaria disponible.</div>
+  </div>
+
+  <div class="pago-box">
+    <div class="pago-icon">💳</div>
+    <div class="pago-title">Espacio con costo</div>
+    <div class="pago-text">La reserva quedará en estado <strong>PENDIENTE</strong> hasta que administración valide el pago. Recibirás confirmación por WhatsApp.</div>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label class="field-label">Fecha de la reserva <span>*</span></label>
+      <input type="date" class="field-input" id="s3-fecha" onchange="cargarFranjas()">
+    </div>
+    <div class="field">
+      <label class="field-label">Franja horaria <span>*</span></label>
+      <div id="franjas-wrap">
+        <div class="slot-loading" id="slot-hint" style="display:none">
+          <div class="slot-spinner"></div>Verificando disponibilidad...
+        </div>
+        <div class="radio-group" id="franjas-grid" style="display:none">
+          <div class="radio-btn" id="slot-manana" onclick="selectFranja('mañana',this)">🌅 Mañana<br><span style="font-size:10px;font-weight:400">8am – 12pm</span></div>
+          <div class="radio-btn" id="slot-tarde"  onclick="selectFranja('tarde',this)">☀️ Tarde<br><span style="font-size:10px;font-weight:400">1pm – 6pm</span></div>
+          <div class="radio-btn" id="slot-noche"  onclick="selectFranja('noche',this)" style="grid-column:1/-1">🌙 Noche<br><span style="font-size:10px;font-weight:400">7pm – 10pm</span></div>
+        </div>
+        <div id="franjas-empty" style="display:none;background:var(--red-light);border:1px solid var(--red);border-radius:10px;padding:14px;text-align:center;font-size:13px;color:var(--red);font-weight:600">
+          ❌ No hay franjas disponibles para esta fecha. Elige otro día.
+        </div>
+        <p style="font-size:12px;color:var(--text2);margin-top:6px" id="franjas-placeholder">Selecciona una fecha para ver disponibilidad</p>
+      </div>
+      <input type="hidden" id="s3-franja">
+    </div>
+    <div class="field">
+      <label class="field-label">Cantidad de personas <span>*</span></label>
+      <select class="field-input" id="s3-personas">
+        <option value="">-- Seleccionar --</option>
+        <option value="1">1 persona</option><option value="2">2 personas</option>
+        <option value="3">3 personas</option><option value="4">4 personas</option>
+        <option value="5">5 personas</option><option value="6">6 personas</option>
+        <option value="7">7 personas</option><option value="8">8 personas</option>
+        <option value="9">9 personas</option><option value="10">10 personas</option>
+        <option value="11">11 personas</option><option value="12">12 personas</option>
+        <option value="13">13 personas</option><option value="14">14 personas</option>
+        <option value="15">15 personas</option><option value="16">16 personas</option>
+        <option value="17">17 personas</option><option value="18">18 personas</option>
+        <option value="19">19 personas</option><option value="20">20 personas</option>
+      </select>
+    </div>
+  </div>
+  <div class="error-msg" id="err-3">Completa fecha, franja y cantidad de personas.</div>
+  <div class="btn-row">
+    <button class="btn-back" onclick="goStep('2')">← Atrás</button>
+    <button class="btn-next" onclick="step3Next()">Ver resumen →</button>
+  </div>
+</div>
+
+<!-- PASO 4: CONFIRMACIÓN -->
+<div class="step" id="step-4">
+  <div class="step-header">
+    <div class="step-icon">✅</div>
+    <div class="step-title">Confirmar Reserva</div>
+    <div class="step-sub">Revisa los datos antes de enviar.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Resumen de tu reserva</div>
+    <div id="resumen-contenido"></div>
+  </div>
+  <div class="warn-box">
+    <div class="warn-box-title">⚠️ Recuerda</div>
+    <div class="warn-box-text">Tu reserva quedará en estado <strong>PENDIENTE</strong>. Administración te confirmará por WhatsApp una vez valide el pago. Solo entonces estará activa.</div>
+  </div>
+  <div class="error-msg" id="err-4">Error al registrar. Intenta de nuevo.</div>
+  <div class="btn-row">
+    <button class="btn-back" onclick="goStep('3')">← Atrás</button>
+    <button class="btn-next" onclick="submitForm()">📤 Enviar Reserva</button>
+  </div>
+</div>
+
+<!-- ÉXITO -->
+<div class="step" id="step-success">
+  <div class="success-screen">
+    <div class="success-icon">🔥</div>
+    <div class="success-title">¡Reserva enviada!</div>
+    <div class="success-pending">
+      <div class="success-pending-title">⏳ Estado: Pendiente de pago</div>
+      <div class="success-pending-text">Administración revisará tu solicitud y te confirmará por WhatsApp una vez valide el pago. Solo entonces la reserva quedará activa.</div>
+    </div>
+    <div class="success-text" id="success-detalle"></div>
+    <a id="btn-wa-confirm" href="#" target="_blank" class="btn-wa-success">💬 Notificar a Administración</a>
+    <a href="https://my.innovasync.org/v2/preview/Vd2uWSeIIuPxUX95nQaO" class="btn-portal">← Volver al Portal</a>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- FIREBASE -->
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import{getFirestore,collection,addDoc,getDocs,query,where,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+const fc={apiKey:"AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",authDomain:"registro-residentes.firebaseapp.com",projectId:"registro-residentes",storageBucket:"registro-residentes.firebasestorage.app",messagingSenderId:"646123326163",appId:"1:646123326163:web:8b35b955e7b3692536a226"};
+const app=initializeApp(fc);
+const db=getFirestore(app);
+window.__db=db;
+
+window._checkMora=async(torre,apto)=>{
+  const q=query(collection(db,'mora'),where('torre','==',String(torre).trim()),where('apto','==',String(apto).trim()));
+  const snap=await getDocs(q);
+  if(snap.empty)return false;
+  return snap.docs[0].data().enMora===true;
+};
+
+window._getFranjasOcupadas=async(fecha)=>{
+  const q=query(collection(db,'reservas-bbq'),where('fecha','==',fecha),where('estadoReserva','==','activa'));
+  const snap=await getDocs(q);
+  return snap.docs.map(d=>d.data().franja);
+};
+
+window._saveReservaBBQ=async(data)=>{
+  const ref=await addDoc(collection(db,'reservas-bbq'),{...data,fechaRegistro:serverTimestamp()});
+  return ref.id;
+};
+</script>
+
+<script>
+const WA_ADMIN='573015436576'; // Actualizar con número real
+
+// ── Leer params del portal ────────────────────────────────────────────────
+const params=new URLSearchParams(window.location.search);
+if(params.get('nombre'))document.getElementById('s1-nombre').value=params.get('nombre');
+if(params.get('torre')) document.getElementById('s1-torre').value =params.get('torre');
+if(params.get('apto'))  document.getElementById('s1-apto').value  =params.get('apto');
+if(params.get('tel'))   document.getElementById('s1-tel').value   =params.get('tel');
+
+// Bloquear fechas pasadas y mismo día después de las 12pm
+(()=>{
+  const hoy=new Date();
+  const limite=new Date(hoy);
+  // Si ya pasó el mediodía, la fecha mínima es mañana
+  if(hoy.getHours()>=12) limite.setDate(limite.getDate()+1);
+  // Siempre mínimo mañana para reserva con 24h anticipación
+  limite.setDate(limite.getDate()+1);
+  document.getElementById('s3-fecha').min=limite.toISOString().split('T')[0];
+})();
+
+// ── Progreso ──────────────────────────────────────────────────────────────
+const STEPS={1:'Verificación',2:'Reglamento',3:'Fecha y Horario',4:'Confirmación'};
+function updateProgress(n){
+  document.getElementById('progress-fill').style.width=(n/4*100)+'%';
+  document.getElementById('progress-title').textContent=STEPS[n]||'';
+  document.getElementById('progress-count').textContent=n+' de 4';
+}
+function goStep(n){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step-'+n).classList.add('active');
+  updateProgress(parseInt(n));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function v(id){const e=document.getElementById(id);return e?e.value.trim():'';}
+function showErr(id){const e=document.getElementById(id);if(e){e.classList.add('show');setTimeout(()=>e.classList.remove('show'),5000);}}
+
+// ── PASO 1 ────────────────────────────────────────────────────────────────
+async function step1Next(){
+  const nombre=v('s1-nombre'),torre=v('s1-torre'),apto=v('s1-apto'),tel=v('s1-tel');
+  if(!nombre||!torre||!apto||tel.length<10){showErr('err-1');return;}
+  document.getElementById('mora-block').style.display='none';
+  document.getElementById('err-1').classList.remove('show');
+  // Verificar mora
+  try{
+    const enMora=await window._checkMora(torre,apto);
+    if(enMora){document.getElementById('mora-block').style.display='block';return;}
+  }catch(e){console.warn('Mora check error',e);}
+  goStep('2');
+}
+
+// ── PASO 2 ────────────────────────────────────────────────────────────────
+function step2Next(){
+  if(!document.getElementById('acepta-reglamento').checked){showErr('err-2');return;}
+  goStep('3');
+}
+
+// ── PASO 3: disponibilidad ────────────────────────────────────────────────
+async function cargarFranjas(){
+  const fecha=v('s3-fecha');
+  if(!fecha)return;
+  document.getElementById('s3-franja').value='';
+  document.getElementById('franjas-placeholder').style.display='none';
+  document.getElementById('franjas-grid').style.display='none';
+  document.getElementById('franjas-empty').style.display='none';
+  document.getElementById('slot-hint').style.display='block';
+  // Resetear selección
+  ['slot-manana','slot-tarde','slot-noche'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.remove('selected','disabled-slot');
+    el.onclick=el._origOnclick||el.onclick;
+  });
+  try{
+    const ocupadas=await window._getFranjasOcupadas(fecha);
+    document.getElementById('slot-hint').style.display='none';
+    const todasOcupadas=['mañana','tarde','noche'].every(f=>ocupadas.includes(f));
+    if(todasOcupadas){
+      document.getElementById('franjas-empty').style.display='block';
+      return;
+    }
+    document.getElementById('franjas-grid').style.display='grid';
+    ['mañana','tarde','noche'].forEach(franja=>{
+      const id='slot-'+(franja==='mañana'?'manana':franja==='tarde'?'tarde':'noche');
+      const el=document.getElementById(id);
+      if(ocupadas.includes(franja)){
+        el.classList.add('disabled-slot');
+        el.innerHTML=el.innerHTML+'<br><span style="font-size:10px;color:var(--red);font-weight:700">No disponible</span>';
+        el.onclick=null;
+      }
+    });
+  }catch(e){
+    document.getElementById('slot-hint').style.display='none';
+    document.getElementById('franjas-grid').style.display='grid';
+    console.warn('Error cargando franjas',e);
+  }
+}
+
+function selectFranja(val,btn){
+  document.getElementById('s3-franja').value=val;
+  ['slot-manana','slot-tarde','slot-noche'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el.classList.contains('disabled-slot'))el.classList.remove('selected');
+  });
+  btn.classList.add('selected');
+}
+
+function step3Next(){
+  const fecha=v('s3-fecha'),franja=v('s3-franja'),personas=v('s3-personas');
+  if(!fecha||!franja||!personas){showErr('err-3');return;}
+  buildResumen();
+  goStep('4');
+}
+
+// ── PASO 4 ────────────────────────────────────────────────────────────────
+const FRANJA_LABELS={mañana:'🌅 Mañana (8am–12pm)',tarde:'☀️ Tarde (1pm–6pm)',noche:'🌙 Noche (7pm–10pm)'};
+
+function buildResumen(){
+  const fecha=new Date(v('s3-fecha')+'T12:00:00').toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('resumen-contenido').innerHTML=`
+    <div class="resumen-row"><span class="resumen-label">👤 Residente</span><span class="resumen-val">${v('s1-nombre')}</span></div>
+    <div class="resumen-row"><span class="resumen-label">🏢 Apartamento</span><span class="resumen-val">Torre ${v('s1-torre')} — Apto ${v('s1-apto')}</span></div>
+    <div class="resumen-row"><span class="resumen-label">📅 Fecha</span><span class="resumen-val" style="text-transform:capitalize">${fecha}</span></div>
+    <div class="resumen-row"><span class="resumen-label">⏰ Franja</span><span class="resumen-val">${FRANJA_LABELS[v('s3-franja')]||v('s3-franja')}</span></div>
+    <div class="resumen-row"><span class="resumen-label">👥 Personas</span><span class="resumen-val">${v('s3-personas')}</span></div>
+    <div class="resumen-row"><span class="resumen-label">💳 Estado pago</span><span class="resumen-val" style="color:var(--yellow)">⏳ Pendiente</span></div>
+  `;
+}
+
+// ── ENVÍO ─────────────────────────────────────────────────────────────────
+async function submitForm(){
+  document.getElementById('loading').classList.add('show');
+  const data={
+    espacio:'BBQ',
+    nombreResidente:v('s1-nombre'),
+    torre:v('s1-torre'),
+    apto:v('s1-apto'),
+    telResidente:v('s1-tel'),
+    fecha:v('s3-fecha'),
+    franja:v('s3-franja'),
+    cantidadPersonas:v('s3-personas'),
+    estadoPago:'pendiente',
+    estadoReserva:'activa',
+    aceptaReglamento:true
+  };
+  try{
+    await window._saveReservaBBQ(data);
+  }catch(e){
+    console.warn('Firebase error (non-blocking):',e);
+  }
+  document.getElementById('loading').classList.remove('show');
+
+  // Pantalla de éxito
+  const fecha=new Date(data.fecha+'T12:00:00').toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('success-detalle').innerHTML=
+    `<strong>📅 ${fecha}</strong><br>${FRANJA_LABELS[data.franja]||data.franja}<br>👥 ${data.cantidadPersonas} persona(s)`;
+
+  const waMsg=encodeURIComponent(
+    `*Reserva BBQ — Pendiente de validación*\n`+
+    `👤 ${data.nombreResidente} · Torre ${data.torre} Apto ${data.apto}\n`+
+    `📱 ${data.telResidente}\n`+
+    `📅 ${fecha} — ${FRANJA_LABELS[data.franja]||data.franja}\n`+
+    `👥 ${data.cantidadPersonas} persona(s)\n\n`+
+    `Por favor confirmar disponibilidad de pago para activar la reserva.`
+  );
+  document.getElementById('btn-wa-confirm').href=`https://wa.me/${WA_ADMIN}?text=${waMsg}`;
+
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step-success').classList.add('active');
+  document.querySelector('.progress-wrap').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+updateProgress(1);
+</script>
+</body>
+</html>

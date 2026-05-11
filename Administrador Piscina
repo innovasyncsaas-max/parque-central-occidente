@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Admin Piscina | PCO3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1e3a5f;
+  --primary-light: #2a4f82;
+  --blue: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg: #f0f4f8;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(30,58,95,.10);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; padding-bottom: 80px;
+  -webkit-tap-highlight-color: transparent;
+}
+.header {
+  background: var(--primary); color: #fff;
+  padding: 16px 20px 14px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.header h1 { font-size: 17px; font-weight: 600; }
+.header-sub { font-size: 12px; opacity: .75; margin-top: 2px; }
+.header-row { display: flex; align-items: center; justify-content: space-between; }
+
+.nav-bottom {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--card); border-top: 1px solid var(--border);
+  display: flex; box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 8px 2px 6px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 10px;
+  color: var(--muted); transition: color .2s; position: relative;
+}
+.nav-btn.active { color: var(--primary); }
+.nav-btn svg { width: 22px; height: 22px; margin-bottom: 3px; stroke-width: 1.8; }
+.nav-badge {
+  position: absolute; top: 6px; right: calc(50% - 16px);
+  background: var(--danger); color: #fff;
+  font-size: 9px; font-weight: 700; width: 16px; height: 16px;
+  border-radius: 50%; display: none; align-items: center; justify-content: center;
+}
+.nav-badge.show { display: flex; }
+
+.section { display: none; padding: 16px; }
+.section.active { display: block; }
+
+.card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden;
+}
+.card-header {
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-header-left { display: flex; align-items: center; gap: 8px; }
+.card-header h2 { font-size: 14px; font-weight: 600; }
+.card-body { padding: 14px 16px; }
+
+/* KPI GRID */
+.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.kpi-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 14px; box-shadow: var(--shadow);
+}
+.kpi-num { font-size: 26px; font-weight: 700; color: var(--primary); line-height: 1; }
+.kpi-label { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* NOVEDADES */
+.novedad-card {
+  border: 1.5px solid var(--border); border-radius: 10px;
+  margin-bottom: 10px; overflow: hidden;
+}
+.novedad-card.critico { border-color: var(--danger); }
+.novedad-card.medio   { border-color: var(--warning); }
+.novedad-card.bajo    { border-color: var(--success); }
+.novedad-header {
+  padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+}
+.novedad-header.critico { background: #fef2f2; }
+.novedad-header.medio   { background: #fffbeb; }
+.novedad-header.bajo    { background: #f0fdf4; }
+.nov-sev {
+  font-size: 10px; font-weight: 700; letter-spacing: .6px;
+  padding: 3px 8px; border-radius: 20px;
+}
+.nov-sev.critico { background: #fee2e2; color: #991b1b; }
+.nov-sev.medio   { background: #fef3c7; color: #92400e; }
+.nov-sev.bajo    { background: #d1fae5; color: #065f46; }
+.nov-modulo { font-size: 11px; color: var(--muted); }
+.nov-body { padding: 10px 14px 12px; border-top: 1px solid var(--border); }
+.nov-desc { font-size: 13px; line-height: 1.5; color: var(--text); margin-bottom: 8px; }
+.nov-meta { font-size: 11px; color: var(--muted); }
+.nov-status {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; padding: 3px 8px;
+  border-radius: 20px; margin-left: auto;
+}
+.nov-status.abierto { background: #fee2e2; color: #991b1b; }
+.nov-status.cerrado { background: #d1fae5; color: #065f46; }
+
+/* REACTIVAR */
+.reactivar-section {
+  padding: 10px 14px 14px; border-top: 1px solid var(--border);
+  background: #fef2f2;
+}
+.reactivar-label { font-size: 12px; font-weight: 600; color: #991b1b; margin-bottom: 8px; }
+
+/* CIERRE FORM */
+.cierre-form { padding: 10px 14px 14px; border-top: 1px solid var(--border); }
+.form-label {
+  display: block; font-size: 12px; font-weight: 600; color: var(--muted);
+  margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px;
+}
+.form-textarea {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+  color: var(--text); min-height: 70px; resize: vertical; outline: none;
+}
+.form-textarea:focus { border-color: var(--blue); }
+
+/* BUTTONS */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 16px; border-radius: 10px; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.btn-full { width: 100%; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger  { background: var(--danger);  color: #fff; }
+.btn-warning { background: var(--warning); color: #fff; }
+.btn-sm { padding: 7px 12px; font-size: 12px; }
+.btn-secondary { background: #f1f5f9; color: var(--text); border: 1.5px solid var(--border); }
+.btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+/* FILTROS */
+.filtros-row { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
+.filtro-btn {
+  padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--card); font-family: 'DM Sans', sans-serif; font-size: 12px;
+  font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .2s;
+}
+.filtro-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* HISTORIAL */
+.historial-item {
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.historial-item:last-child { border-bottom: none; }
+.hist-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.hist-icon.apertura { background: #d1fae5; }
+.hist-icon.cierre   { background: #fee2e2; }
+.hist-icon.ronda    { background: #eff6ff; }
+.hist-icon.quimico  { background: #fef3c7; }
+.hist-body { flex: 1; }
+.hist-title { font-size: 13px; font-weight: 600; }
+.hist-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.hist-vals  { font-size: 12px; color: var(--text); margin-top: 4px; }
+.hist-foto {
+  width: 44px; height: 44px; border-radius: 8px;
+  object-fit: cover; flex-shrink: 0; cursor: pointer;
+}
+
+/* QUIMICOS REPORTE */
+.param-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.param-row:last-child { border-bottom: none; }
+.param-name { color: var(--muted); }
+.param-val  { font-weight: 600; }
+.param-val.ok   { color: var(--success); }
+.param-val.warn { color: var(--warning); }
+.param-val.bad  { color: var(--danger); }
+
+/* TABS fecha */
+.fecha-input {
+  padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;
+  background: var(--card); color: var(--text);
+}
+.fecha-input:focus { border-color: var(--blue); }
+
+/* REACTIVAR BANNER */
+.suspendida-banner {
+  background: #fef2f2; border: 1.5px solid var(--danger);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+
+/* FOTO MODAL */
+.foto-modal {
+  display: none; position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,.92); align-items: center; justify-content: center;
+}
+.foto-modal.show { display: flex; }
+.foto-modal img { max-width: 95vw; max-height: 85vh; border-radius: 10px; }
+.foto-modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(255,255,255,.15); border: none; border-radius: 50%;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; color: #fff;
+}
+
+/* ALERT */
+.alert {
+  border-radius: 10px; padding: 12px 14px;
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px;
+}
+.alert-warning { background: #fef3c7; color: #92400e; }
+.alert-success { background: #d1fae5; color: #065f46; }
+.alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.alert-body { font-size: 13px; line-height: 1.5; }
+.alert-title { font-weight: 600; margin-bottom: 2px; }
+
+/* UTILS */
+.loader { text-align: center; padding: 28px; color: var(--muted); font-size: 14px; }
+.empty-state { text-align: center; padding: 28px; color: var(--muted); font-size: 14px; }
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+.tag {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.tag-A  { background: #eff6ff; color: #1e40af; }
+.tag-B2 { background: #f0fdf4; color: #065f46; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 90px; left: 16px; right: 16px; z-index: 999;
+  padding: 14px 16px; border-radius: 12px; font-size: 14px; font-weight: 500;
+  text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.2);
+  transform: translateY(20px); opacity: 0; transition: all .3s; pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: #065f46; color: #fff; }
+.toast.error   { background: #991b1b; color: #fff; }
+.toast.warning { background: #92400e; color: #fff; }
+
+/* MODAL CONFIRM */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.6); align-items: flex-end;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card); border-radius: 20px 20px 0 0;
+  padding: 20px 20px 32px; width: 100%; max-height: 80vh; overflow-y: auto;
+}
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div>
+      <h1>⚙️ Admin — Piscina</h1>
+      <div class="header-sub" id="fechaHeader">Cargando...</div>
+    </div>
+    <div id="suspendidaBadge" style="display:none;background:#fee2e2;color:#991b1b;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px">⛔ SUSPENDIDA</div>
+  </div>
+</div>
+
+<!-- SECCIÓN RESUMEN -->
+<div class="section active" id="sec-resumen">
+  <div id="suspendidaBannerResumen" style="display:none">
+    <div class="suspendida-banner">
+      <div style="font-size:20px">⛔</div>
+      <div>
+        <div style="font-weight:700;font-size:14px;color:#991b1b">Operación suspendida</div>
+        <div style="font-size:12px;color:#991b1b;margin-top:2px" id="suspendidaMotivo">—</div>
+        <button class="btn btn-success btn-sm" style="margin-top:10px;display:inline-flex" onclick="reactivarOperacion()">
+          ✅ Reactivar operación
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-num" id="kpiAforo">0</div>
+      <div class="kpi-label">Personas en piscina</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-num" id="kpiTotal">0</div>
+      <div class="kpi-label">Total atendidas hoy</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-num" id="kpiNovedades" style="color:var(--danger)">0</div>
+      <div class="kpi-label">Novedades abiertas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-num" id="kpiRondas">0/3</div>
+      <div class="kpi-label">Rondas completadas</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <span>🏊</span>
+        <h2>Estado de la piscina hoy</h2>
+      </div>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="param-row">
+          <span class="param-name">Estado operación</span>
+          <span class="param-val" id="estadoOp">—</span>
+        </div>
+        <div class="param-row">
+          <span class="param-name">Apertura</span>
+          <span class="param-val" id="estadoApertura">—</span>
+        </div>
+        <div class="param-row">
+          <span class="param-name">Cierre</span>
+          <span class="param-val" id="estadoCierre">—</span>
+        </div>
+        <div class="param-row">
+          <span class="param-name">Rondas</span>
+          <span class="param-val" id="estadoRondas">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN NOVEDADES -->
+<div class="section" id="sec-novedades">
+  <div class="filtros-row">
+    <button class="filtro-btn active" onclick="filtrarNov('todas',this)">Todas</button>
+    <button class="filtro-btn" onclick="filtrarNov('ABIERTO',this)">Abiertas</button>
+    <button class="filtro-btn" onclick="filtrarNov('CRÍTICO',this)">Críticas</button>
+    <button class="filtro-btn" onclick="filtrarNov('MEDIO',this)">Medias</button>
+    <button class="filtro-btn" onclick="filtrarNov('CERRADO',this)">Cerradas</button>
+  </div>
+  <div id="listadoNovedades">
+    <div class="loader">Cargando novedades...</div>
+  </div>
+</div>
+
+<!-- SECCIÓN HISTORIAL -->
+<div class="section" id="sec-historial">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+    <input type="date" class="fecha-input" id="filtroFecha" onchange="cargarHistorial()">
+    <div class="filtros-row" style="margin-bottom:0;flex:1">
+      <button class="filtro-btn active" style="font-size:11px" onclick="filtrarHist('todos',this)">Todos</button>
+      <button class="filtro-btn" style="font-size:11px" onclick="filtrarHist('apertura',this)">Apertura</button>
+      <button class="filtro-btn" style="font-size:11px" onclick="filtrarHist('cierre',this)">Cierre</button>
+      <button class="filtro-btn" style="font-size:11px" onclick="filtrarHist('ronda',this)">Rondas</button>
+      <button class="filtro-btn" style="font-size:11px" onclick="filtrarHist('quimico',this)">Químicos</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body" id="historialContainer">
+      <div class="loader">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN CONTROLES QUÍMICOS -->
+<div class="section" id="sec-quimicos">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+    <input type="date" class="fecha-input" id="filtroFechaQ" onchange="cargarControlesQuimicos()">
+  </div>
+  <div id="controlesQuimicosContainer">
+    <div class="loader">Cargando...</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-bottom">
+  <button class="nav-btn active" onclick="irA('resumen',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Resumen
+  </button>
+  <button class="nav-btn" onclick="irA('novedades',this)">
+    <div class="nav-badge" id="navBadgeNov">0</div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Novedades
+  </button>
+  <button class="nav-btn" onclick="irA('historial',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Historial
+  </button>
+  <button class="nav-btn" onclick="irA('quimicos',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+    Químicos
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL: CERRAR NOVEDAD -->
+<div class="modal-overlay" id="modalCierre">
+  <div class="modal">
+    <div class="modal-title" id="modalCierreTitulo">Cerrar novedad</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px" id="modalCierreDesc"></div>
+    <label class="form-label">Comentario de cierre <span style="color:var(--danger)">*</span></label>
+    <textarea class="form-textarea" id="modalCierreComentario" placeholder="Acción tomada, resolución del caso..." style="margin-bottom:14px"></textarea>
+    <button class="btn btn-success btn-full" style="margin-bottom:10px" onclick="confirmarCierre()">
+      ✅ Confirmar cierre
+    </button>
+    <button class="btn btn-secondary btn-full" onclick="cerrarModal('modalCierre')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL: FOTO AMPLIADA -->
+<div class="foto-modal" id="fotoModal" onclick="this.classList.remove('show')">
+  <button class="foto-modal-close" onclick="document.getElementById('fotoModal').classList.remove('show')">✕</button>
+  <img id="fotoModalImg" src="" alt="Foto">
+</div>
+
+<script type="module">
+// ═══════════════════════════════════════════════
+// FIREBASE CONFIG
+// ═══════════════════════════════════════════════
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, doc, getDoc, getDocs, updateDoc,
+         query, where, orderBy, onSnapshot, serverTimestamp, setDoc }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+  authDomain: "registro-residentes.firebaseapp.com",
+  projectId: "registro-residentes",
+  storageBucket: "registro-residentes.firebasestorage.app",
+  messagingSenderId: "646123326163",
+  appId: "1:646123326163:web:8b35b955e7b3692536a226"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ═══════════════════════════════════════════════
+// SESIÓN — supervisor o admin
+// ═══════════════════════════════════════════════
+const params = new URLSearchParams(window.location.search);
+const SESSION = {
+  uid:    params.get('uid')    || localStorage.getItem('pco3_adm_uid')    || 'admin_test',
+  nombre: params.get('nombre') || localStorage.getItem('pco3_adm_nombre') || 'Administrador',
+  rol:    params.get('rol')    || 'admin'  // admin | supervisor
+};
+if (params.get('uid')) {
+  localStorage.setItem('pco3_adm_uid',    SESSION.uid);
+  localStorage.setItem('pco3_adm_nombre', SESSION.nombre);
+}
+
+// ═══════════════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════════════
+let novedadesCache    = [];
+let historialCache    = [];
+let filtroNovActivo   = 'todas';
+let filtroHistActivo  = 'todos';
+let novedadCierreId   = null;
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function fechaHoy() { return new Date().toISOString().split('T')[0]; }
+
+function formatHora(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatFecha(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function showToast(msg, tipo = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+window.cerrarModal = function(id) { document.getElementById(id).classList.remove('show'); };
+
+window.irA = function(sec, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`sec-${sec}`).classList.add('active');
+  btn.classList.add('active');
+  if (sec === 'novedades') cargarNovedades();
+  if (sec === 'historial') { document.getElementById('filtroFecha').value = fechaHoy(); cargarHistorial(); }
+  if (sec === 'quimicos')  { document.getElementById('filtroFechaQ').value = fechaHoy(); cargarControlesQuimicos(); }
+};
+
+// Reloj
+function tick() {
+  const ahora = new Date();
+  const opts  = { weekday:'long', day:'numeric', month:'long' };
+  const f = ahora.toLocaleDateString('es-CO', opts);
+  const h = ahora.toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('fechaHeader').textContent = `${f} · ${h}`;
+}
+setInterval(tick, 1000); tick();
+
+// ═══════════════════════════════════════════════
+// ESTADO PISCINA (tiempo real)
+// ═══════════════════════════════════════════════
+function escucharEstado() {
+  onSnapshot(doc(db, 'pool_estado', fechaHoy()), (snap) => {
+    const d = snap.data() || {};
+
+    // Suspended banner
+    const suspBanner = document.getElementById('suspendidaBannerResumen');
+    const suspBadge  = document.getElementById('suspendidaBadge');
+    if (d.suspendida) {
+      suspBanner.style.display = 'flex';
+      suspBadge.style.display  = 'block';
+      document.getElementById('suspendidaMotivo').textContent = d.motivo || '—';
+      document.getElementById('estadoOp').textContent  = '⛔ SUSPENDIDA';
+      document.getElementById('estadoOp').className    = 'param-val bad';
+    } else {
+      suspBanner.style.display = 'none';
+      suspBadge.style.display  = 'none';
+      const estado = d.cerrada ? '🔒 CERRADA' : d.abierta ? '🟢 ABIERTA' : '⏳ PENDIENTE';
+      document.getElementById('estadoOp').textContent = estado;
+      document.getElementById('estadoOp').className   = 'param-val ok';
+    }
+
+    document.getElementById('kpiAforo').textContent = d.aforo_actual || 0;
+    document.getElementById('kpiTotal').textContent = d.total_dia || 0;
+
+    const rondas = [d.ronda_1_completada, d.ronda_2_completada, d.ronda_3_completada].filter(Boolean).length;
+    document.getElementById('kpiRondas').textContent    = `${rondas}/3`;
+    document.getElementById('estadoRondas').textContent = `${rondas} de 3 completadas`;
+
+    document.getElementById('estadoApertura').textContent = d.abierta  ? `✅ ${d.hora_apertura || ''}` : '⏳ Pendiente';
+    document.getElementById('estadoCierre').textContent   = d.cerrada  ? `✅ ${d.hora_cierre || ''}`   : '⏳ Pendiente';
+  });
+}
+
+// ═══════════════════════════════════════════════
+// NOVEDADES
+// ═══════════════════════════════════════════════
+async function cargarNovedades() {
+  document.getElementById('listadoNovedades').innerHTML = '<div class="loader">Cargando...</div>';
+  const q = query(
+    collection(db, 'pool_novedades'),
+    where('fecha', '==', fechaHoy()),
+    orderBy('timestamp', 'desc')
+  );
+  try {
+    const snap = await getDocs(q);
+    novedadesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let abiertas = novedadesCache.filter(n => n.status === 'ABIERTO').length;
+    document.getElementById('kpiNovedades').textContent = abiertas;
+    const badge = document.getElementById('navBadgeNov');
+    if (abiertas > 0) { badge.textContent = abiertas; badge.classList.add('show'); }
+    else badge.classList.remove('show');
+    renderNovedades();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('listadoNovedades').innerHTML = '<div class="empty-state">Error al cargar</div>';
+  }
+}
+
+function renderNovedades() {
+  let lista = novedadesCache;
+  if (filtroNovActivo === 'ABIERTO')  lista = lista.filter(n => n.status === 'ABIERTO');
+  else if (filtroNovActivo === 'CERRADO') lista = lista.filter(n => n.status === 'CERRADO');
+  else if (filtroNovActivo === 'CRÍTICO') lista = lista.filter(n => n.severidad === 'CRÍTICO');
+  else if (filtroNovActivo === 'MEDIO')   lista = lista.filter(n => n.severidad === 'MEDIO');
+
+  if (lista.length === 0) {
+    document.getElementById('listadoNovedades').innerHTML = '<div class="empty-state">Sin novedades en este filtro</div>';
+    return;
+  }
+
+  document.getElementById('listadoNovedades').innerHTML = lista.map(n => {
+    const sev      = (n.severidad || '').toLowerCase();
+    const cerrada  = n.status === 'CERRADO';
+    const modTag   = n.modulo_origen === 'A' ? `<span class="tag tag-A">Módulo A</span>` : `<span class="tag tag-B2">Módulo B2</span>`;
+
+    const btnAcciones = cerrada
+      ? `<div style="font-size:11px;color:var(--success);font-weight:600;padding:8px 14px">✅ Cerrada por ${n.cerrado_por || '—'} · ${formatHora(n.fecha_cierre)}</div>`
+      : `<div class="cierre-form">
+           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+             <button class="btn btn-success btn-sm" onclick="abrirModalCierre('${n.id}','${(n.descripcion||'').replace(/'/g,"\\'")}')">
+               ✅ Cerrar caso
+             </button>
+             ${n.operacion_suspendida ? `<button class="btn btn-warning btn-sm" onclick="reactivarDesdeNovedad()">⚡ Reactivar op.</button>` : ''}
+           </div>
+         </div>`;
+
+    return `<div class="novedad-card ${sev}">
+      <div class="novedad-header ${sev}" onclick="toggleNovCard(this)">
+        <span class="nov-sev ${sev}">${n.severidad}</span>
+        ${modTag}
+        ${n.area_afectada ? `<span style="font-size:11px;color:var(--muted)">${n.area_afectada}</span>` : ''}
+        <span class="nov-status ${cerrada ? 'cerrado' : 'abierto'}" style="margin-left:auto">
+          ${cerrada ? '✅ Cerrada' : '🔴 Abierta'}
+        </span>
+      </div>
+      <div class="nov-body" style="display:none">
+        <div class="nov-desc">${n.descripcion}</div>
+        <div class="nov-meta">
+          Registrada por <strong>${n.creado_por || '—'}</strong> · ${formatHora(n.timestamp)}
+        </div>
+        ${btnAcciones}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleNovCard = function(header) {
+  const body = header.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? 'block' : 'none';
+};
+
+window.filtrarNov = function(f, btn) {
+  filtroNovActivo = f;
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNovedades();
+};
+
+window.abrirModalCierre = function(id, desc) {
+  novedadCierreId = id;
+  document.getElementById('modalCierreTitulo').textContent = 'Cerrar novedad';
+  document.getElementById('modalCierreDesc').textContent   = desc;
+  document.getElementById('modalCierreComentario').value   = '';
+  document.getElementById('modalCierre').classList.add('show');
+};
+
+window.confirmarCierre = async function() {
+  const comentario = document.getElementById('modalCierreComentario').value.trim();
+  if (!comentario) { showToast('Escribe el comentario de cierre', 'warning'); return; }
+
+  const btn = document.querySelector('#modalCierre .btn-success');
+  btn.disabled = true; btn.textContent = '⏳ Guardando...';
+
+  try {
+    await updateDoc(doc(db, 'pool_novedades', novedadCierreId), {
+      status: 'CERRADO',
+      cerrado_por: SESSION.nombre,
+      cerrado_por_id: SESSION.uid,
+      comentario_cierre: comentario,
+      fecha_cierre: serverTimestamp()
+    });
+    document.getElementById('modalCierre').classList.remove('show');
+    showToast('✅ Caso cerrado correctamente');
+    await cargarNovedades();
+  } catch(e) {
+    console.error(e);
+    showToast('Error al cerrar caso', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '✅ Confirmar cierre';
+  }
+};
+
+window.reactivarOperacion = async function() {
+  if (!confirm('¿Confirmas reactivar la operación de la piscina?')) return;
+  await reactivarOp();
+};
+
+window.reactivarDesdeNovedad = async function() {
+  await reactivarOp();
+};
+
+async function reactivarOp() {
+  try {
+    await setDoc(doc(db, 'pool_estado', fechaHoy()), {
+      suspendida: false,
+      reactivada_por: SESSION.nombre,
+      timestamp_reactivacion: serverTimestamp()
+    }, { merge: true });
+    showToast('✅ Operación reactivada');
+  } catch(e) {
+    console.error(e);
+    showToast('Error al reactivar', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// HISTORIAL OPERACIONES
+// ═══════════════════════════════════════════════
+window.cargarHistorial = async function() {
+  const fecha = document.getElementById('filtroFecha').value || fechaHoy();
+  document.getElementById('historialContainer').innerHTML = '<div class="loader">Cargando...</div>';
+
+  const q = query(
+    collection(db, 'pool_operaciones'),
+    where('fecha', '==', fecha),
+    orderBy('timestamp', 'asc')
+  );
+  try {
+    const snap = await getDocs(q);
+    historialCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderHistorial();
+  } catch(e) {
+    document.getElementById('historialContainer').innerHTML = '<div class="empty-state">Error al cargar</div>';
+  }
+};
+
+function renderHistorial() {
+  let lista = historialCache;
+  if (filtroHistActivo !== 'todos') lista = lista.filter(h => h.tipo === filtroHistActivo);
+
+  if (lista.length === 0) {
+    document.getElementById('historialContainer').innerHTML = '<div class="empty-state">Sin registros en este filtro</div>';
+    return;
+  }
+
+  const iconos = { apertura: '🌅', cierre: '🌙', ronda: '🔄', quimico: '🧪' };
+  const etiquetas = { apertura: 'Apertura', cierre: 'Cierre', ronda: 'Ronda de control', quimico: 'Control químico' };
+
+  document.getElementById('historialContainer').innerHTML = lista.map(h => {
+    let vals = '';
+    if (h.tipo === 'apertura' || h.tipo === 'cierre') {
+      vals = `pH: <b>${h.ph || '—'}</b> · Cloro: <b>${h.cloro_libre || '—'} ppm</b>`;
+    }
+    if (h.tipo === 'ronda') {
+      vals = `Ronda ${h.numero_ronda} · Aforo: <b>${h.aforo_momento}</b> personas
+              ${h.observaciones ? `<br>${h.observaciones}` : ''}`;
+    }
+    if (h.tipo === 'quimico') {
+      const p = h.piscina || {};
+      vals = `Cl.T: <b>${p.cloro_total||'—'}</b> · pH: <b>—</b> · Temp: <b>${p.temperatura||'—'}°C</b>`;
+    }
+    return `<div class="historial-item">
+      <div class="hist-icon ${h.tipo}">${iconos[h.tipo] || '📋'}</div>
+      <div class="hist-body">
+        <div class="hist-title">${etiquetas[h.tipo] || h.tipo} · ${h.hora || formatHora(h.timestamp)}</div>
+        <div class="hist-meta">Por ${h.operador_nombre || h.piscinero_nombre || '—'}</div>
+        <div class="hist-vals">${vals}</div>
+      </div>
+      ${h.foto_url ? `<img src="${h.foto_url}" class="hist-foto" onclick="verFoto('${h.foto_url}')" alt="Foto">` : ''}
+    </div>`;
+  }).join('');
+}
+
+window.filtrarHist = function(f, btn) {
+  filtroHistActivo = f;
+  document.querySelectorAll('#sec-historial .filtro-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistorial();
+};
+
+// ═══════════════════════════════════════════════
+// CONTROLES QUÍMICOS
+// ═══════════════════════════════════════════════
+window.cargarControlesQuimicos = async function() {
+  const fecha = document.getElementById('filtroFechaQ').value || fechaHoy();
+  const cont  = document.getElementById('controlesQuimicosContainer');
+  cont.innerHTML = '<div class="loader">Cargando...</div>';
+
+  const q = query(
+    collection(db, 'pool_controls'),
+    where('fecha', '==', fecha),
+    orderBy('timestamp', 'desc')
+  );
+  try {
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      cont.innerHTML = '<div class="empty-state">Sin controles químicos para esta fecha</div>';
+      return;
+    }
+    cont.innerHTML = snap.docs.map(d => {
+      const c = d.data();
+      const p = c.piscina || {};
+      const j = c.jacuzzi || {};
+
+      const filaP = (label, val, min, max) => {
+        const v = parseFloat(val);
+        let cls = 'param-val';
+        if (!isNaN(v)) {
+          if (v >= min && v <= max) cls += ' ok';
+          else cls += ' warn';
+        }
+        return `<div class="param-row"><span class="param-name">${label}</span><span class="${cls}">${val || '—'}</span></div>`;
+      };
+
+      const quimHtml = (c.quimicos || []).filter(q => q.aplicado).map(q =>
+        `<span style="font-size:11px;background:#eff6ff;color:#1e40af;padding:2px 8px;border-radius:20px;margin-right:4px;margin-bottom:4px;display:inline-block">${q.nombre}: ${q.cantidad} ${q.unidad}</span>`
+      ).join('') || '<span style="font-size:12px;color:var(--muted)">Ninguno</span>';
+
+      const fotosHtml = (c.fotos || []).slice(0, 4).map(url =>
+        `<img src="${url}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;cursor:pointer;flex-shrink:0" onclick="verFoto('${url}')" alt="foto">`
+      ).join('');
+
+      return `<div class="card">
+        <div class="card-header">
+          <div class="card-header-left"><span>🧪</span><h2>Control químico · ${c.hora || formatHora(c.timestamp)}</h2></div>
+        </div>
+        <div class="card-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Por ${c.piscinero_nombre || '—'}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">🏊 Piscina</div>
+          ${filaP('Cloro total', p.cloro_total, 0.5, 3.0)}
+          ${filaP('Cloro residual', p.cloro_residual, 0.2, 1.0)}
+          ${filaP('Alcalinidad', p.alcalinidad, 80, 120)}
+          ${filaP('Dureza', p.dureza, 200, 400)}
+          <div class="param-row"><span class="param-name">Color</span><span class="param-val">${p.color || '—'}</span></div>
+          <div class="param-row"><span class="param-name">Transparencia</span><span class="param-val">${p.transparencia || '—'}</span></div>
+          ${filaP('Temperatura', p.temperatura, 26, 32)}
+          <div style="margin-top:10px;font-size:12px;font-weight:700;color:var(--primary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">♨️ Jacuzzi</div>
+          ${filaP('Cloro total', j.cloro_total, 1.0, 3.0)}
+          ${filaP('Temperatura', j.temperatura, 36, 40)}
+          <div class="divider"></div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Químicos aplicados:</div>
+          <div style="display:flex;flex-wrap:wrap">${quimHtml}</div>
+          ${fotosHtml ? `<div class="divider"></div><div style="font-size:12px;font-weight:600;margin-bottom:8px">Fotos:</div><div style="display:flex;gap:8px;flex-wrap:wrap">${fotosHtml}</div>` : ''}
+          ${c.observaciones ? `<div class="divider"></div><div style="font-size:12px;color:var(--muted)">Obs: ${c.observaciones}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error(e);
+    cont.innerHTML = '<div class="empty-state">Error al cargar controles</div>';
+  }
+};
+
+// FOTO MODAL
+window.verFoto = function(url) {
+  document.getElementById('fotoModalImg').src = url;
+  document.getElementById('fotoModal').classList.add('show');
+};
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+async function init() {
+  escucharEstado();
+  await cargarNovedades();
+  document.getElementById('filtroFecha').value  = fechaHoy();
+  document.getElementById('filtroFechaQ').value = fechaHoy();
+}
+
+init().catch(console.error);
+</script>
+</body>
+</html>

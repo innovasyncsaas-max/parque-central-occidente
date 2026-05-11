@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Cancha de Squash — PCO3</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:  #1e3a5f;
+      --accent2: #2563eb;
+      --gbtn:    linear-gradient(135deg, #1e3a5f, #2563eb);
+      --bg:      #eef2f7;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 48px 32px 40px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(30,58,95,0.10);
+    }
+
+    .icon-wrap {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #eef2f7, #dbeafe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 48px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      color: #92400e;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      color: var(--accent);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #64748b;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      background: #eef2f7;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar-bg {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 65%;
+      background: var(--gbtn);
+      border-radius: 99px;
+      animation: fillBar 1.6s ease forwards;
+    }
+
+    @keyframes fillBar {
+      from { width: 0; }
+      to   { width: 65%; }
+    }
+
+    .progress-pct {
+      font-size: 13px;
+      color: var(--accent2);
+      font-weight: 600;
+    }
+
+    /* ── Features list ── */
+    .features {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: #475569;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .features li:last-child { border-bottom: none; }
+
+    .feat-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ── Buttons ── */
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 15px 24px;
+      background: var(--gbtn);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(37,99,235,0.25);
+      transition: transform .15s, box-shadow .15s;
+    }
+
+    .btn-back:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(37,99,235,0.2);
+    }
+
+    .btn-notify {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px 24px;
+      background: transparent;
+      color: var(--accent2);
+      border: 2px solid #dbeafe;
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      text-decoration: none;
+      transition: background .15s, border-color .15s;
+    }
+
+    .btn-notify:active {
+      background: #eff6ff;
+    }
+
+    /* ── Floating dots decoration ── */
+    .dots {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: -1;
+    }
+
+    .dot {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.06;
+      background: var(--accent);
+    }
+
+    .dot-1 { width: 260px; height: 260px; top: -80px; right: -60px; }
+    .dot-2 { width: 180px; height: 180px; bottom: -50px; left: -60px; }
+    .dot-3 { width: 100px; height: 100px; bottom: 30%; right: 10%; }
+  </style>
+</head>
+<body>
+
+  <!-- Background decoration -->
+  <div class="dots">
+    <div class="dot dot-1"></div>
+    <div class="dot dot-2"></div>
+    <div class="dot dot-3"></div>
+  </div>
+
+  <div class="card">
+
+    <div class="icon-wrap">🎾</div>
+
+    <div class="badge">Próximamente</div>
+
+    <h1>Cancha de Squash</h1>
+
+    <p class="subtitle">
+      Estamos preparando el sistema de reservas para la cancha de squash.<br>
+      Pronto podrás reservar tu turno directamente desde el portal.
+    </p>
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+      <div class="progress-label">Progreso de habilitación</div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill"></div>
+      </div>
+      <div class="progress-pct">65% completado</div>
+    </div>
+
+    <!-- Coming features -->
+    <ul class="features">
+      <li>
+        <span class="feat-dot">📅</span>
+        Selección de fecha y turno (1 h)
+      </li>
+      <li>
+        <span class="feat-dot">👥</span>
+        Reserva para 1 o 2 jugadores
+      </li>
+      <li>
+        <span class="feat-dot">🔔</span>
+        Recordatorio automático por WhatsApp
+      </li>
+      <li>
+        <span class="feat-dot">📋</span>
+        Historial y cancelación en línea
+      </li>
+    </ul>
+
+    <!-- Back button -->
+    <a id="btnVolver" href="#" class="btn-back" onclick="volver(event)">
+      ← Volver al Portal
+    </a>
+
+    <!-- Notify via WA -->
+    <a id="btnNotify" href="#" class="btn-notify" onclick="notificar(event)">
+      🔔 Avisarme cuando esté disponible
+    </a>
+
+  </div>
+
+  <script>
+    // ── Reconstruct portal URL from session or URL params ──────────────────
+    function getPortalURL() {
+      try {
+        const s = JSON.parse(sessionStorage.getItem('residente_pco3') || '{}');
+        if (s.torre && s.apto) {
+          const p = new URLSearchParams({
+            torre:  s.torre,
+            apto:   s.apto,
+            tel:    s.tel    || '',
+            nombre: s.nombre || ''
+          });
+          return `modulo-g-portal.html?${p.toString()}`;
+        }
+      } catch (_) {}
+
+      // Fallback: pass through current params
+      const cur = new URLSearchParams(window.location.search);
+      if (cur.get('torre')) {
+        return `modulo-g-portal.html?${cur.toString()}`;
+      }
+
+      return 'modulo-g-portal.html';
+    }
+
+    function volver(e) {
+      e.preventDefault();
+      window.location.href = getPortalURL();
+    }
+
+    function notificar(e) {
+      e.preventDefault();
+      try {
+        const s = JSON.parse(sessionStorage.getItem('residente_pco3') || '{}');
+        const nombre = s.nombre || (new URLSearchParams(window.location.search).get('nombre')) || 'Residente';
+        const torre  = s.torre  || (new URLSearchParams(window.location.search).get('torre'))  || '';
+        const apto   = s.apto   || (new URLSearchParams(window.location.search).get('apto'))   || '';
+
+        const msg = encodeURIComponent(
+          `Hola, soy ${nombre}${torre ? ` de Torre ${torre} Apto ${apto}` : ''}. ` +
+          `Quisiera que me avisen cuando esté disponible el sistema de reservas de la Cancha de Squash. ¡Gracias!`
+        );
+        // WA_ADMIN — update before production
+        const WA_ADMIN = '573000000000';
+        window.open(`https://wa.me/${WA_ADMIN}?text=${msg}`, '_blank');
+      } catch (_) {
+        alert('No se pudo abrir WhatsApp. Comunícate directamente con la administración.');
+      }
+    }
+
+    // ── Set back button href for non-JS contexts ───────────────────────────
+    document.getElementById('btnVolver').href = getPortalURL();
+  </script>
+
+</body>
+</html>

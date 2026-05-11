@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCO3 · Asistente Administrativa</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#1e3a5f; --primary-light:#2d5a8e; --primary-dark:#152d4a;
+  --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --purple:#7c3aed;
+  --bg:#f0f4f8; --card:#fff; --text:#1a202c; --muted:#64748b;
+  --border:#e2e8f0; --radius:12px; --nav-w:220px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+header .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600}
+header h1{font-size:17px;font-weight:700}
+header p{font-size:12px;opacity:.8}
+.user-info{margin-left:auto;text-align:right;font-size:12px;opacity:.85}
+.layout{display:flex;min-height:calc(100vh - 56px)}
+main{flex:1;padding:16px;padding-bottom:90px;min-width:0}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+nav button{flex:1;padding:10px 2px 8px;border:none;background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.2s;position:relative}
+nav button .icon{font-size:18px}
+nav button.active{color:var(--primary);font-weight:700}
+.nav-badge{position:absolute;top:4px;right:calc(50% - 18px);background:var(--danger);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px}
+.nav-badge.show{display:flex}
+@media(min-width:768px){
+  main{padding:24px;padding-bottom:24px;margin-left:var(--nav-w)}
+  nav{position:fixed;left:0;top:56px;bottom:0;right:auto;width:var(--nav-w);flex-direction:column;border-top:none;border-right:1px solid var(--border);background:#fff;padding:12px 0;box-shadow:2px 0 8px rgba(0,0,0,.04);overflow-y:auto}
+  nav button{flex:none;flex-direction:row;padding:12px 20px;font-size:13px;gap:10px;border-radius:0;justify-content:flex-start}
+  nav button.active{background:#eff6ff;color:var(--primary);border-right:3px solid var(--primary)}
+  .nav-badge{position:static;margin-left:auto}
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+}
+.section{display:none}.section.active{display:block}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.card-title{font-weight:700;font-size:14px;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.section-header h2{font-size:18px;font-weight:700;color:var(--primary)}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-box{background:var(--card);border-radius:var(--radius);padding:14px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.stat-box .num{font-size:26px;font-weight:700;color:var(--primary)}
+.stat-box .lbl{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.3}
+.stat-box.alerta .num{color:var(--danger)}
+.stat-box.ok .num{color:var(--success)}
+.badge-estado{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-critico{background:#fee2e2;color:#b91c1c}
+.badge-medio{background:#fef3c7;color:#b45309}
+.badge-bajo{background:#d1fae5;color:#065f46}
+.badge-abierta{background:#dbeafe;color:#1d4ed8}
+.badge-listo{background:#e9d5ff;color:#6b21a8}
+.badge-cerrada{background:#f1f5f9;color:#475569}
+.btn{width:100%;padding:12px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-warning{background:var(--warning);color:#fff}
+.btn-secondary{background:var(--border);color:var(--text)}
+.btn-purple{background:var(--purple);color:#fff}
+.input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);transition:.2s;background:#fff}
+.input:focus{outline:none;border-color:var(--primary)}
+.label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block}
+.form-group{margin-bottom:12px}
+.select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--text)}
+.select:focus{outline:none;border-color:var(--primary)}
+.form-row{display:grid;grid-template-columns:1fr;gap:10px}
+.list-item{padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--card)}
+.list-item.critico{border-left:4px solid var(--danger)}
+.list-item.medio{border-left:4px solid var(--warning)}
+.list-item.bajo{border-left:4px solid var(--success)}
+.list-item.listo{border-left:4px solid var(--purple)}
+.list-item-title{font-weight:600;font-size:13px}
+.list-item-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.tabs{display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:16px;overflow-x:auto}
+.tab{flex:1;padding:8px;text-align:center;border:none;background:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;transition:.2s;min-width:fit-content}
+.tab.active{background:var(--card);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.filter-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.filter-bar::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:.2s}
+.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:92vh;display:flex;flex-direction:column}
+.modal-header{padding:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header h3{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer}
+.modal-body{padding:16px;overflow-y:auto}
+.modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.empty{text-align:center;padding:28px 16px;color:var(--muted)}
+.empty .icon{font-size:34px;margin-bottom:8px}
+.empty p{font-size:13px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;max-width:90vw}
+.toast.show{opacity:1}
+.toast.error{background:var(--danger)}
+.module-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase}
+.module-seg{background:#dbeafe;color:#1d4ed8}
+.module-pool{background:#e0f2fe;color:#0369a1}
+.module-gym{background:#f3e8ff;color:#7c3aed}
+.module-mtto{background:#fef3c7;color:#92400e}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="badge">ASISTENTE</div>
+    <h1>PCO3 Ciudadela</h1>
+    <p id="headerFecha">—</p>
+  </div>
+  <div class="user-info">
+    <div id="headerNombre">Asistente</div>
+    <div>Administración</div>
+  </div>
+</header>
+
+<div class="layout">
+<main>
+
+<!-- INICIO -->
+<div id="sec-inicio" class="section active">
+  <div class="section-header"><h2>Resumen del Día</h2></div>
+  <div class="stat-grid">
+    <div class="stat-box" id="box-pqr"><div class="num" id="stat-pqr">0</div><div class="lbl">PQRs sin responder</div></div>
+    <div class="stat-box" id="box-reservas"><div class="num" id="stat-reservas">0</div><div class="lbl">Reservas pendientes</div></div>
+    <div class="stat-box" id="box-verif"><div class="num" id="stat-verif">0</div><div class="lbl">Tareas para verificar</div></div>
+    <div class="stat-box" id="box-corr"><div class="num" id="stat-corr">0</div><div class="lbl">Correspondencia sin entregar</div></div>
+  </div>
+
+  <div id="alertas-criticas-cont"></div>
+
+  <div class="card">
+    <div class="card-title">💬 PQRs recientes sin responder</div>
+    <div id="pqr-resumen-lista"><div class="empty"><div class="icon">✅</div><p>Sin PQRs pendientes</p></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📦 Correspondencia pendiente de entrega</div>
+    <div id="corr-resumen-lista"><div class="empty"><div class="icon">📦</div><p>Sin correspondencia pendiente</p></div></div>
+  </div>
+</div>
+
+<!-- NOVEDADES -->
+<div id="sec-novedades" class="section">
+  <div class="section-header"><h2>Novedades</h2></div>
+  <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#b45309">
+    ℹ️ Puedes marcar novedades como "listo para cerrar". El cierre definitivo lo realiza el Coordinador o la Administradora.
+  </div>
+  <div class="tabs" id="tabs-nov-mod">
+    <button class="tab active" onclick="setTabNovMod('seg',this)">🔒 Seguridad</button>
+    <button class="tab" onclick="setTabNovMod('pool',this)">🏊 Piscina</button>
+    <button class="tab" onclick="setTabNovMod('gym',this)">💪 Gimnasio</button>
+    <button class="tab" onclick="setTabNovMod('mtto',this)">🔧 Mantenimiento</button>
+  </div>
+  <div class="filter-bar" id="filtro-nov-chips">
+    <div class="chip active" data-val="todas" onclick="setFiltroNovAs(this)">Todas</div>
+    <div class="chip" data-val="abiertas" onclick="setFiltroNovAs(this)">Abiertas</div>
+    <div class="chip" data-val="criticas" onclick="setFiltroNovAs(this)">Críticas</div>
+    <div class="chip" data-val="listo" onclick="setFiltroNovAs(this)">Listo cierre</div>
+    <div class="chip" data-val="cerradas" onclick="setFiltroNovAs(this)">Cerradas</div>
+  </div>
+  <div id="lista-novedades-as"><div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div></div>
+</div>
+
+<!-- PQR -->
+<div id="sec-pqr" class="section">
+  <div class="section-header"><h2>PQR Residentes</h2></div>
+  <button class="btn btn-primary" style="margin-bottom:16px" onclick="abrirModalPQR()">+ Nueva PQR</button>
+  <div class="filter-bar" id="filtro-pqr-chips">
+    <div class="chip active" data-val="todas" onclick="setFiltroPQR(this)">Todas</div>
+    <div class="chip" data-val="abierto" onclick="setFiltroPQR(this)">Abiertas</div>
+    <div class="chip" data-val="en_gestion" onclick="setFiltroPQR(this)">En gestión</div>
+    <div class="chip" data-val="listo_cierre" onclick="setFiltroPQR(this)">Listo cierre</div>
+    <div class="chip" data-val="cerrado" onclick="setFiltroPQR(this)">Cerradas</div>
+  </div>
+  <div id="lista-pqr"><div class="empty"><div class="icon">🔄</div><p>Cargando PQRs...</p></div></div>
+</div>
+
+<!-- RESERVAS -->
+<div id="sec-reservas" class="section">
+  <div class="section-header"><h2>Gestión de Reservas</h2></div>
+  <div class="tabs" id="tabs-reserva-tipo">
+    <button class="tab active" onclick="setTabReservaAs('BBQ Comunal',this)">🔥 BBQ</button>
+    <button class="tab" onclick="setTabReservaAs('Salón Social',this)">🏛️ Salón</button>
+    <button class="tab" onclick="setTabReservaAs('Piscina & Jacuzzi',this)">🏊 Piscina</button>
+  </div>
+  <div class="filter-bar" id="filtro-reserva-chips">
+    <div class="chip active" data-val="todas" onclick="setFiltroReservaAs(this)">Todas</div>
+    <div class="chip" data-val="pendiente" onclick="setFiltroReservaAs(this)">Pendientes</div>
+    <div class="chip" data-val="confirmada" onclick="setFiltroReservaAs(this)">Confirmadas</div>
+    <div class="chip" data-val="cancelada" onclick="setFiltroReservaAs(this)">Canceladas</div>
+  </div>
+  <div class="form-group" style="margin-bottom:12px">
+    <input type="date" class="input" id="fecha-reserva-as" onchange="cargarReservasAs()">
+  </div>
+  <div id="lista-reservas-as"><div class="empty"><div class="icon">📅</div><p>Selecciona una fecha</p></div></div>
+</div>
+
+<!-- MORA + CORRESPONDENCIA -->
+<div id="sec-mora" class="section">
+  <div class="section-header"><h2>Mora / Correspondencia</h2></div>
+  <div class="tabs" id="tabs-mora-corr">
+    <button class="tab active" onclick="setTabMoraCorr('mora',this)">💰 Mora</button>
+    <button class="tab" onclick="setTabMoraCorr('corr',this)">📦 Correspondencia</button>
+  </div>
+  <div id="sub-mora">
+    <div class="form-group"><input type="text" class="input" id="buscar-mora" placeholder="Buscar torre/apto o nombre..." oninput="renderMora()"></div>
+    <div id="lista-mora"><div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div></div>
+  </div>
+  <div id="sub-corr" style="display:none">
+    <button class="btn btn-primary" style="margin-bottom:16px" onclick="abrirModalCorrespondencia()">+ Registrar paquete / carta</button>
+    <div class="filter-bar" id="filtro-corr-chips">
+      <div class="chip active" data-val="todas" onclick="setFiltroCorr(this)">Todas</div>
+      <div class="chip" data-val="pendiente" onclick="setFiltroCorr(this)">Sin entregar</div>
+      <div class="chip" data-val="entregada" onclick="setFiltroCorr(this)">Entregadas</div>
+    </div>
+    <div id="lista-corr"><div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div></div>
+  </div>
+</div>
+
+<!-- VERIFICACIONES -->
+<div id="sec-verif" class="section">
+  <div class="section-header"><h2>Verificaciones Pendientes</h2></div>
+  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#166534">
+    ✅ Tareas completadas por Todero/Aseo esperando tu revisión antes de pasar al Coordinador.
+  </div>
+  <div id="lista-verif"><div class="empty"><div class="icon">🔄</div><p>Cargando verificaciones...</p></div></div>
+</div>
+
+</main>
+</div>
+
+<nav>
+  <button class="active" onclick="navTo('inicio',this)"><span class="icon">🏠</span>Inicio</button>
+  <button onclick="navTo('novedades',this)"><span class="icon">🚨</span>Nov.<div class="nav-badge" id="badge-nov-as">0</div></button>
+  <button onclick="navTo('pqr',this)"><span class="icon">💬</span>PQR<div class="nav-badge" id="badge-pqr">0</div></button>
+  <button onclick="navTo('reservas',this)"><span class="icon">📅</span>Reservas</button>
+  <button onclick="navTo('mora',this)"><span class="icon">💰</span>Mora</button>
+  <button onclick="navTo('verif',this)"><span class="icon">🔍</span>Verif.<div class="nav-badge" id="badge-verif">0</div></button>
+</nav>
+
+<!-- MODAL LISTO CIERRE NOV -->
+<div class="modal-overlay" id="modal-listo-cierre">
+  <div class="modal">
+    <div class="modal-header" style="background:var(--purple)"><h3>Marcar Listo para Cierre</h3><button class="modal-close" onclick="cerrarModal('modal-listo-cierre')">✕</button></div>
+    <div class="modal-body">
+      <div style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#6d28d9">
+        Esta acción notifica al Coordinador que la novedad está lista para cierre definitivo.
+      </div>
+      <div class="form-group">
+        <label class="label">Novedad</label>
+        <div id="listo-nov-titulo" style="font-weight:600;font-size:13px;padding:8px;background:var(--bg);border-radius:8px"></div>
+      </div>
+      <div class="form-group">
+        <label class="label">Comentario de gestión *</label>
+        <textarea class="input" id="listo-nov-comentario" rows="4" placeholder="Describe qué se hizo, estado actual..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-listo-cierre')">Cancelar</button>
+      <button class="btn btn-purple btn-sm" style="flex:1" onclick="confirmarListoCierreAs()">Marcar Listo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA PQR -->
+<div class="modal-overlay" id="modal-pqr">
+  <div class="modal">
+    <div class="modal-header"><h3>Registrar PQR</h3><button class="modal-close" onclick="cerrarModal('modal-pqr')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">Tipo *</label>
+          <select class="select" id="pqr-tipo">
+            <option value="consulta">❓ Consulta</option>
+            <option value="queja">😠 Queja</option>
+            <option value="reclamo">📢 Reclamo</option>
+            <option value="sugerencia">💡 Sugerencia</option>
+            <option value="solicitud">📋 Solicitud</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">Torre / Apto *</label>
+          <input type="text" class="input" id="pqr-apto" placeholder="Ej: T2-401">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="label">Nombre residente *</label>
+        <input type="text" class="input" id="pqr-nombre" placeholder="Nombre completo">
+      </div>
+      <div class="form-group">
+        <label class="label">Descripción *</label>
+        <textarea class="input" id="pqr-descripcion" rows="4" placeholder="Describe la consulta, queja o solicitud..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="label">Canal de recepción</label>
+        <select class="select" id="pqr-canal">
+          <option value="presencial">Presencial</option>
+          <option value="telefono">Teléfono</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="email">Email</option>
+          <option value="escrito">Escrito</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-pqr')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="guardarPQR()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GESTIONAR PQR -->
+<div class="modal-overlay" id="modal-pqr-gestionar">
+  <div class="modal">
+    <div class="modal-header"><h3>Gestionar PQR</h3><button class="modal-close" onclick="cerrarModal('modal-pqr-gestionar')">✕</button></div>
+    <div class="modal-body" id="pqr-gestionar-body"></div>
+    <div class="modal-footer" id="pqr-gestionar-footer"></div>
+  </div>
+</div>
+
+<!-- MODAL CORRESPONDENCIA -->
+<div class="modal-overlay" id="modal-corr">
+  <div class="modal">
+    <div class="modal-header"><h3>Registrar Correspondencia</h3><button class="modal-close" onclick="cerrarModal('modal-corr')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">Tipo *</label>
+          <select class="select" id="corr-tipo">
+            <option value="paquete">📦 Paquete</option>
+            <option value="carta">✉️ Carta</option>
+            <option value="documento">📄 Documento</option>
+            <option value="otro">📋 Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">Torre / Apto *</label>
+          <input type="text" class="input" id="corr-apto" placeholder="Ej: T3-205">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="label">Remitente</label>
+        <input type="text" class="input" id="corr-remitente" placeholder="Empresa o persona">
+      </div>
+      <div class="form-group">
+        <label class="label">Descripción</label>
+        <input type="text" class="input" id="corr-descripcion" placeholder="Ej: Caja mediana Amazon">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-corr')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="guardarCorrespondencia()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, query, where, orderBy, onSnapshot,
+         doc, addDoc, updateDoc, serverTimestamp, getDocs }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek", authDomain:"registro-residentes.firebaseapp.com",
+  projectId:"registro-residentes", storageBucket:"registro-residentes.firebasestorage.app",
+  messagingSenderId:"646123326163", appId:"1:646123326163:web:8b35b955e7b3692536a226"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── STATE ────────────────────────────────────────────────
+const S = {
+  uid:'', nombre:'Asistente',
+  novSeg:[], novPool:[], novGym:[], novMtto:[],
+  pqrs:[], reservas:[], mora:[], correspondencia:[], tareas:[],
+  tabNovMod:'seg', filtroNovAs:'todas',
+  tabReservaAs:'BBQ Comunal', filtroReservaAs:'todas',
+  filtroPQR:'todas', filtroCorr:'todas',
+  novSel:null, pqrSel:null
+};
+
+// ── FIX 1: zona horaria Bogotá ───────────────────────────
+function fechaHoy() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+const ffd = ts => {
+  if(!ts) return '--';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+};
+
+const toast = (msg, tipo) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show' + (tipo==='error'?' error':'');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+};
+
+const cerrarModal = id => document.getElementById(id).classList.remove('open');
+window.cerrarModal = cerrarModal;
+
+// ── FIX 8: normalización de nivel/severidad ──────────────
+function normalizarNov(d, mod) {
+  let nivel = d.nivel;
+  if (!nivel && d.severidad) {
+    nivel = d.severidad.toLowerCase().includes('crít') ? 'critica'
+          : d.severidad.toLowerCase().includes('medi') ? 'media' : 'baja';
+  }
+  nivel = nivel || 'baja';
+  let estado = d.estado;
+  if (!estado && d.status) {
+    estado = d.status === 'ABIERTO' ? 'abierta'
+           : d.status === 'CERRADO' ? 'cerrada' : d.status.toLowerCase();
+  }
+  estado = estado || 'abierta';
+  const tipo = d.tipo || d.area_afectada || '—';
+  const area = d.area || d.area_afectada || '';
+  const creado_en = d.creado_en || d.timestamp;
+  return { ...d, nivel, estado, tipo, area, creado_en, _m: mod };
+}
+
+// FIX 4: normalizar clase CSS sin tilde
+const nivelClass = n => {
+  const v = (n||'').toLowerCase();
+  return v.includes('crit') ? 'critico' : v.includes('medi') ? 'medio' : 'bajo';
+};
+const nivelBadge = n => {
+  const v = (n||'').toLowerCase();
+  return v.includes('crit') ? 'badge-critico' : v.includes('medi') ? 'badge-medio' : 'badge-bajo';
+};
+const estadoBadge = e => ({abierta:'badge-abierta',en_atencion:'badge-medio',listo_cierre:'badge-listo',cerrada:'badge-cerrada'}[e]||'badge-cerrada');
+const estadoLabel = e => ({abierta:'Abierta',en_atencion:'En atención',listo_cierre:'Listo cierre',cerrada:'Cerrada'}[e]||e);
+const colNov = m => ({pool:'pool_novedades',gym:'gym_novedades',mtto:'novedades_mantenimiento'}[m]||'seg_novedades');
+const modTag = m => ({
+  seg:'<span class="module-tag module-seg">SEG</span>',
+  pool:'<span class="module-tag module-pool">PISCINA</span>',
+  gym:'<span class="module-tag module-gym">GIMNASIO</span>',
+  mtto:'<span class="module-tag module-mtto">MTTO</span>'
+}[m]||'');
+
+// ── SESSION ──────────────────────────────────────────────
+(()=>{
+  const p = new URLSearchParams(window.location.search);
+  S.uid = p.get('uid')||localStorage.getItem('pco3_uid')||'asist_demo';
+  S.nombre = p.get('nombre')||localStorage.getItem('pco3_nombre')||'Asistente';
+  if(p.get('uid')) localStorage.setItem('pco3_uid', S.uid);
+  if(p.get('nombre')) localStorage.setItem('pco3_nombre', S.nombre);
+  document.getElementById('headerNombre').textContent = S.nombre;
+  document.getElementById('headerFecha').textContent = new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('fecha-reserva-as').value = fechaHoy();
+})();
+
+// ── FIX 2: wrapper con error handler ────────────────────
+function escuchar(q, onData, etiqueta) {
+  return onSnapshot(q, onData, error => {
+    console.error(`❌ Listener "${etiqueta}":`, error.code, error.message);
+    if (error.code === 'failed-precondition')
+      console.error(`🔧 Falta índice compuesto para "${etiqueta}". Revisa Firebase Console.`);
+  });
+}
+
+// ── LISTENERS ────────────────────────────────────────────
+// FIX 3,4,5,6,7,9: todos los listeners correctamente nombrados y sin llamadas a funciones inexistentes
+function iniciarListeners() {
+  const hoy = fechaHoy();
+
+  // Novedades de los 4 módulos
+  escuchar(query(collection(db,'seg_novedades'), where('fecha','==',hoy)),
+    s => { S.novSeg = s.docs.map(d=>normalizarNov({id:d.id,...d.data()},'seg')); refrescar(); },
+    'seg_novedades');
+
+  escuchar(query(collection(db,'pool_novedades'), where('fecha','==',hoy)),
+    s => { S.novPool = s.docs.map(d=>normalizarNov({id:d.id,...d.data()},'pool')); refrescar(); },
+    'pool_novedades');
+
+  escuchar(query(collection(db,'gym_novedades'), where('fecha','==',hoy)),
+    s => { S.novGym = s.docs.map(d=>normalizarNov({id:d.id,...d.data()},'gym')); refrescar(); },
+    'gym_novedades');
+
+  escuchar(query(collection(db,'novedades_mantenimiento'), where('fecha','==',hoy)),
+    s => { S.novMtto = s.docs.map(d=>normalizarNov({id:d.id,...d.data()},'mtto')); refrescar(); },
+    'novedades_mantenimiento');
+
+  // FIX 7: nombre correcto de la función
+  escuchar(query(collection(db,'tareas_mantenimiento'), where('fecha','==',hoy), where('estado','==','completada_pendiente_revision'), orderBy('creado_en','desc')),
+    s => { S.tareas = s.docs.map(d=>({id:d.id,...d.data()})); actualizarStats(); renderVerificaciones(); },
+    'tareas verificacion');
+
+  // FIX 9: listeners para PQR, mora y correspondencia
+  escuchar(query(collection(db,'pqr'), orderBy('creado_en','desc')),
+    s => { S.pqrs = s.docs.map(d=>({id:d.id,...d.data()})); actualizarStats(); renderPQR(); renderPQRResumen(); },
+    'pqr');
+
+  escuchar(query(collection(db,'correspondencia'), orderBy('hora_recepcion','desc')),
+    s => { S.correspondencia = s.docs.map(d=>({id:d.id,...d.data()})); actualizarStats(); renderCorrespondencia(); renderCorrResumen(); },
+    'correspondencia');
+
+  escuchar(query(collection(db,'mora')),
+    s => { S.mora = s.docs.map(d=>({id:d.id,...d.data()})); renderMora(); },
+    'mora');
+}
+
+function refrescar() {
+  actualizarStats();
+  renderNovedadesAs();
+  renderAlertasCriticas();
+}
+
+// ── STATS ────────────────────────────────────────────────
+function actualizarStats() {
+  const pqrPend = S.pqrs.filter(p=>p.estado==='abierto').length;
+  const corrPend = S.correspondencia.filter(c=>!c.entregado).length;
+  const verifPend = S.tareas.length;
+  const resPend = S.reservas.filter(r=>r.estado==='pendiente').length;
+
+  document.getElementById('stat-pqr').textContent = pqrPend;
+  document.getElementById('stat-corr').textContent = corrPend;
+  document.getElementById('stat-verif').textContent = verifPend;
+  document.getElementById('stat-reservas').textContent = resPend;
+
+  document.getElementById('box-pqr').className = 'stat-box'+(pqrPend>0?' alerta':'');
+  document.getElementById('box-verif').className = 'stat-box'+(verifPend>0?' alerta':'');
+  document.getElementById('box-corr').className = 'stat-box'+(corrPend>0?' alerta':'');
+
+  // Badges en el nav
+  const bPqr = document.getElementById('badge-pqr');
+  if(pqrPend>0){bPqr.textContent=pqrPend;bPqr.classList.add('show');}else bPqr.classList.remove('show');
+
+  const bVerif = document.getElementById('badge-verif');
+  if(verifPend>0){bVerif.textContent=verifPend;bVerif.classList.add('show');}else bVerif.classList.remove('show');
+
+  const todas = [...S.novSeg,...S.novPool,...S.novGym,...S.novMtto];
+  const novAbiertas = todas.filter(n=>n.estado==='abierta'||n.estado==='en_atencion').length;
+  const bNov = document.getElementById('badge-nov-as');
+  if(novAbiertas>0){bNov.textContent=novAbiertas;bNov.classList.add('show');}else bNov.classList.remove('show');
+}
+
+// ── ALERTAS CRÍTICAS ─────────────────────────────────────
+function renderAlertasCriticas() {
+  const criticas = [...S.novSeg,...S.novPool,...S.novGym,...S.novMtto]
+    .filter(n => (n.nivel||'').includes('crit') && (n.estado==='abierta'||n.estado==='en_atencion'));
+  const cont = document.getElementById('alertas-criticas-cont');
+  if(!criticas.length){ cont.innerHTML=''; return; }
+  cont.innerHTML = criticas.map(n=>`
+    <div style="background:#fef2f2;border:2px solid var(--danger);border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="font-weight:700;font-size:13px;color:var(--danger)">🚨 CRÍTICO — ${n._m==='pool'?'Piscina':n._m==='gym'?'Gimnasio':n._m==='mtto'?'Mantenimiento':'Seguridad'}</div>
+      <div style="font-size:12px;margin-top:4px">${n.descripcion||''}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">${ffd(n.creado_en)}</div>
+    </div>`).join('');
+}
+
+// ── RESÚMENES INICIO ─────────────────────────────────────
+function renderPQRResumen() {
+  const pend = S.pqrs.filter(p=>p.estado==='abierto').slice(0,4);
+  const cont = document.getElementById('pqr-resumen-lista');
+  const tipoIcon = {consulta:'❓',queja:'😠',reclamo:'📢',sugerencia:'💡',solicitud:'📋'};
+  if(!pend.length){ cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin PQRs sin responder</p></div>'; return; }
+  cont.innerHTML = pend.map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:18px">${tipoIcon[p.tipo]||'📋'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre_residente||'—'} · ${p.torre_apto||'—'}</div>
+        <div style="font-size:11px;color:var(--muted)">${p.tipo} · ${ffd(p.creado_en)}</div>
+      </div>
+      <button class="btn-sm btn-primary" onclick="gestionarPQR('${p.id}')">Atender</button>
+    </div>`).join('');
+}
+
+function renderCorrResumen() {
+  const pend = S.correspondencia.filter(c=>!c.entregado).slice(0,4);
+  const cont = document.getElementById('corr-resumen-lista');
+  if(!pend.length){ cont.innerHTML='<div class="empty"><div class="icon">📦</div><p>Sin correspondencia pendiente</p></div>'; return; }
+  cont.innerHTML = pend.map(c=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:18px">${{paquete:'📦',carta:'✉️',documento:'📄'}[c.tipo]||'📋'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px">${c.torre_apto||'—'} · ${c.remitente||'—'}</div>
+        <div style="font-size:11px;color:var(--muted)">${c.descripcion||c.tipo}</div>
+      </div>
+      <button class="btn-sm btn-success" onclick="marcarEntregado('${c.id}')">Entregar</button>
+    </div>`).join('');
+}
+
+// ── NOVEDADES ────────────────────────────────────────────
+window.setTabNovMod = function(mod, el) {
+  S.tabNovMod = mod;
+  document.querySelectorAll('#tabs-nov-mod .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  renderNovedadesAs();
+};
+window.setFiltroNovAs = function(el) {
+  S.filtroNovAs = el.dataset.val;
+  document.querySelectorAll('#filtro-nov-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderNovedadesAs();
+};
+
+// FIX 3: función con el nombre correcto
+function renderNovedadesAs() {
+  let lista = S.tabNovMod==='pool'?S.novPool:S.tabNovMod==='gym'?S.novGym:S.tabNovMod==='mtto'?S.novMtto:S.novSeg;
+  const f = S.filtroNovAs;
+  if(f==='abiertas') lista = lista.filter(n=>n.estado==='abierta'||n.estado==='en_atencion');
+  else if(f==='criticas') lista = lista.filter(n=>(n.nivel||'').includes('crit'));
+  else if(f==='listo') lista = lista.filter(n=>n.estado==='listo_cierre');
+  else if(f==='cerradas') lista = lista.filter(n=>n.estado==='cerrada');
+
+  const cont = document.getElementById('lista-novedades-as');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin novedades</p></div>'; return; }
+  cont.innerHTML = lista.map(n => {
+    const activa = n.estado==='abierta'||n.estado==='en_atencion';
+    return `<div class="list-item ${nivelClass(n.nivel)}">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        ${modTag(n._m)}<span class="badge-estado ${nivelBadge(n.nivel)}">${n.nivel}</span>
+        <span class="badge-estado ${estadoBadge(n.estado)}">${estadoLabel(n.estado)}</span>
+      </div>
+      <div class="list-item-title">${n.tipo} ${n.area?'· '+n.area:''}</div>
+      <div class="list-item-sub">${n.descripcion||''}</div>
+      <div class="list-item-sub" style="margin-top:2px">${ffd(n.creado_en)}</div>
+      ${activa?`<div style="margin-top:8px">
+        <button class="btn-sm btn-purple" onclick="abrirListoCierreAs('${n.id}','${n._m}')">Marcar listo para cierre</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// FIX 3: también se llama desde la función genérica
+window.renderNovedades = renderNovedadesAs;
+
+window.abrirListoCierreAs = function(id, mod) {
+  const lista = mod==='pool'?S.novPool:mod==='gym'?S.novGym:mod==='mtto'?S.novMtto:S.novSeg;
+  const n = lista.find(x=>x.id===id); if(!n) return;
+  S.novSel = {...n, _m:mod};
+  document.getElementById('listo-nov-titulo').textContent = `${n.nivel} · ${n.tipo} ${n.area?'· '+n.area:''}`;
+  document.getElementById('listo-nov-comentario').value = '';
+  document.getElementById('modal-listo-cierre').classList.add('open');
+};
+
+window.confirmarListoCierreAs = async function() {
+  const com = document.getElementById('listo-nov-comentario').value.trim();
+  if(!com){ toast('Escribe un comentario', 'error'); return; }
+  if(!S.novSel) return;
+  try {
+    await updateDoc(doc(db, colNov(S.novSel._m), S.novSel.id), {
+      estado: 'listo_cierre',
+      status: 'EN_ATENCION',
+      comentario_supervision: com,
+      marcado_listo_por: S.uid,
+      marcado_listo_nombre: S.nombre,
+      marcado_listo_en: serverTimestamp()
+    });
+    cerrarModal('modal-listo-cierre');
+    toast('✅ Marcado como listo para cierre');
+  } catch(e) { console.error(e); toast('Error', 'error'); }
+};
+
+// ── PQR ──────────────────────────────────────────────────
+window.setFiltroPQR = function(el) {
+  S.filtroPQR = el.dataset.val;
+  document.querySelectorAll('#filtro-pqr-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderPQR();
+};
+
+window.abrirModalPQR = function() {
+  ['pqr-apto','pqr-nombre','pqr-descripcion'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modal-pqr').classList.add('open');
+};
+
+window.guardarPQR = async function() {
+  const apto = document.getElementById('pqr-apto').value.trim();
+  const nombre = document.getElementById('pqr-nombre').value.trim();
+  const desc = document.getElementById('pqr-descripcion').value.trim();
+  if(!apto||!nombre||!desc){ toast('Completa todos los campos', 'error'); return; }
+  try {
+    await addDoc(collection(db,'pqr'), {
+      tipo: document.getElementById('pqr-tipo').value,
+      torre_apto: apto, nombre_residente: nombre, descripcion: desc,
+      canal: document.getElementById('pqr-canal').value,
+      estado: 'abierto', fecha: fechaHoy(),
+      creado_por: S.uid, creado_por_nombre: S.nombre, creado_en: serverTimestamp()
+    });
+    cerrarModal('modal-pqr'); toast('✅ PQR registrada');
+  } catch(e) { console.error(e); toast('Error', 'error'); }
+};
+
+function renderPQR() {
+  let lista = [...S.pqrs];
+  if(S.filtroPQR !== 'todas') lista = lista.filter(p=>p.estado===S.filtroPQR);
+  const cont = document.getElementById('lista-pqr');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">💬</div><p>Sin PQRs</p></div>'; return; }
+  const tipoIcon = {consulta:'❓',queja:'😠',reclamo:'📢',sugerencia:'💡',solicitud:'📋'};
+  const estColor = {abierto:'#ef4444',en_gestion:'#f59e0b',listo_cierre:'#7c3aed',cerrado:'#10b981'};
+  const estLabel = {abierto:'Abierto',en_gestion:'En gestión',listo_cierre:'Listo cierre',cerrado:'Cerrado'};
+  cont.innerHTML = lista.map(p=>`
+    <div class="list-item" style="border-left:4px solid ${estColor[p.estado]||'#94a3b8'}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="font-size:16px">${tipoIcon[p.tipo]||'📋'}</span>
+            <span style="font-weight:700;font-size:12px;text-transform:capitalize">${p.tipo}</span>
+          </div>
+          <div class="list-item-title">${p.nombre_residente||'—'} · ${p.torre_apto||'—'}</div>
+          <div class="list-item-sub">${(p.descripcion||'').substring(0,70)}${(p.descripcion||'').length>70?'...':''}</div>
+          <div class="list-item-sub" style="margin-top:2px">${ffd(p.creado_en)} · ${p.canal||'presencial'}</div>
+        </div>
+        <span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:12px;background:${estColor[p.estado]}22;color:${estColor[p.estado]};white-space:nowrap">${estLabel[p.estado]||p.estado}</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${p.estado!=='cerrado'?`<button class="btn-sm btn-primary" onclick="gestionarPQR('${p.id}')">Gestionar</button>`:''}
+        ${p.estado!=='cerrado'&&p.estado!=='listo_cierre'?`<button class="btn-sm btn-purple" onclick="marcarListoPQR('${p.id}')">Listo cierre</button>`:''}
+      </div>
+      ${p.respuesta?`<div style="margin-top:8px;background:#f0fdf4;border-radius:8px;padding:8px;font-size:12px"><span style="font-weight:600;color:var(--success)">Respuesta:</span> ${p.respuesta}</div>`:''}
+    </div>`).join('');
+}
+
+window.gestionarPQR = function(id) {
+  const p = S.pqrs.find(x=>x.id===id); if(!p) return;
+  S.pqrSel = p;
+  const tipoIcon = {consulta:'❓',queja:'😠',reclamo:'📢',sugerencia:'💡',solicitud:'📋'};
+  document.getElementById('pqr-gestionar-body').innerHTML = `
+    <div class="form-group"><span class="label">Tipo · Torre/Apto</span><div style="font-weight:600">${tipoIcon[p.tipo]||''} ${p.tipo} · ${p.torre_apto}</div></div>
+    <div class="form-group"><span class="label">Residente</span><div>${p.nombre_residente} · ${ffd(p.creado_en)}</div></div>
+    <div class="form-group"><span class="label">Descripción</span><div style="font-size:13px">${p.descripcion}</div></div>
+    <hr style="border-color:var(--border);margin:12px 0">
+    <div class="form-group"><label class="label">Respuesta / Gestión</label>
+      <textarea class="input" id="pqr-respuesta-text" rows="4" placeholder="Escribe la respuesta o acción tomada...">${p.respuesta||''}</textarea>
+    </div>
+    <div class="form-group"><label class="label">Cambiar estado</label>
+      <select class="select" id="pqr-nuevo-estado">
+        <option value="abierto" ${p.estado==='abierto'?'selected':''}>Abierto</option>
+        <option value="en_gestion" ${p.estado==='en_gestion'?'selected':''}>En gestión</option>
+        <option value="listo_cierre" ${p.estado==='listo_cierre'?'selected':''}>Listo para cierre</option>
+      </select>
+    </div>`;
+  document.getElementById('pqr-gestionar-footer').innerHTML =
+    `<button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-pqr-gestionar')">Cancelar</button>
+     <button class="btn btn-primary btn-sm" style="flex:1" onclick="guardarGestionPQR()">Guardar</button>`;
+  document.getElementById('modal-pqr-gestionar').classList.add('open');
+};
+
+window.guardarGestionPQR = async function() {
+  const respuesta = document.getElementById('pqr-respuesta-text').value.trim();
+  const nuevoEstado = document.getElementById('pqr-nuevo-estado').value;
+  if(!S.pqrSel) return;
+  try {
+    await updateDoc(doc(db,'pqr',S.pqrSel.id), {
+      respuesta: respuesta||null, estado: nuevoEstado,
+      gestionado_por: S.uid, gestionado_por_nombre: S.nombre,
+      gestionado_en: serverTimestamp()
+    });
+    cerrarModal('modal-pqr-gestionar'); toast('✅ PQR actualizada');
+  } catch(e) { console.error(e); toast('Error', 'error'); }
+};
+
+window.marcarListoPQR = async function(id) {
+  try {
+    await updateDoc(doc(db,'pqr',id), {
+      estado: 'listo_cierre',
+      marcado_listo_por: S.uid, marcado_listo_en: serverTimestamp()
+    });
+    toast('✅ PQR lista para cierre');
+  } catch(e) { toast('Error', 'error'); }
+};
+
+// ── RESERVAS ─────────────────────────────────────────────
+window.setTabReservaAs = function(tipo, el) {
+  S.tabReservaAs = tipo;
+  document.querySelectorAll('#tabs-reserva-tipo .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  cargarReservasAs();
+};
+window.setFiltroReservaAs = function(el) {
+  S.filtroReservaAs = el.dataset.val;
+  document.querySelectorAll('#filtro-reserva-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderReservasAs();
+};
+
+// FIX 4: función con nombre correcto
+async function cargarReservasAs() {
+  const fecha = document.getElementById('fecha-reserva-as').value; if(!fecha) return;
+  try {
+    const q = query(collection(db,'reservas'), where('fecha','==',fecha), where('espacio','==',S.tabReservaAs), orderBy('hora'));
+    const snap = await getDocs(q);
+    S.reservas = snap.docs.map(d=>({id:d.id,...d.data()}));
+    actualizarStats();
+    renderReservasAs();
+  } catch(e) { console.error(e); }
+}
+window.cargarReservasAs = cargarReservasAs;
+
+function renderReservasAs() {
+  let lista = [...S.reservas];
+  if(S.filtroReservaAs !== 'todas') lista = lista.filter(r=>r.estado===S.filtroReservaAs);
+  const cont = document.getElementById('lista-reservas-as');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">📅</div><p>Sin reservas</p></div>'; return; }
+  const estColor = {pendiente:'#f59e0b',confirmada:'#10b981',cancelada:'#94a3b8'};
+  const estLabel = {pendiente:'⏳ Pendiente',confirmada:'✅ Confirmada',cancelada:'❌ Cancelada'};
+  cont.innerHTML = lista.map(r=>`
+    <div class="list-item" style="border-left:4px solid ${estColor[r.estado]||'#94a3b8'}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1">
+          <div class="list-item-title">${r.nombre_residente||r.residente||r.nombre||'—'}</div>
+          <div class="list-item-sub">Apto: ${r.torre_apto||r.apartamento||'—'} · ${r.hora||'—'} · ${r.numPersonas||r.num_personas||'—'} pers.</div>
+          <div class="list-item-sub">Pago: ${r.comprobante_pago?'✅ Registrado':'⏳ Pendiente'}</div>
+        </div>
+        <span style="font-size:12px;font-weight:600;color:${estColor[r.estado]};white-space:nowrap">${estLabel[r.estado]||r.estado}</span>
+      </div>
+      ${r.estado==='pendiente'?`
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn-sm btn-success" onclick="confirmarReservaAs('${r.id}')">✅ Confirmar</button>
+        <button class="btn-sm btn-danger" onclick="rechazarReservaAs('${r.id}')">❌ Rechazar</button>
+      </div>`:''}
+    </div>`).join('');
+}
+
+window.confirmarReservaAs = async function(id) {
+  try {
+    await updateDoc(doc(db,'reservas',id), {estado:'confirmada',confirmado_por:S.uid,confirmado_por_nombre:S.nombre,confirmado_en:serverTimestamp()});
+    toast('✅ Reserva confirmada');
+  } catch(e) { toast('Error', 'error'); }
+};
+window.rechazarReservaAs = async function(id) {
+  const motivo = prompt('Motivo de rechazo:'); if(!motivo) return;
+  try {
+    await updateDoc(doc(db,'reservas',id), {estado:'cancelada',motivo_cancelacion:motivo,cancelado_por:S.uid,cancelado_en:serverTimestamp()});
+    toast('Reserva rechazada');
+  } catch(e) { toast('Error', 'error'); }
+};
+
+// ── MORA ─────────────────────────────────────────────────
+window.setTabMoraCorr = function(tab, el) {
+  document.querySelectorAll('#tabs-mora-corr .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  document.getElementById('sub-mora').style.display = tab==='mora'?'block':'none';
+  document.getElementById('sub-corr').style.display = tab==='corr'?'block':'none';
+};
+
+window.renderMora = function() {
+  const busq = (document.getElementById('buscar-mora').value||'').toLowerCase();
+  let lista = [...S.mora];
+  if(busq) lista = lista.filter(m=>[m.torre_apto,m.nombre_residente,m.nombre].join(' ').toLowerCase().includes(busq));
+  const cont = document.getElementById('lista-mora');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">💰</div><p>Sin registros de mora</p></div>'; return; }
+  cont.innerHTML = lista.map(m=>{
+    const enMora = m.en_mora||m.mora||false;
+    const meses = m.meses_mora||m.cuotas_pendientes||0;
+    return `<div class="list-item" style="border-left:4px solid ${enMora?'var(--danger)':'var(--success)'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="flex:1">
+          <div class="list-item-title">${m.nombre_residente||m.nombre||'—'}</div>
+          <div class="list-item-sub">Torre/Apto: ${m.torre_apto||m.apto||'—'}</div>
+          ${enMora?`<div class="list-item-sub" style="color:var(--danger);margin-top:2px">⚠️ ${meses} mes(es) en mora${m.valor_mora?' · $'+m.valor_mora.toLocaleString():''}</div>`:''}
+        </div>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;background:${enMora?'#fee2e2':'#d1fae5'};color:${enMora?'#b91c1c':'#065f46'}">${enMora?'En mora':'Al día'}</span>
+      </div>
+      ${enMora?`<div style="margin-top:8px"><button class="btn-sm btn-success" onclick="marcarPagado('${m.id}')">Registrar pago recibido</button></div>`:''}
+    </div>`;
+  }).join('');
+};
+
+window.marcarPagado = async function(id) {
+  if(!confirm('¿Confirmas que recibiste el pago?')) return;
+  try {
+    await updateDoc(doc(db,'mora',id), {en_mora:false,mora:false,meses_mora:0,pago_registrado_por:S.uid,pago_registrado_en:serverTimestamp()});
+    toast('✅ Pago registrado');
+  } catch(e) { toast('Error', 'error'); }
+};
+
+// ── CORRESPONDENCIA ──────────────────────────────────────
+window.setFiltroCorr = function(el) {
+  S.filtroCorr = el.dataset.val;
+  document.querySelectorAll('#filtro-corr-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderCorrespondencia();
+};
+
+window.abrirModalCorrespondencia = function() {
+  ['corr-apto','corr-remitente','corr-descripcion'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('modal-corr').classList.add('open');
+};
+
+window.guardarCorrespondencia = async function() {
+  const apto = document.getElementById('corr-apto').value.trim();
+  if(!apto){ toast('Escribe el torre/apto', 'error'); return; }
+  try {
+    await addDoc(collection(db,'correspondencia'), {
+      tipo: document.getElementById('corr-tipo').value,
+      torre_apto: apto,
+      remitente: document.getElementById('corr-remitente').value.trim(),
+      descripcion: document.getElementById('corr-descripcion').value.trim(),
+      entregado: false, fecha: fechaHoy(),
+      hora_recepcion: serverTimestamp(),
+      registrado_por: S.uid, registrado_por_nombre: S.nombre
+    });
+    cerrarModal('modal-corr'); toast('✅ Correspondencia registrada');
+  } catch(e) { console.error(e); toast('Error', 'error'); }
+};
+
+window.marcarEntregado = async function(id) {
+  try {
+    await updateDoc(doc(db,'correspondencia',id), {entregado:true,fecha_entrega:serverTimestamp(),entregado_por:S.uid});
+    toast('✅ Marcado como entregado');
+  } catch(e) { toast('Error', 'error'); }
+};
+
+function renderCorrespondencia() {
+  let lista = [...S.correspondencia];
+  if(S.filtroCorr==='pendiente') lista = lista.filter(c=>!c.entregado);
+  else if(S.filtroCorr==='entregada') lista = lista.filter(c=>c.entregado);
+  const cont = document.getElementById('lista-corr');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">📦</div><p>Sin registros</p></div>'; return; }
+  const tipoIcon = {paquete:'📦',carta:'✉️',documento:'📄',otro:'📋'};
+  cont.innerHTML = lista.map(c=>`
+    <div class="list-item" style="border-left:4px solid ${c.entregado?'var(--success)':'var(--warning)'}">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">${tipoIcon[c.tipo]||'📋'}</span>
+        <div style="flex:1">
+          <div class="list-item-title">${c.torre_apto||'—'} · ${c.remitente||'—'}</div>
+          <div class="list-item-sub">${c.descripcion||c.tipo} · ${ffd(c.hora_recepcion)}</div>
+          ${c.entregado?`<div class="list-item-sub" style="color:var(--success)">✅ Entregado ${ffd(c.fecha_entrega)}</div>`:''}
+        </div>
+      </div>
+      ${!c.entregado?`<div style="margin-top:8px"><button class="btn-sm btn-success" onclick="marcarEntregado('${c.id}')">Marcar entregado</button></div>`:''}
+    </div>`).join('');
+}
+
+// ── VERIFICACIONES ───────────────────────────────────────
+// FIX 7: nombre correcto
+function renderVerificaciones() {
+  const cont = document.getElementById('lista-verif');
+  if(!S.tareas.length){ cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin tareas para verificar</p></div>'; return; }
+  const asigLabel = {todero:'🔧 Todero',aseo:'🧹 Aseo',seguridad:'👮 Seguridad'};
+  cont.innerHTML = S.tareas.map(t=>`
+    <div class="list-item" style="border-left:4px solid var(--purple)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:#f5f3ff;color:var(--purple)">${asigLabel[t.asignado_a]||t.asignado_a}</span>
+            <span class="badge-estado badge-${t.prioridad==='alta'?'critico':t.prioridad==='media'?'medio':'bajo'}">${t.prioridad}</span>
+          </div>
+          <div class="list-item-title">${t.titulo}</div>
+          <div class="list-item-sub">${t.area||'—'}</div>
+          <div class="list-item-sub" style="margin-top:2px">Completada por: ${t.completado_por_nombre||'—'} · ${ffd(t.completado_en)}</div>
+        </div>
+      </div>
+      ${t.completado_notas?`<div style="background:#f8f9fa;border-radius:8px;padding:8px;font-size:12px;margin-top:8px">${t.completado_notas}</div>`:''}
+      ${t.foto_evidencia?`<img src="${t.foto_evidencia}" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;cursor:pointer" onclick="window.open('${t.foto_evidencia}','_blank')">`:''}
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn-sm btn-success" onclick="aprobarVerif('${t.id}')">✅ Aprobar → Coordinador</button>
+        <button class="btn-sm btn-danger" onclick="rechazarVerif('${t.id}')">❌ Rechazar</button>
+      </div>
+    </div>`).join('');
+}
+
+window.aprobarVerif = async function(id) {
+  try {
+    await updateDoc(doc(db,'tareas_mantenimiento',id), {
+      estado: 'completada_pendiente_revision',
+      verificado_por_asistente: S.uid,
+      verificado_por_asistente_nombre: S.nombre,
+      verificado_asistente_en: serverTimestamp()
+    });
+    toast('✅ Enviado al Coordinador');
+  } catch(e) { console.error(e); toast('Error', 'error'); }
+};
+
+window.rechazarVerif = async function(id) {
+  const motivo = prompt('Motivo de rechazo:'); if(!motivo) return;
+  try {
+    await updateDoc(doc(db,'tareas_mantenimiento',id), {
+      estado: 'en_proceso',
+      rechazo_asistente_motivo: motivo,
+      rechazado_asistente_por: S.uid,
+      rechazado_asistente_en: serverTimestamp()
+    });
+    toast('Tarea devuelta para corrección');
+  } catch(e) { toast('Error', 'error'); }
+};
+
+// ── NAV ──────────────────────────────────────────────────
+window.navTo = function(sec, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(sec==='reservas') cargarReservasAs();
+};
+
+// ── INIT ─────────────────────────────────────────────────
+iniciarListeners();
+</script>
+</body>
+</html>

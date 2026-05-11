@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Reserva — Gimnasio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f7;--white:#fff;--text:#0f172a;--text2:#475569;--border:#cbd5e1;--accent:#1e3a5f;--accent2:#2563eb;--accent-light:#dbeafe;--gbtn:linear-gradient(135deg,#1e3a5f,#2563eb);--red:#dc2626;--red-light:#fef2f2;--yellow:#f59e0b;--yellow-light:#fffbeb;--green:#16a34a;--green-light:#f0fdf4;--font:'DM Sans',sans-serif;--fd:'DM Serif Display',serif}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:100vh}
+.progress-wrap{position:sticky;top:0;z-index:100;background:var(--accent);padding:14px 20px;box-shadow:0 4px 20px rgba(15,23,42,.3)}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.progress-title{font-size:13px;font-weight:600;color:rgba(255,255,255,.9)}
+.progress-count{font-size:12px;color:rgba(255,255,255,.6)}
+.progress-bar{height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#60a5fa,#3b82f6,#2563eb);border-radius:2px;transition:width .4s ease}
+.container{max-width:520px;margin:0 auto;padding:24px 16px 40px}
+.step{display:none}.step.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.step-header{margin-bottom:24px}
+.step-icon{width:52px;height:52px;background:var(--gbtn);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.step-title{font-family:var(--fd);font-size:26px;color:var(--accent);margin-bottom:6px}
+.step-sub{font-size:14px;color:var(--text2);line-height:1.6}
+.card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.card-title{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.field{margin-bottom:16px}.field:last-child{margin-bottom:0}
+.field-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.field-label span{color:var(--red);margin-left:2px}
+.field-input{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:15px;color:var(--text);outline:none;transition:border-color .2s;appearance:none;-webkit-appearance:none}
+.field-input:focus{border-color:var(--accent2);background:var(--white)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.file-upload{position:relative}.file-upload input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.file-upload-box{width:100%;padding:20px;background:var(--bg);border:2px dashed var(--border);border-radius:10px;text-align:center;font-size:13px;color:var(--text2);transition:all .2s;cursor:pointer}
+.file-upload-box:hover{border-color:var(--accent2);background:var(--accent-light)}
+.file-upload-box.has-file{border-color:var(--green);background:var(--green-light);color:var(--green);font-weight:600}
+.reglamento-box{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px;max-height:300px;overflow-y:auto;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.reglamento-section{font-size:14px;font-weight:700;color:var(--accent);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.reglamento-section:first-child{margin-top:0}
+.reglamento-item{font-size:12.5px;color:var(--text2);line-height:1.7;padding:3px 0 3px 18px;position:relative}
+.reglamento-item::before{content:'•';position:absolute;left:4px;color:var(--accent2);font-weight:700}
+.reglamento-resp{font-size:11.5px;color:var(--text2);line-height:1.6;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.checkbox-single{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.checkbox-single input[type="checkbox"]{width:20px;height:20px;flex-shrink:0;accent-color:var(--accent2);margin-top:2px}
+.checkbox-single .checkbox-label{font-size:13px;font-weight:600;color:var(--accent);line-height:1.4}
+.conditional{display:none}.conditional.show{display:block}
+.radio-group{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.radio-btn{padding:12px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:14px;font-weight:600;color:var(--text2);background:var(--bg);transition:all .2s;user-select:none}
+.radio-btn.selected{border-color:var(--accent2);background:var(--accent-light);color:var(--accent)}
+.block-msg{background:linear-gradient(135deg,#fef2f2,#fff1f2);border:2px solid var(--red);border-radius:14px;padding:24px 20px;text-align:center;margin-top:16px;display:none;animation:fadeIn .3s ease}
+.block-msg.show{display:block}
+.block-icon{font-size:40px;margin-bottom:12px}
+.block-title{font-size:18px;font-weight:700;color:var(--red);margin-bottom:8px;font-family:var(--fd)}
+.block-text{font-size:13px;color:#991b1b;line-height:1.6}
+.inv-card{background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-top:12px}
+.inv-card-title{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.ok-box{background:var(--green-light);border:1.5px solid var(--green);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.ok-box-title{font-size:12px;font-weight:700;color:var(--green);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.ok-box-text{font-size:13px;color:#14532d}
+.btn-row{display:flex;gap:10px;margin-top:24px}
+.btn-next{flex:1;padding:15px;background:var(--gbtn);border:none;border-radius:12px;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.btn-next:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(37,99,235,.4)}
+.btn-next:disabled{background:#94a3b8;box-shadow:none;cursor:not-allowed;transform:none}
+.btn-back{padding:15px 20px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;color:var(--text2);font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-back:hover{border-color:var(--accent2);color:var(--accent)}
+.error-msg{background:var(--red-light);border:1px solid var(--red);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-top:8px;display:none}
+.error-msg.show{display:block}
+.success-screen{text-align:center;padding:40px 20px}
+.success-icon{width:80px;height:80px;background:var(--gbtn);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;animation:popIn .4s ease;box-shadow:0 8px 24px rgba(37,99,235,.3)}
+@keyframes popIn{0%{transform:scale(.5);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.success-title{font-family:var(--fd);font-size:28px;color:var(--accent);margin-bottom:12px}
+.success-text{font-size:15px;color:var(--text2);line-height:1.6;margin-bottom:24px}
+.loading-overlay{position:fixed;inset:0;background:rgba(238,242,247,.92);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:1000}
+.loading-overlay.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--text2);font-weight:500}
+.inline-loading{display:none;align-items:center;gap:8px;padding:12px 0;font-size:13px;color:var(--text2)}
+.inline-loading.show{display:flex}
+.inline-loading .spinner{width:20px;height:20px;border-width:2px}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px}
+.chip{padding:7px 13px;background:var(--accent-light);border:1.5px solid var(--accent2);border-radius:20px;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;transition:all .2s;user-select:none}
+.chip:hover{background:var(--accent2);color:#fff}
+.frecuente-section{margin-bottom:8px}
+.frecuente-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.fecha-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.fecha-card{padding:10px 6px;border:2px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;background:var(--white);transition:all .2s;user-select:none}
+.fecha-card:hover:not(.bloqueada){border-color:var(--accent2)}
+.fecha-card.selected{border-color:var(--accent2);background:var(--accent-light)}
+.fecha-card.bloqueada{background:#f8fafc;opacity:.5;cursor:not-allowed;pointer-events:none}
+.fecha-card-dia{font-size:11px;font-weight:600;color:var(--text2);text-transform:capitalize}
+.fecha-card-num{font-size:20px;font-weight:700;color:var(--accent);line-height:1.2;margin:2px 0}
+.fecha-card-fest{font-size:9px;color:var(--green);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+.fecha-card-no{font-size:9px;color:var(--red);font-weight:700;margin-top:2px}
+.franja-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.franja-btn{padding:12px 6px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;color:var(--text2);background:var(--bg);transition:all .2s;font-family:var(--font);width:100%;line-height:1.3}
+.franja-btn:hover{border-color:var(--accent2);background:var(--accent-light);color:var(--accent)}
+.franja-btn.selected{border-color:var(--accent2);background:var(--accent-light);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="progress-wrap">
+  <div class="progress-top">
+    <span class="progress-title" id="progress-title">Verificación</span>
+    <span class="progress-count" id="progress-count">1 de 6</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:17%"></div></div>
+</div>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Procesando...</div>
+</div>
+
+<div id="mora-block" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px 16px">
+  <div style="background:var(--white);border:2px solid var(--red);border-radius:20px;padding:32px 24px;width:100%;max-width:420px;text-align:center;box-shadow:0 4px 24px rgba(220,38,38,.15)">
+    <div style="font-size:52px;margin-bottom:16px">🚫</div>
+    <div style="font-family:var(--fd);font-size:22px;color:var(--red);margin-bottom:10px">Acceso Restringido</div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px">El apartamento Torre <strong id="mora-torre-apto"></strong> tiene una obligación pendiente con el conjunto.<br><br>Comunícate con administración para regularizar tu situación.</div>
+    <a id="mora-wa-res" href="#" target="_blank" style="display:inline-block;padding:13px 24px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none">💬 Contactar Administración</a>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- PASO 1 -->
+<div class="step active" id="step-1">
+  <div class="step-header">
+    <div class="step-icon">🆔</div>
+    <div class="step-title">Verificación</div>
+    <div class="step-sub">Ingresa tu torre y apartamento para verificar que eres residente registrado.</div>
+  </div>
+  <div class="card">
+    <div class="field-row">
+      <div class="field"><label class="field-label">Torre <span>*</span></label><input type="text" class="field-input" id="torre" placeholder="Ej: 1..." autocomplete="off"></div>
+      <div class="field"><label class="field-label">Apartamento <span>*</span></label><input type="text" class="field-input" id="apto" placeholder="Ej: 101" autocomplete="off"></div>
+    </div>
+  </div>
+  <div class="inline-loading" id="res-checking"><div class="spinner"></div><span>Verificando residente...</span></div>
+  <div class="ok-box" id="res-ok-card" style="display:none">
+    <div class="ok-box-title">✅ Residente Verificado</div>
+    <div class="ok-box-text">Bienvenido/a, <strong id="res-nombre-display"></strong>. Puedes continuar.</div>
+  </div>
+  <input type="hidden" id="nombre">
+  <div class="error-msg" id="err-1">Completa torre y apartamento.</div>
+  <div class="btn-row"><button class="btn-next" onclick="nextStep('1')">Verificar y Continuar →</button></div>
+</div>
+
+<!-- PASO 2 -->
+<div class="step" id="step-2">
+  <div class="step-header">
+    <div class="step-icon">📋</div>
+    <div class="step-title">Reglamento de Uso</div>
+    <div class="step-sub">Lee el reglamento completo antes de continuar.</div>
+  </div>
+  <div class="reglamento-box">
+    <div class="reglamento-section">🏋️ Gimnasio</div>
+    <div class="reglamento-item">Uso exclusivo para propietarios y residentes registrados</div>
+    <div class="reglamento-item">Ropa y calzado deportivo obligatorio</div>
+    <div class="reglamento-item">Toalla personal obligatoria</div>
+    <div class="reglamento-item">Desinfectar equipos después de cada uso</div>
+    <div class="reglamento-item">Tiempo máximo por equipo: 30 min en alta demanda</div>
+    <div class="reglamento-item">No consumir alimentos ni bebidas</div>
+    <div class="reglamento-item">No alcohol ni sustancias psicoactivas</div>
+    <div class="reglamento-item">No arrojar ni usar indebidamente los equipos</div>
+    <div class="reglamento-item">No retirar ni cambiar equipos de lugar</div>
+    <div class="reglamento-item">Informar daños inmediatamente al operador</div>
+    <div class="reglamento-item">No dejar pertenencias fuera de casilleros</div>
+    <div class="reglamento-item">Se recomienda valoración médica previa</div>
+    <div class="reglamento-item">Menores de 12 años solo con adulto responsable</div>
+    <div class="reglamento-item">Aforo máximo: 20 personas</div>
+    <div class="reglamento-resp">Todo daño por uso indebido será asumido por el residente responsable.</div>
+  </div>
+  <div class="card">
+    <label class="checkbox-single">
+      <input type="checkbox" id="acepta-reglamento">
+      <span class="checkbox-label">He leído y acepto el reglamento de uso de Piscina y Jacuzzi.</span>
+    </label>
+  </div>
+  <div class="error-msg" id="err-2">Debes aceptar el reglamento para continuar.</div>
+  <div class="btn-row">
+    <button class="btn-back" onclick="sS('1')">← Atrás</button>
+    <button class="btn-next" onclick="nextStep('2')">Continuar →</button>
+  </div>
+</div>
+
+<!-- PASO 3 -->
+<div class="step" id="step-3">
+  <div class="step-header">
+    <div class="step-icon">🏥</div>
+    <div class="step-title">Información de EPS</div>
+    <div class="step-sub">Datos del servicio médico. Se verifica cada 2 meses.</div>
+  </div>
+  <div class="inline-loading" id="eps-checking"><div class="spinner"></div><span>Verificando EPS registrada...</span></div>
+  <div class="ok-box" id="eps-vigente-card" style="display:none">
+    <div class="ok-box-title">✅ EPS Vigente Registrada</div>
+    <div class="ok-box-text">Tu EPS <strong id="eps-nombre-display"></strong> está registrada y vigente.</div>
+  </div>
+  <div id="eps-form" style="display:none">
+    <div class="card">
+      <div class="field">
+        <label class="field-label">¿Cuenta con EPS activa? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('tiene-eps','Sí',this);showConditional('cond-eps');hideBlock()">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('tiene-eps','No',this);hideConditional('cond-eps');showBlock()">❌ No</div>
+        </div>
+        <input type="hidden" id="tiene-eps">
+      </div>
+      <div class="conditional" id="cond-eps">
+        <div class="field"><label class="field-label">Nombre de la EPS <span>*</span></label><input type="text" class="field-input" id="nombre-eps" placeholder="Ej: Sura, Nueva EPS, Sanitas..."></div>
+        <div class="field">
+          <label class="field-label">Certificado de EPS <span>*</span></label>
+          <div class="file-upload">
+            <div class="file-upload-box" id="eps-box">📎 Toca para subir certificado (foto o PDF)</div>
+            <input type="file" accept="image/*,.pdf" id="eps-file" onchange="handleFile(this,'eps-box','eps-data')">
+          </div>
+          <input type="hidden" id="eps-data">
+        </div>
+      </div>
+    </div>
+    <div class="block-msg" id="block-eps">
+      <div class="block-icon">🚫</div>
+      <div class="block-title">Reserva No Disponible</div>
+      <div class="block-text">Para usar el gimnasio es <strong>obligatorio</strong> contar con servicio médico vigente.</div>
+    </div>
+  </div>
+  <div class="error-msg" id="err-3">Por favor completa nombre y certificado de EPS.</div>
+  <div class="btn-row">
+    <button class="btn-back" onclick="sS('2')">← Atrás</button>
+    <button class="btn-next" id="btn-next-3" onclick="nextStep('3')">Continuar →</button>
+  </div>
+</div>
+
+<!-- PASO 4 -->
+<div class="step" id="step-4">
+  <div class="step-header">
+    <div class="step-icon">👥</div>
+    <div class="step-title">Invitados</div>
+    <div class="step-sub">Agrega hasta 5 personas que te acompañan. Puedes continuar sin invitados.</div>
+  </div>
+  <div class="ok-box" style="margin-bottom:16px">
+    <div class="ok-box-title">👤 Residente principal</div>
+    <div class="ok-box-text" id="inv-residente-display"></div>
+  </div>
+  <div id="frecuentes-wrap" style="display:none;margin-bottom:4px">
+    <div class="frecuente-section">
+      <div class="frecuente-label">Invitados frecuentes — toca para agregar</div>
+      <div class="chip-wrap" id="frecuentes-chips"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:13px;font-weight:700;color:var(--accent)">Invitados: <span id="inv-count">0</span> / 5</span>
+      <button class="btn-next" id="btn-add-inv" onclick="addInvitado()" style="padding:8px 16px;font-size:13px;width:auto;box-shadow:none">+ Agregar</button>
+    </div>
+    <div id="inv-lista"></div>
+  </div>
+  <div class="error-msg" id="err-4">Completa nombre, apellido y documento de cada invitado.</div>
+  <div class="btn-row">
+    <button class="btn-back" onclick="sS('3')">← Atrás</button>
+    <button class="btn-next" onclick="nextStep('4')">Continuar →</button>
+  </div>
+</div>
+
+<!-- PASO 5 -->
+<div class="step" id="step-5">
+  <div class="step-header">
+    <div class="step-icon">📊</div>
+    <div class="step-title">Fecha y Disponibilidad</div>
+    <div class="step-sub">Elige el día y la hora. Verifica quiénes van.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Quiénes asisten</div>
+    <div id="res-lista-personas" style="font-size:13px;color:var(--text2);line-height:2"></div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:14px;font-weight:700;color:var(--accent)">Total: <span id="res-total-personas">1</span> persona(s)</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Selecciona el día</div>
+    <div class="fecha-grid" id="fecha-cards"></div>
+  </div>
+  <div class="card" id="franja-selector-card" style="display:none">
+    <div class="card-title">Selecciona la hora</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Cada franja tiene duración de 1 hora.</p>
+    <div class="franja-grid" id="franja-buttons"></div>
+  </div>
+  <div class="card" id="disponibilidad-card" style="display:none">
+    <div class="card-title">Disponibilidad</div>
+    <div class="inline-loading" id="aforo-loading"><div class="spinner"></div><span>Consultando cupos...</span></div>
+    <div id="aforo-resultado" style="display:none">
+      <div id="aforo-ok-box" class="ok-box" style="display:none">
+        <div class="ok-box-title" id="aforo-ok-title">✅ Cupos disponibles</div>
+        <div class="ok-box-text" id="aforo-ok-text"></div>
+      </div>
+      <div id="aforo-err-box" class="block-msg" style="display:none;margin-top:0">
+        <div class="block-icon">⚠️</div>
+        <div class="block-title">Sin cupos</div>
+        <div class="block-text" id="aforo-err-text"></div>
+      </div>
+    </div>
+  </div>
+  <div class="error-msg" id="err-5">Selecciona fecha y hora para continuar.</div>
+  <div class="btn-row">
+    <button class="btn-back" onclick="sS('4')">← Atrás</button>
+    <button class="btn-next" id="btn-next-5" onclick="nextStep('5')" disabled>Continuar →</button>
+  </div>
+</div>
+
+<!-- PASO 6 — SIN REDIRECCIÓN AL CALENDARIO -->
+<div class="step" id="step-6">
+  <div class="step-header">
+    <div class="step-icon">✅</div>
+    <div class="step-title">Confirmar Reserva</div>
+    <div class="step-sub">Revisa tu reserva y confirma. Tu lugar quedará asegurado de inmediato.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Resumen de reserva</div>
+    <div id="res-final" style="font-size:13px;color:var(--text2);line-height:2"></div>
+  </div>
+  <div id="cal-verificando" class="inline-loading" style="display:none"><div class="spinner"></div><span>Guardando reserva...</span></div>
+  <div id="cal-err-box" class="block-msg" style="display:none;margin-top:0">
+    <div class="block-icon">⚠️</div>
+    <div class="block-title" id="cal-err-titulo">Sin disponibilidad</div>
+    <div class="block-text" id="cal-err-texto"></div>
+  </div>
+  <div class="error-msg" id="err-6">Error al guardar. Intenta de nuevo.</div>
+  <div class="btn-row" style="flex-direction:column;gap:12px">
+    <button class="btn-next" id="btn-confirmar" onclick="confirmarReserva()" style="font-size:16px;padding:16px">✅ Confirmar Reserva</button>
+    <button class="btn-back" onclick="sS('5')">← Atrás</button>
+  </div>
+</div>
+
+<!-- ÉXITO -->
+<div class="step" id="step-success">
+  <div class="success-screen">
+    <div class="success-icon">🏋️</div>
+    <div class="success-title">¡Reserva confirmada!</div>
+    <div class="success-text">Tu reserva fue registrada exitosamente en el sistema.<br>El operador del gimnasio ya puede verla. ¡Hasta pronto!</div>
+    <button class="btn-next" onclick="window.location.href=window.location.href.split('?')[0]" style="max-width:260px;margin:0 auto">← Hacer otra reserva</button>
+  </div>
+</div>
+
+</div>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import{getFirestore,collection,addDoc,getDocs,getDoc,setDoc,doc,query,where,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+const fc={apiKey:'AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek',authDomain:'registro-residentes.firebaseapp.com',projectId:'registro-residentes',storageBucket:'registro-residentes.firebasestorage.app',messagingSenderId:'646123326163',appId:'1:646123326163:web:8b35b955e7b3692536a226'};
+const app=initializeApp(fc),db=getFirestore(app);
+window.FB={
+  async checkResidente(torre,apto){
+    try{
+      const s=await getDoc(doc(db,'residentes',torre+'_'+apto));
+      if(s.exists())return s.data();
+      const q=query(collection(db,'residentes'),where('torre','==',torre),where('apto','==',String(apto)));
+      const r=await getDocs(q);
+      return r.empty?null:r.docs[0].data();
+    }catch(e){return null;}
+  },
+  async checkEPS(torre,apto){
+    try{
+      const s=await getDoc(doc(db,'eps_residentes',torre+'_'+apto));
+      if(!s.exists())return null;
+      const d=s.data();
+      let ms;
+      if(d.fecha_registro?.toMillis){ms=d.fecha_registro.toMillis();}
+      else if(d.fecha_registro?.seconds){ms=d.fecha_registro.seconds*1000;}
+      else{ms=Date.now();}
+      return(Date.now()-ms)/86400000<60?d:null;
+    }catch(e){return null;}
+  },
+  async saveEPS(torre,apto,eps){
+    try{await setDoc(doc(db,'eps_residentes',torre+'_'+apto),{torre,apto,eps,fecha_registro:serverTimestamp()});}catch(e){}
+  },
+  async loadFrecuentes(torre,apto){
+    try{const s=await getDoc(doc(db,'invitados_frecuentes',torre+'_'+apto));return s.exists()?(s.data().lista||[]):[];}catch(e){return[];}
+  },
+  async saveFrecuentes(torre,apto,lista){
+    try{await setDoc(doc(db,'invitados_frecuentes',torre+'_'+apto),{torre,apto,lista,actualizado:serverTimestamp()});}catch(e){}
+  },
+  async getAforoFecha(espacio,fecha,franja){
+    try{
+      const q=query(collection(db,'reservas'),where('espacio','==',espacio),where('fecha','==',fecha),where('franja','==',franja),where('estado','==','activa'));
+      const s=await getDocs(q);let total=0;
+      s.forEach(d=>total+=(d.data().personas_total||1));
+      return total;
+    }catch(e){return 0;}
+  },
+  async checkReservaFecha(torre,apto,espacio,fecha){
+    try{
+      const q=query(collection(db,'reservas'),where('torre','==',torre),where('apto','==',String(apto)),where('espacio','==',espacio),where('fecha','==',fecha),where('estado','==','activa'));
+      const s=await getDocs(q);return!s.empty;
+    }catch(e){return false;}
+  },
+  async saveReserva(data){
+    const ref=await addDoc(collection(db,'reservas'),{...data,estado:'activa',creado_en:serverTimestamp()});
+    return ref.id;
+  },
+  async checkMora(torre,apto){
+    try{
+      const q=query(collection(db,'mora'),where('torre','==',String(torre).trim()),where('apto','==',String(apto).trim()));
+      const s=await getDocs(q);
+      if(s.empty)return false;
+      return s.docs[0].data().enMora===true;
+    }catch(e){return false;}
+  }
+};
+</script>
+
+<script>
+const ESPACIO='Gimnasio', AFORO_LIMIT=20;
+const ST=['1','2','3','4','5','6'];
+const TI={'1':'Verificación','2':'Reglamento','3':'EPS','4':'Invitados','5':'Fecha y Hora','6':'Confirmar'};
+
+let D={nombre:'',torre:'',apto:'',tieneEPS:'',nombreEPS:'',epsSkipped:false,invitados:[],personas_total:1,frecuentes:[],fecha:'',franja:''};
+let _invCount=0;
+
+function toAMPM(hora24){
+  const[h,m]=hora24.split(':').map(Number);
+  const ampm=h>=12?'PM':'AM';
+  const h12=h%12||12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+function fechaHoy(){return new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});}
+
+function uP(s){
+  const i=ST.indexOf(s),p=Math.round(((i+1)/ST.length)*100);
+  document.getElementById('progress-fill').style.width=p+'%';
+  document.getElementById('progress-title').textContent=TI[s]||'';
+  document.getElementById('progress-count').textContent=(i+1)+' de '+ST.length;
+}
+function sS(s){
+  document.querySelectorAll('.step').forEach(x=>x.classList.remove('active'));
+  document.getElementById('step-'+s).classList.add('active');
+  uP(s);window.scrollTo({top:0,behavior:'smooth'});
+}
+function v(id){const e=document.getElementById(id);return e?e.value.trim():'';}
+function sE(id,msg){const e=document.getElementById(id);if(e){if(msg)e.textContent=msg;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),6000);}}
+function hE(){document.querySelectorAll('.error-msg').forEach(e=>e.classList.remove('show'));}
+function showConditional(id){const el=document.getElementById(id);if(el)el.classList.add('show');}
+function hideConditional(id){const el=document.getElementById(id);if(el)el.classList.remove('show');}
+function selectRadio(f,val,btn){
+  document.getElementById(f).value=val;
+  btn.closest('.radio-group').querySelectorAll('.radio-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function showBlock(){document.getElementById('block-eps').classList.add('show');document.getElementById('btn-next-3').style.display='none';}
+function hideBlock(){document.getElementById('block-eps').classList.remove('show');document.getElementById('btn-next-3').style.display='';}
+function handleFile(input,boxId,dataId){const f=input.files[0],box=document.getElementById(boxId);if(f){box.textContent='✅ '+f.name;box.classList.add('has-file');document.getElementById(dataId).value='ok';}}
+
+function showMoraBlock(torre,apto){
+  document.querySelector('.progress-wrap').style.display='none';
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('loading').classList.remove('show');
+  const block=document.getElementById('mora-block');
+  block.style.display='flex';
+  document.getElementById('mora-torre-apto').textContent=`Torre ${torre} — Apto ${apto}`;
+  const msg=encodeURIComponent(`Hola, soy residente de Torre ${torre} Apto ${apto}. Quiero regularizar mi situación.`);
+  document.getElementById('mora-wa-res').href=`https://wa.me/573204522322?text=${msg}`;
+}
+
+async function enterStep3(){
+  sS('3');
+  const chk=document.getElementById('eps-checking'),vig=document.getElementById('eps-vigente-card'),form=document.getElementById('eps-form');
+  chk.classList.add('show');vig.style.display='none';form.style.display='none';
+  const eps=await window.FB.checkEPS(v('torre'),v('apto'));
+  chk.classList.remove('show');
+  if(eps){D.tieneEPS='Sí';D.nombreEPS=eps.eps||eps.nombre_eps||'Registrada';D.epsSkipped=true;document.getElementById('eps-nombre-display').textContent=D.nombreEPS;vig.style.display='block';}
+  else{D.epsSkipped=false;form.style.display='block';}
+}
+
+async function enterStep4(){
+  document.getElementById('inv-residente-display').textContent=`${D.nombre} — Torre ${v('torre')}, Apto ${v('apto')}`;
+  document.getElementById('inv-lista').innerHTML='';
+  _invCount=0;
+  document.getElementById('inv-count').textContent='0';
+  document.getElementById('btn-add-inv').disabled=false;
+  D.frecuentes=await window.FB.loadFrecuentes(v('torre'),v('apto'));
+  const wrap=document.getElementById('frecuentes-wrap'),chipsEl=document.getElementById('frecuentes-chips');
+  if(D.frecuentes.length){
+    chipsEl.innerHTML=D.frecuentes.map((f,i)=>`<div class="chip" onclick="addInvitadoFrecuente(${i})">👤 ${f.nombre} ${f.apellido}</div>`).join('');
+    wrap.style.display='block';
+  }else{wrap.style.display='none';}
+  sS('4');
+}
+
+window.addInvitadoFrecuente=function(idx){const f=D.frecuentes[idx];if(!f)return;addInvitado(f.nombre,f.apellido,f.documento,f.tieneEPS||'');};
+
+window.addInvitado=function(nombre,apellido,documento,tieneEPS){
+  if(_invCount>=5)return;
+  _invCount++;
+  const n=nombre||'',a=apellido||'',d=documento||'',eps=tieneEPS||'';
+  const li=document.getElementById('inv-lista');
+  const el=document.createElement('div');
+  el.className='inv-card';el.id='inv-item-'+_invCount;
+  const epsSelSi=eps==='Sí'?'selected':'',epsSelNo=eps==='No'?'selected':'';
+  el.innerHTML=`
+    <div class="inv-card-title" style="display:flex;justify-content:space-between;align-items:center">
+      👤 Invitado ${_invCount}
+      <button onclick="removeInvitado(${_invCount})" style="background:var(--red-light);border:1px solid var(--red);border-radius:6px;color:var(--red);font-size:12px;font-weight:600;padding:3px 10px;cursor:pointer">✕ Quitar</button>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Nombre <span>*</span></label><input type="text" class="field-input" id="inv${_invCount}-nombre" placeholder="Nombre" value="${n}"></div>
+      <div class="field"><label class="field-label">Apellido <span>*</span></label><input type="text" class="field-input" id="inv${_invCount}-ape" placeholder="Apellido" value="${a}"></div>
+    </div>
+    <div class="field"><label class="field-label">N° Documento <span>*</span></label><input type="text" class="field-input" id="inv${_invCount}-doc" placeholder="Cédula o pasaporte" value="${d}"></div>
+    <div class="field" style="margin-top:8px">
+      <label class="field-label">¿Tiene EPS?</label>
+      <div class="radio-group">
+        <div class="radio-btn ${epsSelSi}" onclick="selInvEPS(${_invCount},'Sí',this)">✅ Sí</div>
+        <div class="radio-btn ${epsSelNo}" onclick="selInvEPS(${_invCount},'No',this)">❌ No</div>
+      </div>
+      <input type="hidden" id="inv${_invCount}-eps" value="${eps}">
+      <div id="inv${_invCount}-eps-warn" style="display:${eps==='No'?'block':'none'};background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;font-size:12px;color:#78350f;margin-top:6px">⚠️ Sin EPS: el residente asume la responsabilidad médica por este invitado.</div>
+    </div>`;
+  li.appendChild(el);
+  document.getElementById('inv-count').textContent=_invCount;
+  if(_invCount>=5)document.getElementById('btn-add-inv').disabled=true;
+};
+
+window.removeInvitado=function(n){
+  const el=document.getElementById('inv-item-'+n);if(el)el.remove();
+  _invCount=document.getElementById('inv-lista').querySelectorAll('.inv-card').length;
+  document.getElementById('inv-count').textContent=_invCount;
+  document.getElementById('btn-add-inv').disabled=false;
+};
+
+function getInvitados(){
+  const items=document.getElementById('inv-lista').querySelectorAll('.inv-card'),arr=[];
+  items.forEach(item=>{
+    const id=item.id.replace('inv-item-','');
+    const n=document.getElementById('inv'+id+'-nombre')?.value.trim()||'';
+    const a=document.getElementById('inv'+id+'-ape')?.value.trim()||'';
+    const d=document.getElementById('inv'+id+'-doc')?.value.trim()||'';
+    const e=document.getElementById('inv'+id+'-eps')?.value||'';
+    if(n||a||d)arr.push({nombre:n,apellido:a,documento:d,tieneEPS:e});
+  });
+  return arr;
+}
+
+function valInvitados(){
+  const items=document.getElementById('inv-lista').querySelectorAll('.inv-card');
+  for(const item of items){
+    const id=item.id.replace('inv-item-','');
+    if(!document.getElementById('inv'+id+'-nombre')?.value.trim()||!document.getElementById('inv'+id+'-ape')?.value.trim()||!document.getElementById('inv'+id+'-doc')?.value.trim())return false;
+  }
+  return true;
+}
+
+window.selInvEPS=function(n,val,btn){
+  document.getElementById('inv'+n+'-eps').value=val;
+  btn.closest('.radio-group').querySelectorAll('.radio-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('inv'+n+'-eps-warn').style.display=val==='No'?'block':'none';
+};
+
+const FESTIVOS_COL=new Set(['2025-01-01','2025-01-06','2025-03-23','2025-04-18','2025-05-01','2025-06-02','2025-06-23','2025-06-30','2025-07-20','2025-08-07','2025-08-18','2025-10-13','2025-11-03','2025-11-17','2025-12-08','2025-12-25','2026-01-01','2026-01-12','2026-03-23','2026-04-02','2026-05-01','2026-05-25','2026-06-15','2026-06-22','2026-06-29','2026-07-20','2026-08-07','2026-08-17']);
+
+function esDiaDisponible(fechaStr){
+  // Gimnasio: cerrado domingos
+  return new Date(fechaStr+'T12:00:00').getDay()!==0;
+}
+
+function renderFechaSelector(){
+  const grid=document.getElementById('fecha-cards');grid.innerHTML='';
+  const hoy=new Date(fechaHoy()+'T12:00:00');
+  const dias=['dom','lun','mar','mié','jue','vie','sáb'];
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  for(let i=0;i<6;i++){
+    const d=new Date(hoy);d.setDate(d.getDate()+i);
+    const yyyy=d.getFullYear(),mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');
+    const fechaStr=`${yyyy}-${mm}-${dd}`;
+    const disponible=esDiaDisponible(fechaStr);
+    const esFestivo=FESTIVOS_COL.has(fechaStr);
+    const card=document.createElement('div');
+    card.className='fecha-card'+(disponible?'':' bloqueada');
+    if(disponible)card.setAttribute('onclick',`selFecha('${fechaStr}',this)`);
+    let extra='';
+    if(esFestivo&&disponible)extra='<div class="fecha-card-fest">🎉 Festivo</div>';
+    else if(!disponible)extra='<div class="fecha-card-no">Cerrado</div>';
+    card.innerHTML=`<div class="fecha-card-dia">${dias[d.getDay()]}</div><div class="fecha-card-num">${d.getDate()}</div><div class="fecha-card-dia">${meses[d.getMonth()]}</div>${extra}`;
+    grid.appendChild(card);
+  }
+}
+
+function getFranjas(fechaStr){
+  const dow=new Date(fechaStr+'T12:00:00').getDay();
+  if(dow===6)return['07:00','08:00','09:00','10:00','11:00'];
+  return['06:00','07:00','08:00','09:00','17:00','18:00','19:00','20:00'];
+}
+
+function renderFranjaSelector(fechaStr){
+  const card=document.getElementById('franja-selector-card');
+  const grid=document.getElementById('franja-buttons');
+  const esHoy=fechaStr===fechaHoy();
+  let franjas=getFranjas(fechaStr);
+  if(esHoy){
+    const ahora=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Bogota'}));
+    const minActual=ahora.getHours()*60+ahora.getMinutes();
+    franjas=franjas.filter(f=>{const[h,m]=f.split(':').map(Number);return(h*60+m)>(minActual+60);});
+  }
+  if(!franjas.length){
+    grid.innerHTML='<p style="font-size:12px;color:var(--red);padding:8px 0;text-align:center">⏰ No hay franjas disponibles para hoy. Selecciona otro día.</p>';
+    card.style.display='block';document.getElementById('disponibilidad-card').style.display='none';document.getElementById('btn-next-5').disabled=true;return;
+  }
+  grid.innerHTML=franjas.map(f=>`<button class="franja-btn" onclick="selFranja('${f}',this)">${toAMPM(f)}</button>`).join('');
+  card.style.display='block';
+}
+
+window.selFranja=function(franja,el){
+  document.querySelectorAll('.franja-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');D.franja=franja;consultarAforo(D.fecha,franja);
+};
+
+window.selFecha=function(fechaStr,el){
+  document.querySelectorAll('.fecha-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');D.fecha=fechaStr;D.franja='';
+  document.getElementById('franja-selector-card').style.display='none';
+  document.getElementById('disponibilidad-card').style.display='none';
+  document.getElementById('btn-next-5').disabled=true;
+  renderFranjaSelector(fechaStr);
+};
+
+async function consultarAforo(fecha,franja){
+  const card=document.getElementById('disponibilidad-card');
+  const loadEl=document.getElementById('aforo-loading'),resEl=document.getElementById('aforo-resultado');
+  const okEl=document.getElementById('aforo-ok-box'),errEl=document.getElementById('aforo-err-box');
+  const btn=document.getElementById('btn-next-5');
+  card.style.display='block';loadEl.classList.add('show');resEl.style.display='none';btn.disabled=true;
+  const ocupados=await window.FB.getAforoFecha(ESPACIO,fecha,franja);
+  loadEl.classList.remove('show');resEl.style.display='block';
+  const disponibles=AFORO_LIMIT-ocupados;
+  if(disponibles>=D.personas_total){
+    okEl.style.display='block';errEl.style.display='none';
+    document.getElementById('aforo-ok-title').textContent=`✅ ${disponibles} cupo${disponibles!==1?'s':''} disponibles`;
+    document.getElementById('aforo-ok-text').textContent=`Ocupados: ${ocupados} de ${AFORO_LIMIT}. Entran ${D.personas_total} persona${D.personas_total!==1?'s':''}. ¡Hay cupo!`;
+    btn.disabled=false;
+  }else{
+    okEl.style.display='none';errEl.style.display='block';
+    document.getElementById('aforo-err-text').textContent=`Sin cupos para esa hora. Quedan ${Math.max(0,disponibles)} de ${AFORO_LIMIT} y van ${D.personas_total}. Elige otra franja.`;
+    btn.disabled=true;
+  }
+}
+
+async function enterStep5(){
+  D.invitados=getInvitados();D.personas_total=1+D.invitados.length;D.fecha='';sS('5');
+  let html=`<strong>👤 ${D.nombre}</strong> — Torre ${v('torre')}, Apto ${v('apto')} <span style="font-size:11px;color:var(--green);font-weight:700">(Residente)</span><br>`;
+  D.invitados.forEach((inv,i)=>{html+=`<strong>👥 Invitado ${i+1}:</strong> ${inv.nombre} ${inv.apellido} · Doc: ${inv.documento}${inv.tieneEPS?` · EPS: ${inv.tieneEPS}`:''}<br>`;});
+  document.getElementById('res-lista-personas').innerHTML=html;
+  document.getElementById('res-total-personas').textContent=D.personas_total;
+  document.getElementById('franja-selector-card').style.display='none';
+  document.getElementById('disponibilidad-card').style.display='none';
+  document.getElementById('btn-next-5').disabled=true;
+  renderFechaSelector();
+}
+
+function buildResFinal(){
+  let h=`<strong>👤 Residente:</strong> ${D.nombre} — Torre ${v('torre')}, Apto ${v('apto')}<br>`;
+  h+=`<strong>🏥 EPS:</strong> ${D.nombreEPS||'—'}<br>`;
+  if(D.fecha){const[ay,am,ad]=D.fecha.split('-');h+=`<strong>📅 Fecha:</strong> ${ad}/${am}/${ay}<br>`;}
+  if(D.franja)h+=`<strong>🕐 Hora:</strong> ${toAMPM(D.franja)}<br>`;
+  h+=`<strong>👥 Total personas:</strong> ${D.personas_total}<br>`;
+  if(D.invitados.length){D.invitados.forEach((inv,i)=>{h+=`<strong>Invitado ${i+1}:</strong> ${inv.nombre} ${inv.apellido} · Doc: ${inv.documento}<br>`;});}
+  else{h+='<em style="color:var(--text2);font-size:12px">Sin invitados</em><br>';}
+  document.getElementById('res-final').innerHTML=h;
+}
+
+// ── CONFIRMAR RESERVA — SIN REDIRECCIÓN AL CALENDARIO ────────────────────
+window.confirmarReserva=async function(){
+  const btn=document.getElementById('btn-confirmar');
+  const loading=document.getElementById('cal-verificando');
+  const errBox=document.getElementById('cal-err-box');
+  btn.disabled=true;loading.style.display='flex';errBox.style.display='none';
+  try{
+    const fecha=D.fecha||fechaHoy();
+    const[ay,am,ad]=fecha.split('-');
+
+    // Verificar reserva duplicada
+    const yaTiene=await window.FB.checkReservaFecha(v('torre'),v('apto'),ESPACIO,fecha);
+    if(yaTiene){
+      document.getElementById('cal-err-titulo').textContent=`Ya tienes una reserva el ${ad}/${am}/${ay}`;
+      document.getElementById('cal-err-texto').textContent='Solo se permite 1 reserva por día por apartamento en Gimnasio.';
+      errBox.style.display='block';btn.disabled=false;loading.style.display='none';return;
+    }
+
+    // Verificar aforo final
+    const ocupados=await window.FB.getAforoFecha(ESPACIO,fecha,D.franja);
+    const disponibles=AFORO_LIMIT-ocupados;
+    if(disponibles<D.personas_total){
+      document.getElementById('cal-err-titulo').textContent=`Sin cupos para ${toAMPM(D.franja)}`;
+      document.getElementById('cal-err-texto').textContent=`Quedan ${Math.max(0,disponibles)} cupos y van ${D.personas_total}. Vuelve al paso anterior y elige otra franja.`;
+      errBox.style.display='block';btn.disabled=false;loading.style.display='none';return;
+    }
+
+    // Guardar reserva en Firebase
+    await window.FB.saveReserva({
+      espacio:ESPACIO,torre:v('torre'),apto:v('apto'),
+      torre_apto:v('torre')+'_'+v('apto'),
+      uid:v('torre')+'_'+v('apto'),nombre:D.nombre,
+      tieneEPS:D.tieneEPS,nombreEPS:D.nombreEPS,
+      aceptaReglamento:true,invitados:D.invitados,
+      personas_total:D.personas_total,fecha,franja:D.franja,
+      nombre_residente:D.nombre
+    });
+
+    // Mostrar pantalla de éxito — sin abrir calendario
+    loading.style.display='none';
+    document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+    document.getElementById('step-success').classList.add('active');
+    document.querySelector('.progress-wrap').style.display='none';
+
+  }catch(e){
+    console.error(e);
+    sE('err-6','Error al guardar. Intenta de nuevo.');
+    btn.disabled=false;loading.style.display='none';
+  }
+};
+
+async function nextStep(f){
+  hE();
+  if(f==='1'){
+    if(!v('torre')||!v('apto')){sE('err-1','Ingresa torre y apartamento.');return;}
+    const chk=document.getElementById('res-checking'),ok=document.getElementById('res-ok-card');
+    chk.classList.add('show');ok.style.display='none';
+    const res=await window.FB.checkResidente(v('torre'),v('apto'));
+    chk.classList.remove('show');
+    if(!res){sE('err-1','Residente no encontrado. Verifica torre y apartamento.');return;}
+    D.nombre=res.nombre||res.Nombre||res.name||(v('torre')+'-'+v('apto'));
+    const enMora=await window.FB.checkMora(v('torre'),v('apto'));
+    if(enMora){showMoraBlock(v('torre'),v('apto'));return;}
+    document.getElementById('nombre').value=D.nombre;
+    document.getElementById('res-nombre-display').textContent=D.nombre;
+    ok.style.display='block';setTimeout(()=>sS('2'),600);
+  }
+  else if(f==='2'){
+    if(!document.getElementById('acepta-reglamento').checked){sE('err-2','Debes aceptar el reglamento.');return;}
+    await enterStep3();
+  }
+  else if(f==='3'){
+    if(D.epsSkipped){await enterStep4();return;}
+    if(!v('tiene-eps')){sE('err-3','Selecciona si tienes EPS.');return;}
+    if(v('tiene-eps')==='No'){showBlock();return;}
+    if(!v('nombre-eps')||!v('eps-data')){sE('err-3','Completa nombre y certificado de EPS.');return;}
+    D.tieneEPS='Sí';D.nombreEPS=v('nombre-eps');
+    await window.FB.saveEPS(v('torre'),v('apto'),D.nombreEPS);
+    await enterStep4();
+  }
+  else if(f==='4'){
+    if(!valInvitados()){sE('err-4','Completa nombre, apellido y documento de cada invitado.');return;}
+    const invActuales=getInvitados();
+    if(invActuales.length){
+      let lista=[...D.frecuentes];
+      invActuales.forEach(nuevo=>{if(!lista.find(x=>x.documento===nuevo.documento))lista.push(nuevo);});
+      lista=lista.slice(-20);D.frecuentes=lista;
+      window.FB.saveFrecuentes(v('torre'),v('apto'),lista);
+    }
+    await enterStep5();
+  }
+  else if(f==='5'){
+    if(!D.fecha){sE('err-5','Selecciona una fecha para continuar.');return;}
+    if(!D.franja){sE('err-5','Selecciona una hora para continuar.');return;}
+    buildResFinal();sS('6');
+  }
+}
+
+(function init(){
+  const p=new URLSearchParams(window.location.search);
+  let nombre=p.get('nombre')||'',torre=p.get('torre')||'',apto=p.get('apto')||'';
+  try{const ss=JSON.parse(sessionStorage.getItem('residente_pco3')||'{}');nombre=nombre||ss.nombre||'';torre=torre||ss.torre||'';apto=apto||ss.apto||'';}catch(e){}
+  if(p.get('mora')==='true'){showMoraBlock(torre||'—',apto||'—');return;}
+  if(torre)document.getElementById('torre').value=torre;
+  if(apto)document.getElementById('apto').value=apto;
+  if(nombre&&torre&&apto){
+    D.nombre=nombre;
+    (function waitFB(n){
+      if(!window.FB){if(n>0)setTimeout(()=>waitFB(n-1),150);return;}
+      window.FB.checkMora(torre,apto).then(enMora=>{
+        if(enMora){showMoraBlock(torre,apto);return;}
+        document.getElementById('nombre').value=D.nombre;
+        document.getElementById('res-nombre-display').textContent=D.nombre;
+        document.getElementById('res-ok-card').style.display='block';sS('2');
+      });
+    })(30);
+  }else if(torre&&apto){
+    uP('1');
+    (function tryVerify(intentos){
+      if(!window.FB){if(intentos>0)setTimeout(()=>tryVerify(intentos-1),150);return;}
+      const chk=document.getElementById('res-checking'),ok=document.getElementById('res-ok-card');
+      chk.classList.add('show');
+      window.FB.checkResidente(torre,apto).then(async res=>{
+        chk.classList.remove('show');
+        if(res){
+          const enMora=await window.FB.checkMora(torre,apto);
+          if(enMora){showMoraBlock(torre,apto);return;}
+          D.nombre=res.nombre||res.Nombre||res.name||(torre+'-'+apto);
+          document.getElementById('nombre').value=D.nombre;
+          document.getElementById('res-nombre-display').textContent=D.nombre;
+          ok.style.display='block';setTimeout(()=>sS('2'),600);
+        }
+      });
+    })(30);
+  }else{uP('1');}
+})();
+</script>
+</body>
+</html>

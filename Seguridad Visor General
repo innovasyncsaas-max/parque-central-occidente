@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCO3 · VISOR Seguridad</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--primary:#1e3a5f;--primary-light:#2d5a8e;--primary-dark:#152d4a;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--bg:#f0f4f8;--card:#fff;--text:#1a202c;--muted:#64748b;--border:#e2e8f0;--radius:12px;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+  header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  header .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;letter-spacing:.5px}
+  header h1{font-size:17px;font-weight:700}
+  header p{font-size:12px;opacity:.8}
+  .user-info{margin-left:auto;text-align:right;font-size:12px;opacity:.85}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+  nav button{flex:1;padding:10px 4px 8px;border:none;background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.2s}
+  nav button .icon{font-size:20px}
+  nav button.active{color:var(--primary);font-weight:700}
+  .section{display:none;padding:16px}.section.active{display:block}
+  .card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+  .card-title{font-weight:700;font-size:14px;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+  .stat-box{background:var(--card);border-radius:var(--radius);padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+  .stat-box .num{font-size:28px;font-weight:700;color:var(--primary)}
+  .stat-box .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+  .badge-estado{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge-critico{background:#fee2e2;color:#b91c1c}
+  .badge-medio{background:#fef3c7;color:#b45309}
+  .badge-bajo{background:#d1fae5;color:#065f46}
+  .badge-abierta{background:#dbeafe;color:#1d4ed8}
+  .badge-listo{background:#e9d5ff;color:#6b21a8}
+  .badge-cerrada{background:#f1f5f9;color:#475569}
+  .btn{width:100%;padding:12px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s}
+  .btn-warning{background:var(--warning);color:#fff}
+  .btn-secondary{background:var(--border);color:var(--text)}
+  .input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);transition:.2s}
+  .input:focus{outline:none;border-color:var(--primary)}
+  .label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block}
+  .form-group{margin-bottom:12px}
+  .list-item{padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--card)}
+  .list-item.critico{border-left:4px solid var(--danger)}
+  .list-item.medio{border-left:4px solid var(--warning)}
+  .list-item.bajo{border-left:4px solid var(--success)}
+  .list-item-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .list-item-title{font-weight:600;font-size:13px}
+  .list-item-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .filter-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+  .filter-bar::-webkit-scrollbar{display:none}
+  .chip{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:.2s}
+  .chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot-green{background:var(--success)}.dot-gray{background:#94a3b8}
+  .acceso-tipo{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase}
+  .tipo-visitante{background:#dbeafe;color:#1d4ed8}
+  .tipo-vehiculo{background:#f3e8ff;color:#7c3aed}
+  .tipo-domicilio{background:#fef3c7;color:#b45309}
+  .vig-card{border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+  .vig-avatar{width:40px;height:40px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0}
+  .vig-info{flex:1}
+  .vig-name{font-weight:600;font-size:13px}
+  .vig-status{font-size:12px;color:var(--muted)}
+  .vig-last{font-size:11px;color:var(--muted);margin-top:2px}
+  .select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--text)}
+  .select:focus{outline:none;border-color:var(--primary)}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .modal-header{padding:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:space-between}
+  .modal-header h3{font-size:15px;font-weight:700}
+  .modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
+  .modal-body{padding:16px}
+  .modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+  .empty{text-align:center;padding:30px 20px;color:var(--muted)}.empty .icon{font-size:36px;margin-bottom:8px}.empty p{font-size:13px}
+  .search-bar{display:flex;gap:8px;margin-bottom:12px}.search-bar .input{flex:1}
+  .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1}
+  .section-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .section-header h2{font-size:16px;font-weight:700;color:var(--primary)}
+  .section-header .live-indicator{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--success);font-weight:600}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="badge">VISOR · SEGURIDAD</div>
+    <h1>PCO3 Ciudadela</h1>
+    <p id="headerFecha">Cargando...</p>
+  </div>
+  <div class="user-info"><div id="headerNombre">VISOR</div><div>Turno 24h</div></div>
+</header>
+
+<div id="sec-inicio" class="section active">
+  <div class="section-header"><h2>Centro de Monitoreo</h2><div class="live-indicator"><div class="live-dot"></div>EN VIVO</div></div>
+  <div class="stat-grid">
+    <div class="stat-box"><div class="num" id="stat-accesos-hoy">0</div><div class="lbl">Accesos hoy</div></div>
+    <div class="stat-box"><div class="num" id="stat-activos">0</div><div class="lbl">Personas dentro</div></div>
+    <div class="stat-box"><div class="num" id="stat-nov-abiertas">0</div><div class="lbl">Nov. abiertas</div></div>
+    <div class="stat-box"><div class="num" id="stat-rondas-hoy">0</div><div class="lbl">Rondas hoy</div></div>
+  </div>
+  <div class="card"><div class="card-title">👮 Estado VIGs en turno</div><div id="lista-vigs"><div class="empty"><div class="icon">👥</div><p>Sin datos</p></div></div></div>
+  <div class="card"><div class="card-title">⚡ Últimos accesos</div><div id="ultimos-accesos"><div class="empty"><div class="icon">🚪</div><p>Sin accesos</p></div></div></div>
+  <div class="card"><div class="card-title">🚨 Novedades activas</div><div id="novedades-resumen"><div class="empty"><div class="icon">✅</div><p>Sin novedades abiertas</p></div></div></div>
+</div>
+
+<div id="sec-accesos" class="section">
+  <div class="section-header"><h2>Control de Accesos</h2><div class="live-indicator"><div class="live-dot"></div>EN VIVO</div></div>
+  <div class="search-bar"><input type="text" class="input" id="buscar-acceso" placeholder="Buscar nombre, placa, empresa..." oninput="filtrarAccesos()"></div>
+  <div class="filter-bar" id="filtro-acceso-tipo">
+    <div class="chip active" data-val="todos" onclick="setFiltroAcceso(this)">Todos</div>
+    <div class="chip" data-val="visitante" onclick="setFiltroAcceso(this)">Visitantes</div>
+    <div class="chip" data-val="vehiculo" onclick="setFiltroAcceso(this)">Vehículos</div>
+    <div class="chip" data-val="domicilio" onclick="setFiltroAcceso(this)">Domicilios</div>
+    <div class="chip" data-val="activos" onclick="setFiltroAcceso(this)">Activos</div>
+  </div>
+  <div id="lista-accesos"><div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div></div>
+</div>
+
+<div id="sec-rondas" class="section">
+  <div class="section-header"><h2>Rondas del Día</h2></div>
+  <div class="card"><div class="card-title">📊 Resumen de rondas</div><div id="resumen-rondas"><div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div></div></div>
+  <div id="lista-rondas-detalle"></div>
+</div>
+
+<div id="sec-novedades" class="section">
+  <div class="section-header"><h2>Novedades Seguridad</h2></div>
+  <div class="filter-bar" id="filtro-nov-chips">
+    <div class="chip active" data-val="todas" onclick="setFiltroNov(this)">Todas</div>
+    <div class="chip" data-val="abiertas" onclick="setFiltroNov(this)">Abiertas</div>
+    <div class="chip" data-val="criticas" onclick="setFiltroNov(this)">Críticas</div>
+    <div class="chip" data-val="medias" onclick="setFiltroNov(this)">Medias</div>
+    <div class="chip" data-val="listo" onclick="setFiltroNov(this)">Listo cierre</div>
+    <div class="chip" data-val="cerradas" onclick="setFiltroNov(this)">Cerradas</div>
+  </div>
+  <div id="lista-novedades"><div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div></div>
+</div>
+
+<div id="sec-bitacora" class="section">
+  <div class="section-header"><h2>Bitácora del Día</h2></div>
+  <div class="search-bar"><input type="text" class="input" id="buscar-bitacora" placeholder="Buscar en bitácora..." oninput="filtrarBitacora()"></div>
+  <div id="lista-bitacora"><div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div></div>
+</div>
+
+<nav>
+  <button class="active" onclick="navTo('inicio',this)"><span class="icon">🖥️</span>Monitor</button>
+  <button onclick="navTo('accesos',this)"><span class="icon">🚪</span>Accesos</button>
+  <button onclick="navTo('rondas',this)"><span class="icon">🔍</span>Rondas</button>
+  <button onclick="navTo('novedades',this)"><span class="icon">🚨</span>Novedades</button>
+  <button onclick="navTo('bitacora',this)"><span class="icon">📋</span>Bitácora</button>
+</nav>
+
+<div class="modal-overlay" id="modal-reasignar">
+  <div class="modal">
+    <div class="modal-header"><h3>Reasignar Novedad</h3><button class="modal-close" onclick="cerrarModal('modal-reasignar')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="label">Novedad</label><div id="reasig-titulo" style="font-weight:600;font-size:13px;padding:8px;background:var(--bg);border-radius:8px"></div></div>
+      <div class="form-group"><label class="label">Asignar a VIG</label><select class="select" id="reasig-vig"><option value="">Seleccionar vigilante...</option></select></div>
+      <div class="form-group"><label class="label">Instrucción / Comentario</label><textarea class="input" id="reasig-comentario" rows="3" placeholder="Instrucciones para el VIG..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-reasignar')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="confirmarReasignar()">Reasignar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-nov-detalle">
+  <div class="modal">
+    <div class="modal-header"><h3>Detalle Novedad</h3><button class="modal-close" onclick="cerrarModal('modal-nov-detalle')">✕</button></div>
+    <div class="modal-body" id="modal-nov-body"></div>
+    <div class="modal-footer" id="modal-nov-footer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek", authDomain:"registro-residentes.firebaseapp.com",
+  projectId:"registro-residentes", storageBucket:"registro-residentes.firebasestorage.app",
+  messagingSenderId:"646123326163", appId:"1:646123326163:web:8b35b955e7b3692536a226"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const STATE = {
+  uid:'', nombre:'VISOR',
+  accesos:[], novedades:[], rondas:[], vigs:[],
+  filtroAcceso:'todos', filtroNov:'todas', novSeleccionada:null
+};
+
+// FIX 1: zona horaria Bogotá
+function fechaHoy() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+function formatHora(ts){if(!ts)return '--';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});}
+function formatFechaHora(ts){if(!ts)return '--';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function cerrarModal(id){document.getElementById(id).classList.remove('open');}
+window.cerrarModal=cerrarModal;
+
+// FIX 3: sin tildes
+function getNivelClass(nivel){const n=(nivel||'').toLowerCase();return n.includes('crit')?'critico':n.includes('medi')?'medio':'bajo';}
+function getNivelBadge(nivel){const n=(nivel||'').toLowerCase();return n.includes('crit')?'badge-critico':n.includes('medi')?'badge-medio':'badge-bajo';}
+function getEstadoBadge(e){return({abierta:'badge-abierta',en_atencion:'badge-medio',listo_cierre:'badge-listo',cerrada:'badge-cerrada'}[e]||'badge-cerrada');}
+function getEstadoLabel(e){return({abierta:'Abierta',en_atencion:'En atención',listo_cierre:'Listo cierre',cerrada:'Cerrada'}[e]||e);}
+
+// Normalizar novedad (lee ambos formatos)
+function normalizarNov(d){
+  let nivel=d.nivel;
+  if(!nivel&&d.severidad) nivel=d.severidad.toLowerCase().includes('crít')?'critica':d.severidad.toLowerCase().includes('medi')?'media':'baja';
+  nivel=nivel||'baja';
+  let estado=d.estado;
+  if(!estado&&d.status) estado=d.status==='ABIERTO'?'abierta':d.status==='CERRADO'?'cerrada':d.status.toLowerCase();
+  estado=estado||'abierta';
+  return{...d,nivel,estado,creado_en:d.creado_en||d.timestamp};
+}
+
+(()=>{
+  const p=new URLSearchParams(window.location.search);
+  STATE.uid=p.get('uid')||localStorage.getItem('pco3_uid')||'visor_demo';
+  STATE.nombre=p.get('nombre')||localStorage.getItem('pco3_nombre')||'VISOR';
+  if(p.get('uid')) localStorage.setItem('pco3_uid',STATE.uid);
+  if(p.get('nombre')) localStorage.setItem('pco3_nombre',STATE.nombre);
+  document.getElementById('headerNombre').textContent=STATE.nombre;
+  document.getElementById('headerFecha').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+})();
+
+// FIX 2: wrapper con error handler
+function escuchar(q,onData,etiqueta){
+  return onSnapshot(q,onData,error=>{
+    console.error(`❌ "${etiqueta}":`,error.code,error.message);
+    if(error.code==='failed-precondition') console.error(`🔧 Falta índice para "${etiqueta}"`);
+  });
+}
+
+function iniciarListeners(){
+  const hoy=fechaHoy();
+
+  // FIX 4: campo unificado - usa timestamp que es el que escribe el Vigilante
+  escuchar(query(collection(db,'accesos'),where('fecha','==',hoy),orderBy('timestamp','desc')),
+    s=>{STATE.accesos=s.docs.map(d=>({id:d.id,...d.data()}));actualizarEstadisticas();renderAccesos();renderUltimosAccesos();renderBitacora();},'accesos');
+
+  escuchar(query(collection(db,'seg_novedades'),where('fecha','==',hoy),orderBy('timestamp','desc')),
+    s=>{STATE.novedades=s.docs.map(d=>normalizarNov({id:d.id,...d.data()}));actualizarEstadisticas();renderNovedades();renderNovedadesResumen();},'seg_novedades');
+
+  // FIX 4: campo unificado - usa timestamp que es el que escribe el Vigilante
+  escuchar(query(collection(db,'seg_rondas'),where('fecha','==',hoy),orderBy('timestamp','desc')),
+    s=>{STATE.rondas=s.docs.map(d=>({id:d.id,...d.data()}));actualizarEstadisticas();renderRondas();},'seg_rondas');
+
+  escuchar(query(collection(db,'seg_turnos'),where('fecha','==',hoy)),
+    s=>{STATE.vigs=s.docs.map(d=>({id:d.id,...d.data()}));renderVigs();poblarSelectVig();},'seg_turnos');
+}
+
+function actualizarEstadisticas(){
+  document.getElementById('stat-accesos-hoy').textContent=STATE.accesos.length;
+  document.getElementById('stat-activos').textContent=STATE.accesos.filter(a=>!a.salida&&a.estado==='ingreso').length;
+  document.getElementById('stat-nov-abiertas').textContent=STATE.novedades.filter(n=>n.estado==='abierta'||n.estado==='en_atencion').length;
+  document.getElementById('stat-rondas-hoy').textContent=STATE.rondas.length;
+}
+
+function renderVigs(){
+  const cont=document.getElementById('lista-vigs');
+  if(!STATE.vigs.length){cont.innerHTML='<div class="empty"><div class="icon">👥</div><p>Sin datos</p></div>';return;}
+  cont.innerHTML=STATE.vigs.map(v=>{
+    const ultima=STATE.rondas.filter(r=>r.vig_uid===v.uid||r.vig_id===v.uid).sort((a,b)=>(b.timestamp?.toDate?.()?.getTime()||0)-(a.timestamp?.toDate?.()?.getTime()||0))[0];
+    const novAsig=STATE.novedades.filter(n=>n.asignado_a===v.uid&&(n.estado==='abierta'||n.estado==='en_atencion')).length;
+    return `<div class="vig-card">
+      <div class="vig-avatar">${(v.nombre||'V').charAt(0).toUpperCase()}</div>
+      <div class="vig-info">
+        <div class="vig-name">${v.nombre||v.uid}</div>
+        <div class="vig-status">${novAsig>0?`<span style="color:var(--warning)">⚠️ ${novAsig} novedad(es)</span>`:'<span style="color:var(--success)">✅ Sin novedades</span>'}</div>
+        ${ultima?`<div class="vig-last">Última ronda: ${ultima.tipo||ultima.tipo_ronda} a las ${formatHora(ultima.timestamp||ultima.registrado_en)}</div>`:'<div class="vig-last">Sin rondas registradas</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function poblarSelectVig(){
+  const sel=document.getElementById('reasig-vig');
+  sel.innerHTML='<option value="">Seleccionar vigilante...</option>'+STATE.vigs.map(v=>`<option value="${v.uid}">${v.nombre||v.uid}</option>`).join('');
+}
+
+function getTipoClass(t){return t==='visitante'?'tipo-visitante':t==='vehiculo'?'tipo-vehiculo':'tipo-domicilio';}
+function getTipoLabel(t){return t==='visitante'?'Visitante':t==='vehiculo'?'Vehículo':'Domicilio';}
+function getAccesoTitulo(a){return a.tipo==='vehiculo'?`${a.placa||''} · ${a.marca||''} ${a.color||''}`.trim():a.tipo==='domicilio'?`${a.empresa||''} · ${a.repartidor||''}`.trim():a.nombre||'Sin nombre';}
+
+window.setFiltroAcceso=function(el){STATE.filtroAcceso=el.dataset.val;document.querySelectorAll('#filtro-acceso-tipo .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderAccesos();};
+window.filtrarAccesos=function(){renderAccesos();};
+
+function renderAccesos(){
+  const busq=document.getElementById('buscar-acceso').value.toLowerCase();
+  let lista=[...STATE.accesos];
+  if(STATE.filtroAcceso!=='todos') lista=STATE.filtroAcceso==='activos'?lista.filter(a=>a.estado==='ingreso'):lista.filter(a=>a.tipo===STATE.filtroAcceso);
+  if(busq) lista=lista.filter(a=>[a.nombre,a.placa,a.empresa,a.repartidor,a.torre_apto,a.marca].join(' ').toLowerCase().includes(busq));
+  const cont=document.getElementById('lista-accesos');
+  if(!lista.length){cont.innerHTML='<div class="empty"><div class="icon">🚪</div><p>Sin resultados</p></div>';return;}
+  cont.innerHTML=lista.map(a=>`<div class="list-item">
+    <div class="list-item-header">
+      <div>
+        <span class="acceso-tipo ${getTipoClass(a.tipo)}">${getTipoLabel(a.tipo)}</span>
+        <div class="list-item-title" style="margin-top:4px">${getAccesoTitulo(a)}</div>
+        <div class="list-item-sub">Entrada: ${formatHora(a.timestamp||a.entrada)}${a.hora_salida?' · Salida: '+formatHora(a.hora_salida):' · Activo'} · ${a.torre_apto||a.torre||'--'}</div>
+        ${a.observacion?`<div class="list-item-sub">📝 ${a.observacion}</div>`:''}
+      </div>
+      ${a.estado==='ingreso'?'<div style="background:#d1fae5;color:#065f46;font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;height:fit-content">DENTRO</div>':''}
+    </div>
+  </div>`).join('');
+}
+
+function renderUltimosAccesos(){
+  const cont=document.getElementById('ultimos-accesos');
+  const ultimos=STATE.accesos.slice(0,5);
+  if(!ultimos.length){cont.innerHTML='<div class="empty"><div class="icon">🚪</div><p>Sin accesos</p></div>';return;}
+  cont.innerHTML=ultimos.map(a=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span class="acceso-tipo ${getTipoClass(a.tipo)}">${getTipoLabel(a.tipo)}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${getAccesoTitulo(a)}</div>
+      <div style="font-size:11px;color:var(--muted)">${a.torre_apto||a.torre||''} · ${formatHora(a.timestamp)}</div>
+    </div>
+    ${a.estado==='ingreso'?'<div class="dot dot-green"></div>':'<div class="dot dot-gray"></div>'}
+  </div>`).join('');
+}
+
+const TIPOS_RONDA_LABEL={infraestructura:'🏗️ Infraestructura',vehicular:'🚗 Vehicular',perimetral:'🔍 Perimetral',parqueaderos:'🅿️ Parqueaderos',corredores:'🏢 Corredores',terrazas:'🏔️ Terrazas'};
+
+function renderRondas(){
+  const porVig={};
+  STATE.rondas.forEach(r=>{
+    // FIX 4: compatibilidad con vig_uid y vig_id
+    const key=r.vig_uid||r.vig_id||'desconocido';
+    if(!porVig[key])porVig[key]={nombre:r.vig_nombre||key,rondas:[]};
+    porVig[key].rondas.push(r);
+  });
+  document.getElementById('resumen-rondas').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:13px;color:var(--muted)">Total rondas hoy</span><span style="font-weight:700;font-size:18px;color:var(--primary)">${STATE.rondas.length}</span></div>
+    <div style="background:var(--bg);border-radius:8px;padding:8px">
+      ${Object.entries(porVig).map(([uid,data])=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0"><span style="font-size:13px">${data.nombre}</span><span style="font-weight:600;color:var(--primary)">${data.rondas.length} rondas</span></div>`).join('')}
+      ${!Object.keys(porVig).length?'<div style="text-align:center;color:var(--muted);font-size:12px">Sin rondas hoy</div>':''}
+    </div>`;
+  if(!Object.keys(porVig).length){document.getElementById('lista-rondas-detalle').innerHTML='';return;}
+  document.getElementById('lista-rondas-detalle').innerHTML=Object.entries(porVig).map(([uid,data])=>`<div class="card"><div class="card-title">👮 ${data.nombre}</div>`+
+    data.rondas.map(r=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="min-width:45px;font-size:11px;color:var(--muted);padding-top:2px">${formatHora(r.timestamp||r.registrado_en)}</div>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${TIPOS_RONDA_LABEL[r.tipo_ronda]||TIPOS_RONDA_LABEL[r.tipo]||r.tipo}</div>
+      ${r.observacion||r.observaciones?`<div style="font-size:12px;color:var(--muted);margin-top:2px">${r.observacion||r.observaciones}</div>`:''}
+      ${r.foto_url?`<div style="margin-top:4px"><img src="${r.foto_url}" style="max-height:60px;border-radius:6px;object-fit:cover" onclick="window.open('${r.foto_url}','_blank')"></div>`:''}</div>
+    </div>`).join('')+'</div>').join('');
+}
+
+window.setFiltroNov=function(el){STATE.filtroNov=el.dataset.val;document.querySelectorAll('#filtro-nov-chips .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderNovedades();};
+
+function renderNovedades(){
+  let lista=[...STATE.novedades];
+  const f=STATE.filtroNov;
+  if(f==='abiertas') lista=lista.filter(n=>n.estado==='abierta'||n.estado==='en_atencion');
+  else if(f==='criticas') lista=lista.filter(n=>n.nivel==='critica');
+  else if(f==='medias') lista=lista.filter(n=>n.nivel==='media');
+  else if(f==='listo') lista=lista.filter(n=>n.estado==='listo_cierre');
+  else if(f==='cerradas') lista=lista.filter(n=>n.estado==='cerrada');
+  const cont=document.getElementById('lista-novedades');
+  if(!lista.length){cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin novedades</p></div>';return;}
+  cont.innerHTML=lista.map(n=>`<div class="list-item ${getNivelClass(n.nivel)}">
+    <div class="list-item-header">
+      <div style="flex:1">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px"><span class="badge-estado ${getNivelBadge(n.nivel)}">${n.nivel}</span><span class="badge-estado ${getEstadoBadge(n.estado)}">${getEstadoLabel(n.estado)}</span></div>
+        <div class="list-item-title">${n.tipo||'Sin tipo'} · ${n.area||n.ubicacion||'Sin área'}</div>
+        <div class="list-item-sub">${n.descripcion||''}</div>
+        <div class="list-item-sub" style="margin-top:2px">${formatFechaHora(n.creado_en)} · VIG: ${n.vig_nombre||n.vig_uid||n.creado_por||'--'}${n.asignado_nombre?' · Asignado: '+n.asignado_nombre:''}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn-sm btn-secondary" onclick="verDetalleNovedad('${n.id}')">Ver detalle</button>
+      ${n.estado==='abierta'||n.estado==='en_atencion'?`<button class="btn-sm btn-warning" onclick="abrirReasignar('${n.id}')">Reasignar</button>`:''}
+    </div>
+  </div>`).join('');
+}
+
+function renderNovedadesResumen(){
+  const abiertas=STATE.novedades.filter(n=>n.estado==='abierta'||n.estado==='en_atencion');
+  const cont=document.getElementById('novedades-resumen');
+  if(!abiertas.length){cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin novedades abiertas</p></div>';return;}
+  cont.innerHTML=abiertas.slice(0,3).map(n=>`<div class="list-item ${getNivelClass(n.nivel)}" style="margin-bottom:6px">
+    <div style="display:flex;gap:6px;margin-bottom:4px"><span class="badge-estado ${getNivelBadge(n.nivel)}">${n.nivel}</span><span class="badge-estado ${getEstadoBadge(n.estado)}">${getEstadoLabel(n.estado)}</span></div>
+    <div class="list-item-title">${n.tipo||'Sin tipo'} · ${n.area||n.ubicacion||''}</div>
+    <div class="list-item-sub">${formatFechaHora(n.creado_en)}</div>
+  </div>`).join('')+(abiertas.length>3?`<div style="text-align:center;font-size:12px;color:var(--muted);margin-top:4px">+${abiertas.length-3} más</div>`:'');
+}
+
+window.verDetalleNovedad=function(id){
+  const n=STATE.novedades.find(x=>x.id===id); if(!n) return;
+  STATE.novSeleccionada=n;
+  document.getElementById('modal-nov-body').innerHTML=`
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge-estado ${getNivelBadge(n.nivel)}">${n.nivel}</span><span class="badge-estado ${getEstadoBadge(n.estado)}">${getEstadoLabel(n.estado)}</span></div>
+    <div class="form-group"><span class="label">Tipo / Área</span><div style="font-weight:600">${n.tipo||'--'} · ${n.area||n.ubicacion||'--'}</div></div>
+    <div class="form-group"><span class="label">Descripción</span><div style="font-size:13px">${n.descripcion||'Sin descripción'}</div></div>
+    <div class="form-group"><span class="label">Registrado por</span><div style="font-size:13px">${n.vig_nombre||n.creado_por||'--'} · ${formatFechaHora(n.creado_en)}</div></div>
+    ${n.asignado_a?`<div class="form-group"><span class="label">Asignado a</span><div style="font-size:13px">${n.asignado_nombre||n.asignado_a}${n.instruccion_asignacion?' · "'+n.instruccion_asignacion+'"':''}</div></div>`:''}
+    ${n.foto_url?`<div class="form-group"><span class="label">Foto</span><img src="${n.foto_url}" style="width:100%;border-radius:8px;object-fit:cover;max-height:200px;cursor:pointer" onclick="window.open('${n.foto_url}','_blank')"></div>`:''}`;
+  document.getElementById('modal-nov-footer').innerHTML=`<button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-nov-detalle')">Cerrar</button>
+    ${n.estado==='abierta'||n.estado==='en_atencion'?`<button class="btn btn-warning btn-sm" style="flex:1" onclick="cerrarModal('modal-nov-detalle');abrirReasignar('${n.id}')">Reasignar</button>`:''}`;
+  document.getElementById('modal-nov-detalle').classList.add('open');
+};
+
+window.abrirReasignar=function(id){
+  const n=STATE.novedades.find(x=>x.id===id); if(!n) return;
+  STATE.novSeleccionada=n;
+  document.getElementById('reasig-titulo').textContent=`${n.nivel} · ${n.tipo} · ${n.area||n.ubicacion||''}`;
+  document.getElementById('reasig-comentario').value='';
+  document.getElementById('modal-reasignar').classList.add('open');
+};
+
+window.confirmarReasignar=async function(){
+  const vigUid=document.getElementById('reasig-vig').value;
+  const comentario=document.getElementById('reasig-comentario').value.trim();
+  if(!vigUid){showToast('Selecciona un VIG');return;}
+  const vigData=STATE.vigs.find(v=>v.uid===vigUid);
+  try{
+    await updateDoc(doc(db,'seg_novedades',STATE.novSeleccionada.id),{
+      asignado_a:vigUid, asignado_a_id:vigUid,
+      asignado_nombre:vigData?.nombre||vigUid,
+      instruccion_asignacion:comentario||'',
+      reasignado_por:STATE.uid, reasignado_por_nombre:STATE.nombre,
+      reasignado_en:serverTimestamp()
+    });
+    cerrarModal('modal-reasignar'); showToast('Novedad reasignada');
+  }catch(e){showToast('Error al reasignar');}
+};
+
+window.filtrarBitacora=function(){renderBitacora();};
+function renderBitacora(){
+  const busq=document.getElementById('buscar-bitacora').value.toLowerCase();
+  let eventos=[...STATE.accesos];
+  if(busq) eventos=eventos.filter(a=>[a.nombre,a.placa,a.empresa,a.repartidor,a.torre_apto,a.torre,a.observacion].join(' ').toLowerCase().includes(busq));
+  const cont=document.getElementById('lista-bitacora');
+  if(!eventos.length){cont.innerHTML='<div class="empty"><div class="icon">📋</div><p>Sin registros</p></div>';return;}
+  cont.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${eventos.length} registros</div>`+
+    eventos.map(a=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="min-width:42px;text-align:center">
+        <div style="font-size:12px;font-weight:700;color:var(--primary)">${formatHora(a.timestamp||a.entrada)}</div>
+        ${a.estado==='ingreso'?'<div style="font-size:10px;color:var(--success)">activo</div>':`<div style="font-size:10px;color:var(--muted)">${formatHora(a.hora_salida)}</div>`}
+      </div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="acceso-tipo ${getTipoClass(a.tipo)}" style="font-size:10px">${getTipoLabel(a.tipo)}</span>
+          <span style="font-weight:600;font-size:13px">${getAccesoTitulo(a)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Torre/Apto: ${a.torre_apto||a.torre||'--'} · VIG: ${a.vig_nombre||'--'}</div>
+        ${a.observacion?`<div style="font-size:11px;color:var(--muted)">📝 ${a.observacion}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+window.navTo=function(sec,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active'); btn.classList.add('active');
+};
+
+iniciarListeners();
+</script>
+</body>
+</html>

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Control de Mora</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef2f7;--white:#fff;--text:#0f172a;--text2:#475569;
+  --border:#cbd5e1;--accent:#1e3a5f;--accent2:#2563eb;
+  --accent-light:#dbeafe;--gbtn:linear-gradient(135deg,#1e3a5f,#2563eb);
+  --red:#dc2626;--red-light:#fef2f2;
+  --green:#16a34a;--green-light:#f0fdf4;
+  --yellow:#f59e0b;--yellow-light:#fffbeb;
+  --font:'DM Sans',sans-serif;--fd:'DM Serif Display',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px 28px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+.login-logo{width:60px;height:60px;background:var(--gbtn);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;box-shadow:0 4px 12px rgba(37,99,235,.3);}
+.login-title{font-family:var(--fd);font-size:24px;text-align:center;color:var(--accent);margin-bottom:6px;}
+.login-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:24px;}
+.field-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.field-input{width:100%;padding:13px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:15px;color:var(--text);outline:none;transition:border-color .2s;margin-bottom:16px;}
+.field-input:focus{border-color:var(--accent2);background:var(--white);}
+.btn-primary{width:100%;padding:14px;background:var(--gbtn);border:none;border-radius:10px;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.3);transition:all .2s;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(37,99,235,.4);}
+.error-msg{background:var(--red-light);border:1px solid var(--red);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:12px;display:none;}
+.error-msg.show{display:block;}
+
+/* TOPBAR */
+.topbar{background:var(--accent);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.15);}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-icon{width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.topbar-title{font-size:16px;font-weight:700;color:#fff;}
+.topbar-sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px;}
+.btn-logout{padding:8px 14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:8px;color:#fff;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-logout:hover{background:rgba(255,255,255,.2);}
+
+/* CONTENEDOR */
+.container{max-width:960px;margin:0 auto;padding:28px 16px 48px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 16px;text-align:center;}
+.stat-val{font-size:30px;font-weight:700;}
+.stat-val.mora{color:var(--red);}
+.stat-val.libre{color:var(--green);}
+.stat-val.total{color:var(--accent);}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:4px;letter-spacing:.5px;text-transform:uppercase;}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.search-input{flex:1;min-width:180px;padding:10px 14px;background:var(--white);border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:var(--accent2);}
+.btn{padding:10px 18px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;white-space:nowrap;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#15803d;}
+.btn-orange{background:#ea580c;color:#fff;}
+.btn-orange:hover{background:#c2410c;}
+.btn-outline{background:var(--white);color:var(--accent);border:1.5px solid var(--accent);}
+.btn-outline:hover{background:var(--accent-light);}
+.btn-blue{background:var(--gbtn);color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.3);}
+.btn-blue:hover{transform:translateY(-1px);}
+
+/* TABLA */
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px;}
+thead{background:var(--accent);color:#fff;}
+th{padding:12px 14px;text-align:left;font-weight:600;font-size:12px;letter-spacing:.5px;}
+td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f8fafc;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-mora{background:var(--red-light);color:var(--red);}
+.badge-libre{background:var(--green-light);color:var(--green);}
+.loading-state{text-align:center;padding:40px;color:var(--text2);}
+.spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px;color:var(--text2);font-size:13px;}
+
+/* MODAL EDITAR/CREAR */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal.open{display:flex;}
+.modal-box{background:var(--white);border-radius:16px;padding:28px 24px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,.15);}
+.modal-title{font-family:var(--fd);font-size:20px;color:var(--accent);margin-bottom:20px;}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.modal-field{display:flex;flex-direction:column;gap:5px;}
+.modal-field.full{grid-column:1/-1;}
+.modal-label{font-size:12px;font-weight:600;color:var(--text);}
+.modal-input{padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;transition:border-color .2s;appearance:none;-webkit-appearance:none;}
+.modal-input:focus{border-color:var(--accent2);background:var(--white);}
+select.modal-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23475569' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
+.mora-toggle{display:flex;gap:8px;margin-top:4px;}
+.mora-opt{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;color:var(--text2);background:var(--bg);transition:all .2s;user-select:none;}
+.mora-opt.sel-mora{border-color:var(--red);background:var(--red-light);color:var(--red);}
+.mora-opt.sel-libre{border-color:var(--green);background:var(--green-light);color:var(--green);}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+.btn-save{padding:11px 22px;background:var(--gbtn);border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,.3);}
+.btn-cancel{padding:11px 18px;background:var(--white);border:1.5px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--font);font-size:14px;cursor:pointer;}
+
+/* ── MODAL IMPORTAR ─────────────────────────── */
+.import-modal-box{background:var(--white);border-radius:16px;padding:28px 24px;width:100%;max-width:560px;box-shadow:0 8px 40px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto;}
+
+/* Zona de arrastre */
+.drop-zone{border:2.5px dashed var(--border);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent2);background:var(--accent-light);}
+.drop-zone-icon{font-size:36px;margin-bottom:10px;}
+.drop-zone-title{font-size:15px;font-weight:700;color:var(--accent);margin-bottom:4px;}
+.drop-zone-sub{font-size:12px;color:var(--text2);}
+#file-input{display:none;}
+
+/* Instrucciones formato */
+.format-box{background:var(--yellow-light);border:1px solid var(--yellow);border-radius:10px;padding:14px 16px;margin-top:16px;}
+.format-box-title{font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.format-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px;}
+.format-table th{background:#fef3c7;padding:5px 8px;text-align:left;color:#92400e;font-weight:700;border:1px solid #fde68a;}
+.format-table td{padding:5px 8px;border:1px solid #fde68a;color:#78350f;background:#fffbeb;}
+.format-table td.ex{font-family:monospace;font-weight:600;}
+.format-note{font-size:11px;color:#92400e;margin-top:8px;line-height:1.5;}
+
+/* Preview importación */
+.preview-section{margin-top:20px;}
+.preview-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.preview-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.preview-badge{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.pb-create{background:var(--green-light);color:var(--green);}
+.pb-update{background:var(--accent-light);color:var(--accent2);}
+.pb-error{background:var(--red-light);color:var(--red);}
+.preview-list{max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;font-size:12px;}
+.preview-row{padding:7px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.preview-row:last-child{border-bottom:none;}
+.preview-row.new{border-left:3px solid var(--green);}
+.preview-row.upd{border-left:3px solid var(--accent2);}
+.preview-row.err{border-left:3px solid var(--red);background:var(--red-light);}
+.pr-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;}
+.pr-tag.new{background:var(--green-light);color:var(--green);}
+.pr-tag.upd{background:var(--accent-light);color:var(--accent2);}
+.pr-tag.err{background:var(--red-light);color:var(--red);}
+.pr-info{flex:1;color:var(--text);}
+.pr-reason{color:var(--text2);font-size:11px;}
+
+/* Botón plantilla */
+.btn-template{padding:8px 14px;background:var(--white);border:1.5px solid var(--yellow);border-radius:8px;color:#92400e;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;margin-top:10px;}
+.btn-template:hover{background:var(--yellow-light);}
+
+/* Barra de progreso */
+.progress-wrap{margin-top:14px;display:none;}
+.progress-bar-bg{background:var(--border);border-radius:10px;height:8px;overflow:hidden;}
+.progress-bar-fill{height:8px;background:var(--gbtn);border-radius:10px;transition:width .3s;}
+.progress-lbl{font-size:12px;color:var(--text2);margin-top:6px;text-align:center;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:999;transition:transform .3s ease;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-wrap" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">🏢</div>
+    <div class="login-title">Control de Mora</div>
+    <div class="login-sub">Acceso restringido — Solo administración</div>
+    <div class="error-msg" id="login-err">Contraseña incorrecta.</div>
+    <label class="field-label">Contraseña</label>
+    <input type="password" class="field-input" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary" onclick="doLogin()">Ingresar →</button>
+  </div>
+</div>
+
+<!-- PANEL PRINCIPAL -->
+<div id="panel" style="display:none;">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-icon">🏢</div>
+      <div>
+        <div class="topbar-title">Control de Mora</div>
+        <div class="topbar-sub">Gestión de obligaciones pendientes</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  </div>
+
+  <div class="container">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val total" id="st-total">0</div><div class="stat-lbl">Total registros</div></div>
+      <div class="stat-card"><div class="stat-val mora" id="st-mora">0</div><div class="stat-lbl">En mora</div></div>
+      <div class="stat-card"><div class="stat-val libre" id="st-libre">0</div><div class="stat-lbl">Al día</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" class="search-input" id="search" placeholder="🔍 Buscar torre, apto..." oninput="filterTable()">
+      <button class="btn btn-blue" onclick="openModal(null)">+ Agregar registro</button>
+      <button class="btn btn-outline" onclick="loadData()">🔄 Actualizar</button>
+      <button class="btn btn-green" onclick="exportCSV()">📥 Exportar CSV</button>
+      <button class="btn btn-orange" onclick="openImportModal()">📤 Importar CSV</button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="loading-state" id="loading-state"><div class="spinner"></div>Cargando...</div>
+      <table id="main-table" style="display:none;">
+        <thead>
+          <tr>
+            <th>Torre</th><th>Apto</th><th>Estado</th>
+            <th>Observación</th><th>Última actualización</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty-state" style="display:none;">No hay registros aún. Agrega el primero con el botón de arriba.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR / EDITAR -->
+<div class="modal" id="modal" onclick="if(event.target.id==='modal')closeModal()">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Nuevo registro</div>
+    <div class="modal-grid">
+      <div class="modal-field">
+        <label class="modal-label">Torre *</label>
+        <select class="modal-input" id="m-torre">
+          <option value="">-- Seleccionar --</option>
+          <option value="1">Torre 1</option>
+          <option value="2">Torre 2</option>
+          <option value="3">Torre 3</option>
+          <option value="4">Torre 4</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Apartamento *</label>
+        <input type="text" class="modal-input" id="m-apto" placeholder="Ej: 301">
+      </div>
+      <div class="modal-field full">
+        <label class="modal-label">Estado *</label>
+        <div class="mora-toggle">
+          <div class="mora-opt" id="opt-mora" onclick="selectEstado('mora')">🔴 En mora</div>
+          <div class="mora-opt" id="opt-libre" onclick="selectEstado('libre')">🟢 Al día</div>
+        </div>
+        <input type="hidden" id="m-estado">
+      </div>
+      <div class="modal-field full">
+        <label class="modal-label">Observación interna (no visible al residente)</label>
+        <input type="text" class="modal-input" id="m-obs" placeholder="Ej: Cuota admin feb-mar 2026 pendiente">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveRecord()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR CSV -->
+<div class="modal" id="import-modal" onclick="if(event.target.id==='import-modal')closeImportModal()">
+  <div class="import-modal-box">
+    <div class="modal-title">📤 Importar CSV masivo</div>
+
+    <!-- Zona de carga -->
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event)">
+      <div class="drop-zone-icon">📂</div>
+      <div class="drop-zone-title">Haz clic o arrastra tu archivo CSV aquí</div>
+      <div class="drop-zone-sub">Solo archivos .csv • Máximo 5 000 filas</div>
+    </div>
+    <input type="file" id="file-input" accept=".csv" onchange="handleFileSelect(event)">
+
+    <!-- Botón plantilla -->
+    <button class="btn-template" onclick="downloadTemplate()">
+      📋 Descargar plantilla de ejemplo
+    </button>
+
+    <!-- Instrucciones de formato -->
+    <div class="format-box">
+      <div class="format-box-title">⚠️ Formato obligatorio del archivo CSV</div>
+      <table class="format-table">
+        <thead>
+          <tr><th>Columna</th><th>Valores aceptados</th><th>Ejemplo</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Torre</strong></td><td>1, 2, 3 ó 4</td><td class="ex">2</td></tr>
+          <tr><td><strong>Apto</strong></td><td>Número o código del apartamento</td><td class="ex">304</td></tr>
+          <tr><td><strong>Estado</strong></td><td><strong>En mora</strong> ó <strong>Al día</strong> (exacto)</td><td class="ex">En mora</td></tr>
+          <tr><td><strong>Observación</strong></td><td>Texto libre (puede dejarse vacío)</td><td class="ex">Cuota feb pendiente</td></tr>
+        </tbody>
+      </table>
+      <div class="format-note">
+        📌 <strong>Regla clave:</strong> El sistema identifica cada apartamento por <strong>Torre + Apto</strong>.<br>
+        • Si ya existe → <strong>actualiza</strong> su estado y observación.<br>
+        • Si no existe → <strong>crea</strong> el registro nuevo.<br>
+        • Ningún registro existente se borrará; solo se modifican los que estén en el archivo.
+      </div>
+    </div>
+
+    <!-- Vista previa / errores -->
+    <div class="preview-section" id="preview-section" style="display:none;">
+      <div class="preview-title">📋 Vista previa antes de confirmar</div>
+      <div class="preview-stats" id="preview-stats"></div>
+      <div class="preview-list" id="preview-list"></div>
+    </div>
+
+    <!-- Barra de progreso -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-lbl" id="progress-lbl">Procesando...</div>
+    </div>
+
+    <div class="modal-footer" style="margin-top:20px;">
+      <button class="btn-cancel" onclick="closeImportModal()">Cancelar</button>
+      <button class="btn-save" id="btn-confirm-import" style="display:none;" onclick="confirmImport()">
+        ✅ Confirmar importación
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import{getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,doc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+const fc={apiKey:"AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",authDomain:"registro-residentes.firebaseapp.com",projectId:"registro-residentes",storageBucket:"registro-residentes.firebasestorage.app",messagingSenderId:"646123326163",appId:"1:646123326163:web:8b35b955e7b3692536a226"};
+const app=initializeApp(fc);
+const db=getFirestore(app);
+window.__db=db;
+
+window._fbGetMora=async()=>{
+  const snap=await getDocs(collection(db,'mora'));
+  return snap.docs.map(d=>({id:d.id,...d.data()}));
+};
+window._fbAddMora=async(data)=>{
+  const ref=await addDoc(collection(db,'mora'),{...data,fechaActualizacion:serverTimestamp()});
+  return ref.id;
+};
+window._fbUpdateMora=async(id,data)=>{
+  await updateDoc(doc(db,'mora',id),{...data,fechaActualizacion:serverTimestamp()});
+};
+window._fbDeleteMora=async(id)=>{
+  await deleteDoc(doc(db,'mora',id));
+};
+</script>
+
+<script>
+// ── Auth ─────────────────────────────────────────────────────────────────
+const ADMIN_PASS = 'admin2026';
+
+function doLogin(){
+  const p=document.getElementById('login-pass').value;
+  if(p===ADMIN_PASS){
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('panel').style.display='block';
+    loadData();
+  } else {
+    document.getElementById('login-err').classList.add('show');
+    document.getElementById('login-pass').value='';
+  }
+}
+function doLogout(){
+  document.getElementById('panel').style.display='none';
+  document.getElementById('login-wrap').style.display='flex';
+  document.getElementById('login-pass').value='';
+}
+
+// ── Datos ────────────────────────────────────────────────────────────────
+let allData=[];
+let editingId=null;
+
+async function loadData(){
+  document.getElementById('loading-state').style.display='block';
+  document.getElementById('main-table').style.display='none';
+  document.getElementById('empty-state').style.display='none';
+  try{
+    allData=await window._fbGetMora();
+    allData.sort((a,b)=>{
+      if(a.enMora&&!b.enMora)return -1;
+      if(!a.enMora&&b.enMora)return 1;
+      return (a.torre||'').localeCompare(b.torre||'')||(a.apto||'').localeCompare(b.apto||'');
+    });
+    renderTable(allData);
+    updateStats(allData);
+  }catch(e){
+    document.getElementById('loading-state').innerHTML='❌ Error cargando datos.';
+    console.error(e);
+  }
+}
+
+function updateStats(data){
+  document.getElementById('st-total').textContent=data.length;
+  document.getElementById('st-mora').textContent=data.filter(r=>r.enMora).length;
+  document.getElementById('st-libre').textContent=data.filter(r=>!r.enMora).length;
+}
+
+function renderTable(data){
+  document.getElementById('loading-state').style.display='none';
+  if(!data.length){document.getElementById('empty-state').style.display='block';return;}
+  document.getElementById('main-table').style.display='table';
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML=data.map(r=>{
+    const fecha=r.fechaActualizacion?new Date(r.fechaActualizacion.seconds*1000).toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'}):'—';
+    const idx=allData.indexOf(r);
+    return`<tr>
+      <td><strong>Torre ${r.torre||'—'}</strong></td>
+      <td>Apto ${r.apto||'—'}</td>
+      <td><span class="badge ${r.enMora?'badge-mora':'badge-libre'}">${r.enMora?'🔴 En mora':'🟢 Al día'}</span></td>
+      <td style="color:var(--text2);font-size:12px;">${r.observacion||'—'}</td>
+      <td style="color:var(--text2);font-size:12px;white-space:nowrap;">${fecha}</td>
+      <td style="white-space:nowrap;display:flex;gap:6px;">
+        <button class="btn btn-outline" style="padding:6px 12px;font-size:11px;" onclick="openModal(${idx})">✏️ Editar</button>
+        <button class="btn" style="padding:6px 12px;font-size:11px;background:var(--red-light);color:var(--red);border:1.5px solid var(--red);" onclick="deleteRecord('${r.id}',${idx})">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const filtered=allData.filter(r=>
+    String(r.torre||'').includes(q)||
+    String(r.apto||'').toLowerCase().includes(q)||
+    (r.observacion||'').toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+
+// ── Modal editar/crear ────────────────────────────────────────────────────
+let estadoSeleccionado='';
+
+function selectEstado(val){
+  estadoSeleccionado=val;
+  document.getElementById('m-estado').value=val;
+  document.getElementById('opt-mora').className='mora-opt'+(val==='mora'?' sel-mora':'');
+  document.getElementById('opt-libre').className='mora-opt'+(val==='libre'?' sel-libre':'');
+}
+
+function openModal(idx){
+  editingId=null;
+  estadoSeleccionado='';
+  document.getElementById('m-torre').value='';
+  document.getElementById('m-apto').value='';
+  document.getElementById('m-obs').value='';
+  document.getElementById('m-estado').value='';
+  document.getElementById('opt-mora').className='mora-opt';
+  document.getElementById('opt-libre').className='mora-opt';
+  if(idx!==null){
+    const r=allData[idx];
+    editingId=r.id;
+    document.getElementById('modal-title').textContent='Editar registro';
+    document.getElementById('m-torre').value=r.torre||'';
+    document.getElementById('m-apto').value=r.apto||'';
+    document.getElementById('m-obs').value=r.observacion||'';
+    selectEstado(r.enMora?'mora':'libre');
+  } else {
+    document.getElementById('modal-title').textContent='Nuevo registro';
+  }
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+async function saveRecord(){
+  const torre=document.getElementById('m-torre').value;
+  const apto=document.getElementById('m-apto').value.trim();
+  const estado=document.getElementById('m-estado').value;
+  const obs=document.getElementById('m-obs').value.trim();
+  if(!torre||!apto||!estado){showToast('Completa torre, apto y estado.','err');return;}
+  const payload={torre,apto,enMora:estado==='mora',observacion:obs,actualizadoPor:'admin'};
+  try{
+    if(editingId){
+      await window._fbUpdateMora(editingId,payload);
+      showToast('✅ Registro actualizado','ok');
+    }else{
+      await window._fbAddMora(payload);
+      showToast('✅ Registro creado','ok');
+    }
+    closeModal();loadData();
+  }catch(e){showToast('❌ Error al guardar','err');console.error(e);}
+}
+
+async function deleteRecord(id,idx){
+  const r=allData[idx];
+  if(!confirm(`¿Eliminar el registro de Torre ${r.torre} Apto ${r.apto}?\nEsta acción no se puede deshacer.`))return;
+  try{
+    await window._fbDeleteMora(id);
+    showToast('🗑 Registro eliminado','ok');loadData();
+  }catch(e){showToast('❌ Error al eliminar','err');}
+}
+
+// ── Exportar CSV ──────────────────────────────────────────────────────────
+function exportCSV(){
+  if(!allData.length){alert('No hay datos para exportar.');return;}
+  const headers=['Torre','Apto','Estado','Observación','Última actualización'];
+  const rows=allData.map(r=>{
+    const fecha=r.fechaActualizacion?new Date(r.fechaActualizacion.seconds*1000).toLocaleDateString('es-CO'):'';
+    return[r.torre,r.apto,r.enMora?'En mora':'Al día',r.observacion||'',fecha]
+      .map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',');
+  });
+  const csv='\uFEFF'+[headers.join(','),...rows].join('\n');
+  triggerDownload(csv,'mora_'+new Date().toLocaleDateString('es-CO').replace(/\//g,'-')+'.csv');
+}
+
+function triggerDownload(content,filename){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8;'}));
+  a.download=filename;a.click();
+}
+
+// ── Plantilla CSV ─────────────────────────────────────────────────────────
+function downloadTemplate(){
+  const csv='\uFEFF'
+    +'Torre,Apto,Estado,Observación,Última actualización\n'
+    +'"1","101","En mora","Cuota enero 2026 pendiente",""\n'
+    +'"1","102","Al día","",""\n'
+    +'"2","201","En mora","Cuotas feb-mar 2026",""\n'
+    +'"3","305","Al día","",""\n';
+  triggerDownload(csv,'plantilla_importar_mora.csv');
+}
+
+// ── MODAL IMPORTAR ────────────────────────────────────────────────────────
+let importPreview=[];   // filas analizadas listas para subir
+
+function openImportModal(){
+  importPreview=[];
+  document.getElementById('preview-section').style.display='none';
+  document.getElementById('btn-confirm-import').style.display='none';
+  document.getElementById('progress-wrap').style.display='none';
+  document.getElementById('file-input').value='';
+  document.getElementById('drop-zone').innerHTML=`
+    <div class="drop-zone-icon">📂</div>
+    <div class="drop-zone-title">Haz clic o arrastra tu archivo CSV aquí</div>
+    <div class="drop-zone-sub">Solo archivos .csv • Máximo 5 000 filas</div>`;
+  document.getElementById('import-modal').classList.add('open');
+}
+function closeImportModal(){document.getElementById('import-modal').classList.remove('open');}
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];
+  if(file)processCSVFile(file);
+}
+function handleFileSelect(e){
+  const file=e.target.files[0];
+  if(file)processCSVFile(file);
+}
+
+function processCSVFile(file){
+  if(!file.name.toLowerCase().endsWith('.csv')){
+    showToast('Solo se aceptan archivos .csv','err');return;
+  }
+  const reader=new FileReader();
+  reader.onload=e=>parseAndPreview(e.target.result,file.name);
+  reader.readAsText(file,'UTF-8');
+}
+
+// ── Parser CSV robusto (maneja comillas, comas dentro de campos) ───────────
+function parseCSVLine(line){
+  const result=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){
+      if(inQ&&line[i+1]==='"'){cur+='"';i++;}
+      else{inQ=!inQ;}
+    } else if(c===','&&!inQ){result.push(cur.trim());cur='';}
+    else{cur+=c;}
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function normalizeEstado(raw){
+  const s=(raw||'').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(s==='en mora'||s==='mora')return'mora';
+  if(s==='al dia'||s==='libre'||s==='al día')return'libre';
+  return null;
+}
+
+function parseTorre(raw){
+  const t=String(raw||'').trim();
+  if(['1','2','3','4'].includes(t))return t;
+  return null;
+}
+
+function parseAndPreview(text,filename){
+  // Mostrar nombre en drop-zone
+  document.getElementById('drop-zone').innerHTML=`
+    <div class="drop-zone-icon">✅</div>
+    <div class="drop-zone-title">${filename}</div>
+    <div class="drop-zone-sub">Archivo cargado — revisa la vista previa abajo</div>`;
+
+  // Separar líneas (Windows \r\n o Unix \n)
+  const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim());
+  if(lines.length<2){showToast('El archivo está vacío o solo tiene encabezado.','err');return;}
+
+  // Detectar encabezado (primera línea)
+  const header=parseCSVLine(lines[0]).map(h=>h.toLowerCase().replace(/[^a-záéíóúñ]/gi,''));
+  // Mapear columnas por nombre (flexible)
+  const colTorre  = header.findIndex(h=>h.includes('torre'));
+  const colApto   = header.findIndex(h=>h.includes('apto')||h.includes('apartamento'));
+  const colEstado = header.findIndex(h=>h.includes('estado'));
+  const colObs    = header.findIndex(h=>h.includes('observaci'));
+
+  if(colTorre<0||colApto<0||colEstado<0){
+    showToast('❌ El CSV no tiene las columnas requeridas (Torre, Apto, Estado)','err');return;
+  }
+
+  // Construir mapa de existentes: "torre|apto" → registro
+  const existingMap={};
+  allData.forEach(r=>{
+    const key=String(r.torre||'').toLowerCase()+'|'+String(r.apto||'').toLowerCase();
+    existingMap[key]=r;
+  });
+
+  // Analizar filas
+  const toCreate=[],toUpdate=[],errors=[];
+
+  for(let i=1;i<Math.min(lines.length,5001);i++){
+    if(!lines[i].trim())continue;
+    const cols=parseCSVLine(lines[i]);
+    const rawTorre=cols[colTorre]||'';
+    const rawApto =cols[colApto]||'';
+    const rawEst  =cols[colEstado]||'';
+    const rawObs  =colObs>=0?(cols[colObs]||''):'';
+
+    const torre=parseTorre(rawTorre);
+    const apto =rawApto.trim();
+    const est  =normalizeEstado(rawEst);
+
+    // Validaciones
+    const rowErrs=[];
+    if(!torre) rowErrs.push(`Torre inválida: "${rawTorre}" (debe ser 1, 2, 3 ó 4)`);
+    if(!apto)  rowErrs.push('Apto vacío');
+    if(!est)   rowErrs.push(`Estado inválido: "${rawEst}" (debe ser "En mora" o "Al día")`);
+
+    if(rowErrs.length){
+      errors.push({fila:i,msg:rowErrs.join(' • ')});
+      continue;
+    }
+
+    const key=torre.toLowerCase()+'|'+apto.toLowerCase();
+    const existing=existingMap[key];
+
+    if(existing){
+      toUpdate.push({existing,torre,apto,enMora:est==='mora',observacion:rawObs.trim()});
+    } else {
+      toCreate.push({torre,apto,enMora:est==='mora',observacion:rawObs.trim()});
+    }
+  }
+
+  importPreview={toCreate,toUpdate,errors};
+
+  // Renderizar vista previa
+  const statsEl=document.getElementById('preview-stats');
+  statsEl.innerHTML=`
+    ${toCreate.length?`<span class="preview-badge pb-create">✅ ${toCreate.length} nuevos</span>`:''}
+    ${toUpdate.length?`<span class="preview-badge pb-update">🔄 ${toUpdate.length} a actualizar</span>`:''}
+    ${errors.length?`<span class="preview-badge pb-error">❌ ${errors.length} con error</span>`:''}
+  `;
+
+  const listEl=document.getElementById('preview-list');
+  const rows=[];
+  toCreate.forEach(r=>rows.push(`<div class="preview-row new"><span class="pr-tag new">NUEVO</span><span class="pr-info">Torre ${r.torre} Apto ${r.apto} → <strong>${r.enMora?'En mora':'Al día'}</strong></span>${r.observacion?`<span class="pr-reason">${r.observacion}</span>`:''}</div>`));
+  toUpdate.forEach(r=>rows.push(`<div class="preview-row upd"><span class="pr-tag upd">ACTUALIZAR</span><span class="pr-info">Torre ${r.torre} Apto ${r.apto} → <strong>${r.enMora?'En mora':'Al día'}</strong></span>${r.observacion?`<span class="pr-reason">${r.observacion}</span>`:''}</div>`));
+  errors.forEach(e=>rows.push(`<div class="preview-row err"><span class="pr-tag err">ERROR fila ${e.fila}</span><span class="pr-reason">${e.msg}</span></div>`));
+
+  listEl.innerHTML=rows.join('')||'<div class="preview-row"><span class="pr-reason">Sin filas válidas para procesar.</span></div>';
+
+  document.getElementById('preview-section').style.display='block';
+
+  const hayValidos=toCreate.length+toUpdate.length>0;
+  document.getElementById('btn-confirm-import').style.display=hayValidos?'inline-flex':'none';
+}
+
+// ── Ejecutar importación ──────────────────────────────────────────────────
+async function confirmImport(){
+  const {toCreate,toUpdate}=importPreview;
+  const total=toCreate.length+toUpdate.length;
+  if(!total){showToast('No hay registros válidos para importar.','err');return;}
+
+  document.getElementById('btn-confirm-import').disabled=true;
+  document.getElementById('progress-wrap').style.display='block';
+
+  let done=0;
+  const updateProgress=()=>{
+    done++;
+    const pct=Math.round((done/total)*100);
+    document.getElementById('progress-fill').style.width=pct+'%';
+    document.getElementById('progress-lbl').textContent=`Procesando ${done} de ${total}...`;
+  };
+
+  try{
+    // Crear nuevos
+    for(const r of toCreate){
+      await window._fbAddMora({
+        torre:r.torre,apto:r.apto,
+        enMora:r.enMora,observacion:r.observacion,
+        actualizadoPor:'admin-import'
+      });
+      updateProgress();
+    }
+    // Actualizar existentes
+    for(const r of toUpdate){
+      await window._fbUpdateMora(r.existing.id,{
+        torre:r.torre,apto:r.apto,
+        enMora:r.enMora,observacion:r.observacion,
+        actualizadoPor:'admin-import'
+      });
+      updateProgress();
+    }
+
+    document.getElementById('progress-lbl').textContent='¡Importación completa!';
+    showToast(`✅ ${toCreate.length} creados · ${toUpdate.length} actualizados`,'ok');
+    setTimeout(()=>{closeImportModal();loadData();},1200);
+
+  }catch(e){
+    showToast('❌ Error durante la importación. Revisa la consola.','err');
+    console.error(e);
+    document.getElementById('btn-confirm-import').disabled=false;
+  }
+}
+
+// ── Export CSV ────────────────────────────────────────────────────────────
+function exportCSV(){
+  if(!allData.length){alert('No hay datos para exportar.');return;}
+  const headers=['Torre','Apto','Estado','Observación','Última actualización'];
+  const rows=allData.map(r=>{
+    const fecha=r.fechaActualizacion?new Date(r.fechaActualizacion.seconds*1000).toLocaleDateString('es-CO'):'';
+    return[r.torre,r.apto,r.enMora?'En mora':'Al día',r.observacion||'',fecha]
+      .map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',');
+  });
+  const csv='\uFEFF'+[headers.join(','),...rows].join('\n');
+  triggerDownload(csv,'mora_'+new Date().toLocaleDateString('es-CO').replace(/\//g,'-')+'.csv');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg,tipo=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(tipo?' '+tipo:'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>

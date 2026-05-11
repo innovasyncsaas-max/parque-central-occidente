@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Módulo B1 — Gimnasio | PCO3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1e3a5f;
+  --primary-light: #2a4f82;
+  --blue: #2563eb;
+  --sky: #0ea5e9;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg: #f0f4f8;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(30,58,95,.10);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; padding-bottom: 84px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── HEADER ─────────────────────────────────── */
+.header {
+  background: var(--primary); color: #fff;
+  padding: 16px 20px 14px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.header-top { display: flex; align-items: center; justify-content: space-between; }
+.header h1  { font-size: 17px; font-weight: 600; }
+.header-sub { font-size: 12px; opacity: .75; margin-top: 2px; }
+
+.badge-op {
+  font-size: 11px; font-weight: 600; padding: 4px 10px;
+  border-radius: 20px; letter-spacing: .4px; white-space: nowrap;
+}
+.badge-op.abierto    { background: #d1fae5; color: #065f46; }
+.badge-op.cerrado    { background: #e2e8f0; color: #475569; }
+.badge-op.suspendido { background: #fee2e2; color: #991b1b; animation: pulse 1.5s infinite; }
+.badge-op.fuera-hora { background: #fef3c7; color: #92400e; }
+.badge-op.domingo    { background: #e2e8f0; color: #64748b; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+.banner-critico {
+  display: none; background: var(--danger); color: #fff;
+  padding: 12px 20px; text-align: center; font-weight: 600; font-size: 14px;
+}
+.banner-critico.show { display: block; }
+
+/* ── NAV ─────────────────────────────────────── */
+.nav-bottom {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--card); border-top: 1px solid var(--border);
+  display: flex; box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 8px 2px 6px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 10px;
+  color: var(--muted); transition: color .2s; position: relative;
+}
+.nav-btn.active { color: var(--primary); }
+.nav-btn svg { width: 22px; height: 22px; margin-bottom: 3px; stroke-width: 1.8; }
+.nav-badge {
+  position: absolute; top: 6px; right: calc(50% - 16px);
+  background: var(--danger); color: #fff;
+  font-size: 9px; font-weight: 700; width: 16px; height: 16px;
+  border-radius: 50%; display: none; align-items: center; justify-content: center;
+}
+.nav-badge.show { display: flex; }
+
+/* ── SECTIONS ────────────────────────────────── */
+.section { display: none; padding: 16px; }
+.section.active { display: block; }
+
+/* ── CARD ────────────────────────────────────── */
+.card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden;
+}
+.card-header {
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.card-header h2 { font-size: 14px; font-weight: 600; }
+.card-body { padding: 14px 16px; }
+
+/* ── STATS ───────────────────────────────────── */
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 14px; text-align: center; box-shadow: var(--shadow);
+}
+.stat-num   { font-size: 28px; font-weight: 700; color: var(--primary); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── HORARIO DISPLAY ──────────────────────────── */
+.horario-card {
+  background: var(--primary); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+  color: #fff;
+}
+.horario-titulo { font-size: 12px; opacity: .75; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.horario-bloques { display: flex; gap: 10px; }
+.horario-bloque {
+  flex: 1; background: rgba(255,255,255,.12); border-radius: 10px;
+  padding: 10px; text-align: center;
+}
+.horario-bloque.activo { background: rgba(255,255,255,.22); border: 1.5px solid rgba(255,255,255,.4); }
+.horario-bloque-hora   { font-size: 13px; font-weight: 700; }
+.horario-bloque-label  { font-size: 10px; opacity: .8; margin-top: 2px; }
+.horario-bloque-estado { font-size: 10px; font-weight: 600; margin-top: 4px; }
+
+/* ── AFORO GRANDE ────────────────────────────── */
+.aforo-display {
+  background: var(--primary); border-radius: var(--radius);
+  padding: 20px; text-align: center; margin-bottom: 14px; box-shadow: var(--shadow);
+}
+.aforo-num  { font-size: 56px; font-weight: 700; color: #fff; line-height: 1; }
+.aforo-den  { font-size: 24px; color: rgba(255,255,255,.6); font-weight: 400; }
+.aforo-lbl  { font-size: 13px; color: rgba(255,255,255,.8); margin-top: 6px; }
+.aforo-bar-track {
+  height: 12px; background: rgba(255,255,255,.2);
+  border-radius: 10px; overflow: hidden; margin-top: 12px;
+}
+.aforo-bar-fill {
+  height: 100%; border-radius: 10px;
+  transition: width .4s, background .4s; background: var(--success);
+}
+.aforo-bar-fill.warn   { background: var(--warning); }
+.aforo-bar-fill.danger { background: var(--danger); }
+.aforo-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.btn-aforo {
+  padding: 16px 8px; border-radius: 12px; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 700;
+  cursor: pointer; transition: transform .15s; display: flex;
+  flex-direction: column; align-items: center;
+}
+.btn-aforo:active { transform: scale(.95); }
+.btn-entrada { background: #d1fae5; color: #065f46; }
+.btn-salida  { background: #fee2e2; color: #991b1b; }
+.btn-aforo span { font-size: 11px; font-weight: 500; margin-top: 4px; }
+
+/* ── EQUIPOS ─────────────────────────────────── */
+.equipo-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 0; border-bottom: 1px solid var(--border);
+}
+.equipo-item:last-child { border-bottom: none; }
+.equipo-icono {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: #eff6ff; display: flex; align-items: center;
+  justify-content: center; font-size: 18px; flex-shrink: 0;
+}
+.equipo-nombre { flex: 1; font-size: 13px; font-weight: 500; line-height: 1.3; }
+.equipo-status-btns { display: flex; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--border); flex-shrink: 0; }
+.eq-btn {
+  padding: 5px 8px; border: none; font-family: 'DM Sans', sans-serif;
+  font-size: 10px; font-weight: 600; cursor: pointer; transition: all .15s;
+  background: none; color: var(--muted); white-space: nowrap;
+}
+.eq-btn.ok.active      { background: var(--success); color: #fff; }
+.eq-btn.revision.active { background: var(--warning); color: #fff; }
+.eq-btn.fuera.active   { background: var(--danger);  color: #fff; }
+
+/* ── RONDAS ──────────────────────────────────── */
+.rondas-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.ronda-dot {
+  flex: 1; border-radius: 10px; padding: 10px 6px;
+  text-align: center; border: 2px solid var(--border); background: var(--card);
+}
+.ronda-dot.completada { border-color: var(--success); background: #d1fae5; }
+.ronda-dot.activa     { border-color: var(--blue); background: #eff6ff; }
+.ronda-dot.fuera-hora { border-color: var(--border); opacity: .55; }
+.rd-num   { font-size: 18px; font-weight: 700; color: var(--primary); }
+.ronda-dot.completada .rd-num { color: var(--success); }
+.rd-lbl   { font-size: 9px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+.rd-vent  { font-size: 9px; font-weight: 600; margin-top: 3px; }
+
+/* ── CHECKLIST ───────────────────────────────── */
+.check-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.check-item:last-child { border-bottom: none; }
+.check-box {
+  width: 22px; height: 22px; border-radius: 6px;
+  border: 2px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--card); transition: all .2s;
+}
+.check-item.checked .check-box { background: var(--success); border-color: var(--success); }
+.check-item.checked .check-box::after { content: '✓'; color: #fff; font-size: 13px; font-weight: 700; }
+.check-item.checked .check-text { color: var(--muted); text-decoration: line-through; }
+.check-text { font-size: 13px; line-height: 1.4; }
+.check-progress {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--primary); color: #fff;
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;
+}
+.cp-num { font-size: 20px; font-weight: 700; }
+.cp-lbl { font-size: 12px; opacity: .85; }
+
+/* ── FOTO ────────────────────────────────────── */
+.foto-req {
+  width: 100%; aspect-ratio: 16/9; border-radius: 10px; overflow: hidden;
+  border: 2px dashed var(--border); display: flex;
+  align-items: center; justify-content: center;
+  background: #f8fafc; cursor: pointer; margin-bottom: 12px;
+}
+.foto-req.filled { border-style: solid; border-color: var(--success); }
+.foto-req img  { width: 100%; height: 100%; object-fit: cover; }
+.foto-req-inner { text-align: center; color: var(--muted); }
+.foto-req-inner svg { margin-bottom: 6px; opacity: .5; }
+.foto-req-inner p { font-size: 12px; }
+
+/* ── ASISTENCIA ──────────────────────────────── */
+.asist-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.asist-item:last-child { border-bottom: none; }
+.asist-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.asist-info { flex: 1; min-width: 0; }
+.asist-nombre { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asist-meta   { font-size: 11px; color: var(--muted); }
+.asist-np     { font-size: 12px; font-weight: 600; color: var(--blue); white-space: nowrap; }
+
+/* ── NOVEDADES ───────────────────────────────── */
+.sev-selector { display: flex; gap: 8px; margin-bottom: 10px; }
+.sev-btn {
+  flex: 1; padding: 10px 6px; border-radius: 8px; border: 2px solid var(--border);
+  background: none; font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.sev-btn.bajo.active    { background: #d1fae5; border-color: #10b981; color: #065f46; }
+.sev-btn.medio.active   { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+.sev-btn.critico.active { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+.novedad-item {
+  border-left: 4px solid var(--border); padding: 10px 12px;
+  margin-bottom: 8px; background: #fafcff; border-radius: 0 8px 8px 0;
+}
+.novedad-item.bajo    { border-left-color: var(--success); }
+.novedad-item.medio   { border-left-color: var(--warning); }
+.novedad-item.critico { border-left-color: var(--danger); }
+.nov-sev { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+.nov-sev.bajo    { color: var(--success); }
+.nov-sev.medio   { color: var(--warning); }
+.nov-sev.critico { color: var(--danger); }
+.nov-desc { font-size: 13px; line-height: 1.5; }
+.nov-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── FORMS ───────────────────────────────────── */
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block; font-size: 12px; font-weight: 600; color: var(--muted);
+  margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-family: 'DM Sans', sans-serif;
+  font-size: 15px; color: var(--text); background: var(--card);
+  transition: border-color .2s; outline: none; -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
+.form-textarea { min-height: 80px; resize: vertical; }
+.search-input {
+  width: 100%; padding: 10px 14px 10px 38px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 11px center;
+  outline: none;
+}
+.search-input:focus { border-color: var(--blue); }
+
+/* ── BUTTONS ─────────────────────────────────── */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 20px; border-radius: 12px; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+  cursor: pointer; width: 100%; transition: all .2s;
+}
+.btn-primary  { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.btn-success  { background: var(--success); color: #fff; }
+.btn-danger   { background: var(--danger);  color: #fff; }
+.btn-secondary { background: #f1f5f9; color: var(--text); border: 1.5px solid var(--border); }
+.btn-sm { padding: 9px 14px; font-size: 13px; border-radius: 8px; }
+
+/* ── ALERTS ──────────────────────────────────── */
+.alert {
+  border-radius: 10px; padding: 12px 14px;
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px;
+}
+.alert-warning { background: #fef3c7; color: #92400e; }
+.alert-success { background: #d1fae5; color: #065f46; }
+.alert-danger  { background: #fee2e2; color: #991b1b; }
+.alert-info    { background: #eff6ff; color: #1e40af; }
+.alert-icon    { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.alert-body    { font-size: 13px; line-height: 1.5; }
+.alert-title   { font-weight: 600; margin-bottom: 2px; }
+
+/* ── STATUS ROW ──────────────────────────────── */
+.status-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.status-row:last-child { border-bottom: none; }
+.status-row-label { font-size: 13px; }
+.status-row-val {
+  margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted);
+}
+.status-row-val.ok      { color: var(--success); }
+.status-row-val.warn    { color: var(--warning); }
+.status-row-val.pending { color: var(--muted); }
+
+/* ── TURNO SELECTOR ──────────────────────────── */
+.turno-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.turno-tab {
+  flex: 1; padding: 10px 8px; border-radius: 10px; border: 2px solid var(--border);
+  background: var(--card); font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
+  transition: all .2s; color: var(--muted);
+}
+.turno-tab.activo { background: var(--primary); color: #fff; border-color: var(--primary); }
+.turno-tab.completado { background: #d1fae5; color: #065f46; border-color: var(--success); }
+.turno-tab.disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── MISC ────────────────────────────────────── */
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+.empty-state { text-align: center; padding: 28px; color: var(--muted); font-size: 14px; }
+.loader { text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+.section-title {
+  font-size: 12px; font-weight: 700; color: var(--primary);
+  text-transform: uppercase; letter-spacing: .5px;
+  border-bottom: 2px solid var(--primary); padding-bottom: 6px; margin: 14px 0 10px;
+}
+
+/* ── TOAST ───────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 90px; left: 16px; right: 16px; z-index: 999;
+  padding: 14px 16px; border-radius: 12px; font-size: 14px; font-weight: 500;
+  text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.2);
+  transform: translateY(20px); opacity: 0; transition: all .3s; pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: #065f46; color: #fff; }
+.toast.error   { background: #991b1b; color: #fff; }
+.toast.warning { background: #92400e; color: #fff; }
+
+/* ── MODAL ───────────────────────────────────── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.6); align-items: flex-end;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card); border-radius: 20px 20px 0 0;
+  padding: 20px 20px 32px; width: 100%; max-height: 85vh; overflow-y: auto;
+}
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>🏋️ Operador Gimnasio</h1>
+      <div class="header-sub" id="fechaHora">Cargando...</div>
+    </div>
+    <span class="badge-op fuera-hora" id="badgeOp">● Cargando</span>
+  </div>
+</div>
+<div class="banner-critico" id="bannerCritico">
+  ⛔ OPERACIÓN SUSPENDIDA — Novedad crítica activa
+</div>
+
+<!-- ══ INICIO ══════════════════════════════════ -->
+<div class="section active" id="sec-inicio">
+
+  <div id="domingoBanner" style="display:none">
+    <div class="alert alert-info">
+      <div class="alert-icon">📅</div>
+      <div class="alert-body">
+        <div class="alert-title">Gimnasio cerrado los domingos</div>
+        No hay operación programada hoy.
+      </div>
+    </div>
+  </div>
+
+  <div class="horario-card" id="horarioCard">
+    <div class="horario-titulo">Horario de hoy</div>
+    <div class="horario-bloques" id="horarioBloques"></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="statAforo">0</div>
+      <div class="stat-label">Personas ahora</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">Total del día</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <h2>Estado del turno</h2>
+    </div>
+    <div class="card-body">
+      <div id="estadoTurnos"></div>
+      <div class="status-row" id="rowRondas">
+        <span>🔄</span>
+        <span class="status-row-label">Rondas de control</span>
+        <span class="status-row-val pending" id="txtRondas">0 / 3</span>
+      </div>
+      <div class="status-row">
+        <span>⚠️</span>
+        <span class="status-row-label">Novedades abiertas</span>
+        <span class="status-row-val" id="txtNovedades" style="color:var(--muted)">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:18px">🏋️</span>
+      <h2>Estado de equipos</h2>
+    </div>
+    <div class="card-body" id="equiposDashboard">
+      <div class="loader">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TURNO (apertura / cierre) ═══════════════ -->
+<div class="section" id="sec-turno">
+
+  <div id="turnoDomingo" style="display:none">
+    <div class="alert alert-info">
+      <div class="alert-icon">📅</div>
+      <div class="alert-body"><div class="alert-title">Gimnasio cerrado los domingos</div></div>
+    </div>
+  </div>
+
+  <div id="turnoSuspendido" style="display:none">
+    <div class="alert alert-danger">
+      <div class="alert-icon">⛔</div>
+      <div class="alert-body">
+        <div class="alert-title">Operación suspendida</div>
+        No puedes abrir el gimnasio mientras haya una novedad crítica activa.
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs mañana / tarde -->
+  <div id="turnoTabsWrap" style="display:none">
+    <div class="turno-tabs" id="turnoTabs">
+      <div class="turno-tab" id="tabManana" onclick="selTurnoTab('manana')">
+        🌅 Mañana<br><small style="font-weight:400;font-size:10px">6:00 – 10:00</small>
+      </div>
+      <div class="turno-tab" id="tabTarde" onclick="selTurnoTab('tarde')">
+        🌆 Tarde<br><small style="font-weight:400;font-size:10px">17:00 – 21:00</small>
+      </div>
+    </div>
+    <div id="turnoTabsSabadoWrap" style="display:none">
+      <div class="turno-tabs">
+        <div class="turno-tab activo">☀️ Sábado<br><small style="font-weight:400;font-size:10px">7:00 – 13:00</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario contextual -->
+  <div id="turnoFormWrap"></div>
+</div>
+
+<!-- ══ AFORO ════════════════════════════════════ -->
+<div class="section" id="sec-aforo">
+
+  <div id="aforoLock" style="display:none">
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <div class="alert-title">Gimnasio no abierto</div>
+        Registra la apertura del turno primero.
+      </div>
+    </div>
+  </div>
+
+  <div id="aforoContent">
+    <div class="aforo-display">
+      <div>
+        <span class="aforo-num" id="aforoActualNum">0</span>
+        <span class="aforo-den"> / 20</span>
+      </div>
+      <div class="aforo-lbl">personas en gimnasio ahora</div>
+      <div class="aforo-bar-track">
+        <div class="aforo-bar-fill" id="aforoBarFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div id="alertaAforoMax" style="display:none">
+      <div class="alert alert-danger" style="margin-bottom:14px">
+        <div class="alert-icon">🚫</div>
+        <div class="alert-body"><div class="alert-title">Aforo máximo alcanzado (20)</div>No se permiten más entradas.</div>
+      </div>
+    </div>
+    <div id="alertaAforoWarn" style="display:none">
+      <div class="alert alert-warning" style="margin-bottom:14px">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body">Aforo cercano al límite.</div>
+      </div>
+    </div>
+
+    <div class="aforo-btns">
+      <button class="btn-aforo btn-entrada" onclick="moverAforo(1)">➕<span>Entrada</span></button>
+      <button class="btn-aforo btn-salida"  onclick="moverAforo(-1)">➖<span>Salida</span></button>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="card-header">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <h2>Reservas activas</h2>
+      </div>
+      <div class="card-body">
+        <input type="text" class="search-input" placeholder="Buscar por nombre o apto..." oninput="filtrarReservas(this.value)" style="margin-bottom:10px">
+        <div id="listaReservas"><div class="loader">Cargando...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RONDAS ════════════════════════════════════ -->
+<div class="section" id="sec-rondas">
+
+  <div id="rondasLock" style="display:none">
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body"><div class="alert-title">Gimnasio no abierto</div>Registra la apertura primero.</div>
+    </div>
+  </div>
+
+  <div id="rondasContent">
+    <div class="rondas-row" id="rondasDots"></div>
+
+    <!-- Form ronda activa -->
+    <div class="card" id="rondaFormCard">
+      <div class="card-header">
+        <span style="font-size:18px">🔄</span>
+        <h2 id="rondaFormTitle">Ronda 1</h2>
+      </div>
+      <div class="card-body">
+        <div id="rondaVentanaAlert" style="display:none;margin-bottom:12px"></div>
+
+        <div class="foto-req" onclick="tomarFotoRonda()" id="fotoRondaSlot">
+          <div class="foto-req-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>Foto obligatoria de la ronda</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Aforo al momento</label>
+          <input type="number" class="form-input" id="rondaAforoInp" placeholder="0" min="0" max="20" style="max-width:120px">
+        </div>
+
+        <div class="section-title">Estado rápido de equipos</div>
+        <div id="rondaEquiposCheck"></div>
+
+        <div class="form-group" style="margin-top:12px">
+          <label class="form-label">Observaciones</label>
+          <textarea class="form-textarea" id="rondaObs" placeholder="Condiciones del espacio, incidentes, usuarios..."></textarea>
+        </div>
+        <button class="btn btn-primary" id="btnGuardarRonda" onclick="guardarRonda()">
+          Guardar ronda
+        </button>
+      </div>
+    </div>
+
+    <div id="rondaTodasMsg" style="display:none">
+      <div class="alert alert-success">
+        <div class="alert-icon">✅</div>
+        <div class="alert-body">
+          <div class="alert-title">Todas las rondas completadas</div>
+          Puedes registrar el cierre del turno.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span>📋</span><h2>Historial de rondas</h2></div>
+      <div class="card-body" id="historialRondas"><div class="loader">Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NOVEDADES ════════════════════════════════ -->
+<div class="section" id="sec-novedades">
+  <div class="card">
+    <div class="card-header"><span style="font-size:18px">➕</span><h2>Registrar novedad</h2></div>
+    <div class="card-body">
+      <div class="form-group">
+        <label class="form-label">Equipo / Área afectada</label>
+        <select class="form-select" id="novArea">
+          <option value="">Seleccionar</option>
+          <option value="Caminadora 1">Caminadora 1</option>
+          <option value="Caminadora 2">Caminadora 2</option>
+          <option value="Bicicleta estática 1">Bicicleta estática 1</option>
+          <option value="Bicicleta estática 2">Bicicleta estática 2</option>
+          <option value="Elíptica">Elíptica</option>
+          <option value="Banco plano">Banco plano</option>
+          <option value="Banco inclinado">Banco inclinado</option>
+          <option value="Rack de pesas / Mancuernas">Rack de pesas / Mancuernas</option>
+          <option value="Máquina de cable">Máquina de cable</option>
+          <option value="Aire acondicionado">Aire acondicionado</option>
+          <option value="Instalación general">Instalación general</option>
+          <option value="Usuario">Incidente con usuario</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Severidad</label>
+        <div class="sev-selector">
+          <button class="sev-btn bajo"    onclick="selSev('BAJO',this)">🟢 BAJO</button>
+          <button class="sev-btn medio"   onclick="selSev('MEDIO',this)">🟡 MEDIO</button>
+          <button class="sev-btn critico" onclick="selSev('CRÍTICO',this)">🔴 CRÍTICO</button>
+        </div>
+        <div id="alertaCriticoTxt" style="display:none;background:#fee2e2;border-radius:8px;padding:10px;font-size:12px;color:#991b1b;margin-top:8px">
+          ⛔ Severidad CRÍTICO <strong>suspende la operación</strong> y notifica al administrador y supervisor de inmediato.
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <textarea class="form-textarea" id="novDesc" placeholder="Describe la situación con el mayor detalle posible..."></textarea>
+      </div>
+      <button class="btn btn-primary" id="btnGuardarNov" onclick="guardarNovedad()">Registrar novedad</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span style="font-size:18px">📋</span><h2>Novedades de hoy</h2></div>
+    <div class="card-body" id="listaNov"><div class="loader">Cargando...</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-bottom">
+  <button class="nav-btn active" onclick="irA('inicio',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Inicio
+  </button>
+  <button class="nav-btn" onclick="irA('turno',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
+    Turno
+  </button>
+  <button class="nav-btn" onclick="irA('aforo',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    Aforo
+  </button>
+  <button class="nav-btn" onclick="irA('rondas',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+    Rondas
+  </button>
+  <button class="nav-btn" onclick="irA('novedades',this)">
+    <div class="nav-badge" id="navBadgeNov">0</div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Novedades
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL CONFIRMAR CRÍTICO -->
+<div class="modal-overlay" id="modalCritico">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:48px">⛔</div>
+      <div class="modal-title">¿Confirmar novedad CRÍTICO?</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6">
+        Esta acción <strong>suspende la operación del gimnasio</strong> y notifica al administrador y supervisor de inmediato. Solo ellos pueden reactivar la operación.
+      </p>
+    </div>
+    <button class="btn btn-danger" style="margin-bottom:10px" onclick="confirmarCritico()">Sí, registrar y suspender</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('modalCritico').classList.remove('show')">Cancelar</button>
+  </div>
+</div>
+
+<script type="module">
+// ═══════════════════════════════════════════════
+// FIREBASE CONFIG — Reemplaza con tus credenciales
+// ═══════════════════════════════════════════════
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs,
+         query, where, orderBy, onSnapshot, serverTimestamp, increment }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getStorage, ref, uploadBytes, getDownloadURL }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+  authDomain: "registro-residentes.firebaseapp.com",
+  projectId: "registro-residentes",
+  storageBucket: "registro-residentes.firebasestorage.app",
+  messagingSenderId: "646123326163",
+  appId: "1:646123326163:web:8b35b955e7b3692536a226"
+};
+
+const app     = initializeApp(firebaseConfig);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+// ═══════════════════════════════════════════════
+// SESIÓN
+// ═══════════════════════════════════════════════
+const params = new URLSearchParams(window.location.search);
+const SESSION = {
+  uid:    params.get('uid')    || localStorage.getItem('pco3_gym_uid')    || 'gym_op_test',
+  nombre: params.get('nombre') || localStorage.getItem('pco3_gym_nombre') || 'Operador Gimnasio',
+  rol:    params.get('rol')    || 'operador_gimnasio'
+};
+if (params.get('uid')) {
+  localStorage.setItem('pco3_gym_uid',    SESSION.uid);
+  localStorage.setItem('pco3_gym_nombre', SESSION.nombre);
+}
+
+// ═══════════════════════════════════════════════
+// CONFIGURACIÓN HORARIOS Y RONDAS
+// ═══════════════════════════════════════════════
+const EQUIPOS = [
+  { id: 'caminadora_1',   nombre: 'Caminadora 1',        icono: '🏃' },
+  { id: 'caminadora_2',   nombre: 'Caminadora 2',        icono: '🏃' },
+  { id: 'bicicleta_1',    nombre: 'Bicicleta estática 1',icono: '🚴' },
+  { id: 'bicicleta_2',    nombre: 'Bicicleta estática 2',icono: '🚴' },
+  { id: 'eliptica',       nombre: 'Elíptica',            icono: '🔄' },
+  { id: 'banco_plano',    nombre: 'Banco plano',         icono: '🏋️' },
+  { id: 'banco_inclinado',nombre: 'Banco inclinado',     icono: '🏋️' },
+  { id: 'rack_pesas',     nombre: 'Rack pesas / Mancuernas', icono: '💪' },
+  { id: 'maquina_cable',  nombre: 'Máquina de cable',    icono: '⚙️' },
+  { id: 'aire_acond',     nombre: 'Aire acondicionado',  icono: '❄️' }
+];
+
+const CHECKLIST_APERTURA = [
+  'Revisión visual del espacio general',
+  'Equipos cardiovasculares encendidos y funcionando',
+  'Equipos de fuerza en buen estado',
+  'Pesas y mancuernas ordenadas y completas',
+  'Tapetes y colchonetas limpias y en buen estado',
+  'Ventilación y aire acondicionado operativo',
+  'Iluminación completa funcionando',
+  'Espejos sin daños visibles',
+  'Dispensador de desinfectante disponible',
+  'Toallas o papel disponibles',
+  'Acceso controlado (puerta / torniquete operativo)',
+  'Botiquín de primeros auxilios completo'
+];
+
+// Detectar día y turno
+function getDiaSemana() {
+  return new Date().getDay(); // 0=dom,1=lun..6=sab
+}
+
+function getTurnoActual() {
+  const dia  = getDiaSemana();
+  const hora = new Date().getHours();
+  if (dia === 0) return 'domingo';
+  if (dia === 6) return (hora >= 7 && hora < 13) ? 'sabado' : 'fuera_sabado';
+  // L-V
+  if (hora >= 6  && hora < 10) return 'manana';
+  if (hora >= 17 && hora < 21) return 'tarde';
+  return 'fuera_horario';
+}
+
+function esDiaSemana() { const d = getDiaSemana(); return d >= 1 && d <= 5; }
+function esSabado()    { return getDiaSemana() === 6; }
+function esDomingo()   { return getDiaSemana() === 0; }
+
+function getRondasConfig() {
+  if (esSabado()) return [
+    { label: 'Ronda 1', inicio: 7,  fin: 9,  turno: 'sabado' },
+    { label: 'Ronda 2', inicio: 9,  fin: 11, turno: 'sabado' },
+    { label: 'Ronda 3', inicio: 11, fin: 13, turno: 'sabado' }
+  ];
+  return [
+    { label: 'Ronda 1', inicio: 6,  fin: 10, turno: 'manana' },
+    { label: 'Ronda 2', inicio: 17, fin: 19, turno: 'tarde'  },
+    { label: 'Ronda 3', inicio: 19, fin: 21, turno: 'tarde'  }
+  ];
+}
+
+// ═══════════════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════════════
+const STATE = {
+  suspendido:      false,
+  aforoActual:     0,
+  totalDia:        0,
+  turnoMananaAbierto: false,
+  turnoMananaCerrado: false,
+  turnoTardeAbierto:  false,
+  turnoTardeCerrado:  false,
+  turnoSabadoAbierto: false,
+  turnoSabadoCerrado: false,
+  rondas:          [false, false, false],
+  equiposStatus:   {},   // id → 'ok' | 'revision' | 'fuera'
+  reservasHoy:     [],
+  turnoSeleccionado: null,
+  severidadNov:    null,
+  apCheckState:    new Array(12).fill(false),
+  apFotoBlob:      null,
+  rondaFotoBlob:   null,
+  cierreFotoBlob:  null
+};
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+const fechaHoy = () => new Date().toISOString().split('T')[0];
+
+function formatHora(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+}
+
+function showToast(msg, tipo = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function gimnasioAbierto() {
+  return STATE.turnoMananaAbierto && !STATE.turnoMananaCerrado ||
+         STATE.turnoTardeAbierto  && !STATE.turnoTardeCerrado  ||
+         STATE.turnoSabadoAbierto && !STATE.turnoSabadoCerrado;
+}
+
+// ═══════════════════════════════════════════════
+// RELOJ
+// ═══════════════════════════════════════════════
+function tick() {
+  const ahora = new Date();
+  const f = ahora.toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long' });
+  const h = ahora.toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('fechaHora').textContent = `${f} · ${h}`;
+}
+setInterval(tick, 1000); tick();
+
+// ═══════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════
+window.irA = function(sec, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`sec-${sec}`).classList.add('active');
+  btn.classList.add('active');
+  if (sec === 'turno')    renderSeccionTurno();
+  if (sec === 'aforo')    { renderAforoLock(); cargarReservas(); }
+  if (sec === 'rondas')   { renderRondasLock(); cargarHistorialRondas(); }
+  if (sec === 'novedades') cargarNovedades();
+};
+
+// ═══════════════════════════════════════════════
+// ESTADO TIEMPO REAL (gym_estado)
+// ═══════════════════════════════════════════════
+function escucharEstado() {
+  onSnapshot(doc(db, 'gym_estado', fechaHoy()), snap => {
+    const d = snap.data() || {};
+
+    STATE.suspendido         = d.suspendida === true;
+    STATE.aforoActual        = d.aforo_actual || 0;
+    STATE.totalDia           = d.total_dia    || 0;
+    STATE.turnoMananaAbierto = d.manana_abierto  || false;
+    STATE.turnoMananaCerrado = d.manana_cerrado  || false;
+    STATE.turnoTardeAbierto  = d.tarde_abierto   || false;
+    STATE.turnoTardeCerrado  = d.tarde_cerrado   || false;
+    STATE.turnoSabadoAbierto = d.sabado_abierto  || false;
+    STATE.turnoSabadoCerrado = d.sabado_cerrado  || false;
+    STATE.rondas[0]          = d.ronda_1_ok      || false;
+    STATE.rondas[1]          = d.ronda_2_ok      || false;
+    STATE.rondas[2]          = d.ronda_3_ok      || false;
+
+    actualizarBadgeOp();
+    actualizarDashboard(d);
+    actualizarAforo(STATE.aforoActual);
+  });
+}
+
+function actualizarBadgeOp() {
+  const badge  = document.getElementById('badgeOp');
+  const banner = document.getElementById('bannerCritico');
+  if (esDomingo()) {
+    badge.textContent = '📅 Cerrado'; badge.className = 'badge-op domingo';
+    banner.classList.remove('show'); return;
+  }
+  if (STATE.suspendido) {
+    badge.textContent = '⛔ SUSPENDIDO'; badge.className = 'badge-op suspendido';
+    banner.classList.add('show'); return;
+  }
+  banner.classList.remove('show');
+  if (gimnasioAbierto()) {
+    badge.textContent = '🟢 ABIERTO'; badge.className = 'badge-op abierto';
+  } else {
+    const turno = getTurnoActual();
+    if (turno === 'fuera_horario' || turno === 'fuera_sabado') {
+      badge.textContent = '⏸ Fuera de hora'; badge.className = 'badge-op fuera-hora';
+    } else {
+      badge.textContent = '● Pendiente apertura'; badge.className = 'badge-op fuera-hora';
+    }
+  }
+}
+
+function actualizarDashboard(d) {
+  document.getElementById('statAforo').textContent = STATE.aforoActual;
+  document.getElementById('statTotal').textContent = STATE.totalDia;
+  document.getElementById('domingoBanner').style.display = esDomingo() ? 'block' : 'none';
+
+  // Bloques horarios
+  renderHorarioCard();
+
+  // Turnos
+  const filas = [];
+  if (esDiaSemana()) {
+    const mAb = d.manana_abierto, mCe = d.manana_cerrado;
+    const tAb = d.tarde_abierto,  tCe = d.tarde_cerrado;
+    filas.push(rowTurno('🌅', 'Turno Mañana (6–10)', mAb, mCe, d.manana_hora_apertura, d.manana_hora_cierre));
+    filas.push(rowTurno('🌆', 'Turno Tarde (17–21)', tAb, tCe, d.tarde_hora_apertura, d.tarde_hora_cierre));
+  } else if (esSabado()) {
+    const sAb = d.sabado_abierto, sCe = d.sabado_cerrado;
+    filas.push(rowTurno('☀️', 'Turno Sábado (7–13)', sAb, sCe, d.sabado_hora_apertura, d.sabado_hora_cierre));
+  }
+  document.getElementById('estadoTurnos').innerHTML = filas.join('');
+
+  // Rondas
+  const rCnt = STATE.rondas.filter(Boolean).length;
+  document.getElementById('txtRondas').textContent = `${rCnt} / 3`;
+  document.getElementById('txtRondas').className   = rCnt === 3 ? 'status-row-val ok' : 'status-row-val pending';
+}
+
+function rowTurno(ico, label, abierto, cerrado, hAp, hCe) {
+  let val = '⏳ Pendiente', cls = 'pending';
+  if (cerrado) { val = `✅ Cerrado · ${hCe || ''}`; cls = 'ok'; }
+  else if (abierto) { val = `🟢 Abierto · ${hAp || ''}`; cls = 'ok'; }
+  return `<div class="status-row">
+    <span>${ico}</span>
+    <span class="status-row-label">${label}</span>
+    <span class="status-row-val ${cls}">${val}</span>
+  </div>`;
+}
+
+function renderHorarioCard() {
+  const bloques = document.getElementById('horarioBloques');
+  const turnoAct = getTurnoActual();
+  if (esDomingo()) { document.getElementById('horarioCard').style.display = 'none'; return; }
+  if (esSabado()) {
+    bloques.innerHTML = `<div class="horario-bloque ${turnoAct === 'sabado' ? 'activo' : ''}">
+      <div class="horario-bloque-hora">7:00 – 13:00</div>
+      <div class="horario-bloque-label">Sábado</div>
+      <div class="horario-bloque-estado">${turnoAct === 'sabado' ? '● Activo' : ''}</div>
+    </div>`;
+    return;
+  }
+  bloques.innerHTML = `
+    <div class="horario-bloque ${turnoAct === 'manana' ? 'activo' : ''}">
+      <div class="horario-bloque-hora">6:00 – 10:00</div>
+      <div class="horario-bloque-label">Mañana (L–V)</div>
+      <div class="horario-bloque-estado">${turnoAct === 'manana' ? '● Activo' : ''}</div>
+    </div>
+    <div class="horario-bloque ${turnoAct === 'tarde' ? 'activo' : ''}">
+      <div class="horario-bloque-hora">17:00 – 21:00</div>
+      <div class="horario-bloque-label">Tarde (L–V)</div>
+      <div class="horario-bloque-estado">${turnoAct === 'tarde' ? '● Activo' : ''}</div>
+    </div>`;
+}
+
+// Dashboard: equipos resumen
+async function cargarEquiposDashboard() {
+  const cont = document.getElementById('equiposDashboard');
+  try {
+    const snap = await getDoc(doc(db, 'gym_equipos', fechaHoy()));
+    const data = snap.exists() ? snap.data() : {};
+    const fuera = EQUIPOS.filter(e => data[e.id] === 'fuera');
+    const revision = EQUIPOS.filter(e => data[e.id] === 'revision');
+    if (fuera.length === 0 && revision.length === 0) {
+      cont.innerHTML = `<div style="color:var(--success);font-size:13px;font-weight:600">✅ Todos los equipos operativos</div>`;
+    } else {
+      let html = '';
+      if (fuera.length) html += `<div style="color:var(--danger);font-size:13px;font-weight:600;margin-bottom:6px">⛔ Fuera de servicio (${fuera.length}):</div>` +
+        fuera.map(e => `<div style="font-size:12px;padding:3px 0;color:var(--danger)">· ${e.nombre}</div>`).join('');
+      if (revision.length) html += `<div style="color:var(--warning);font-size:13px;font-weight:600;margin:8px 0 6px">⚠️ En revisión (${revision.length}):</div>` +
+        revision.map(e => `<div style="font-size:12px;padding:3px 0;color:var(--warning)">· ${e.nombre}</div>`).join('');
+      cont.innerHTML = html;
+    }
+  } catch(e) {
+    cont.innerHTML = '<div style="font-size:13px;color:var(--muted)">Sin datos de equipos</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SECCIÓN TURNO
+// ═══════════════════════════════════════════════
+let turnoActivo = null; // 'manana' | 'tarde' | 'sabado'
+
+function renderSeccionTurno() {
+  document.getElementById('turnoDomingo').style.display  = esDomingo() ? 'block' : 'none';
+  document.getElementById('turnoSuspendido').style.display = (!esDomingo() && STATE.suspendido) ? 'block' : 'none';
+  document.getElementById('turnoTabsWrap').style.display = (!esDomingo() && !STATE.suspendido) ? 'block' : 'none';
+
+  if (esDomingo() || STATE.suspendido) return;
+
+  // Sábado: solo una pestaña
+  const esSab = esSabado();
+  document.getElementById('turnoTabs').style.display = esSab ? 'none' : 'flex';
+  document.getElementById('turnoTabsSabadoWrap').style.display = esSab ? 'block' : 'none';
+
+  if (esSab) {
+    turnoActivo = 'sabado';
+    renderFormTurno('sabado');
+    return;
+  }
+
+  // Auto-select basado en hora actual
+  const t = getTurnoActual();
+  turnoActivo = (t === 'manana' || t === 'tarde') ? t : turnoActivo || 'manana';
+  actualizarTabsUI();
+  renderFormTurno(turnoActivo);
+}
+
+window.selTurnoTab = function(turno) {
+  turnoActivo = turno;
+  actualizarTabsUI();
+  renderFormTurno(turno);
+};
+
+function actualizarTabsUI() {
+  ['manana','tarde'].forEach(t => {
+    const tab = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    if (!tab) return;
+    const abierto = t === 'manana' ? STATE.turnoMananaAbierto : STATE.turnoTardeAbierto;
+    const cerrado = t === 'manana' ? STATE.turnoMananaCerrado : STATE.turnoTardeCerrado;
+    tab.className = 'turno-tab';
+    if (cerrado) tab.classList.add('completado');
+    else if (t === turnoActivo) tab.classList.add('activo');
+  });
+}
+
+function renderFormTurno(turno) {
+  const abierto = turno === 'manana' ? STATE.turnoMananaAbierto :
+                  turno === 'tarde'  ? STATE.turnoTardeAbierto  : STATE.turnoSabadoAbierto;
+  const cerrado = turno === 'manana' ? STATE.turnoMananaCerrado :
+                  turno === 'tarde'  ? STATE.turnoTardeCerrado  : STATE.turnoSabadoCerrado;
+  const wrap = document.getElementById('turnoFormWrap');
+
+  if (cerrado) {
+    wrap.innerHTML = `<div class="alert alert-success">
+      <div class="alert-icon">✅</div>
+      <div class="alert-body">
+        <div class="alert-title">Turno cerrado</div>
+        El turno ${etiquetaTurno(turno)} ha sido registrado correctamente.
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (!abierto) {
+    // Formulario apertura
+    // Reset state para esta apertura
+    STATE.apCheckState.fill(false);
+    STATE.apFotoBlob = null;
+    wrap.innerHTML = renderFormApertura(turno);
+    bindChecklistApertura();
+    return;
+  }
+
+  // Turno abierto → mostrar opción cierre
+  wrap.innerHTML = `
+    <div class="alert alert-success" style="margin-bottom:14px">
+      <div class="alert-icon">🟢</div>
+      <div class="alert-body">
+        <div class="alert-title">Gimnasio abierto — Turno ${etiquetaTurno(turno)}</div>
+        El turno está en curso.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span style="font-size:18px">🔒</span><h2>Cerrar turno ${etiquetaTurno(turno)}</h2></div>
+      <div class="card-body">
+        <div class="foto-req" onclick="tomarFotoCierre()" id="fotoCierreSlot">
+          <div class="foto-req-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>Foto obligatoria al cerrar</p>
+          </div>
+        </div>
+        <div class="section-title">Estado final de equipos</div>
+        <div id="cierreEquiposCheck"></div>
+        <div class="form-group" style="margin-top:12px">
+          <label class="form-label">Observaciones del turno</label>
+          <textarea class="form-textarea" id="cierreObs" placeholder="Novedades del turno, estado general, recomendaciones..."></textarea>
+        </div>
+        <button class="btn btn-danger" id="btnCerrarTurno" onclick="cerrarTurno('${turno}')">🔒 Cerrar turno</button>
+      </div>
+    </div>`;
+  renderEquiposCheck('cierreEquiposCheck', 'cierre');
+}
+
+function etiquetaTurno(t) {
+  return { manana: 'Mañana', tarde: 'Tarde', sabado: 'Sábado' }[t] || t;
+}
+
+function renderFormApertura(turno) {
+  return `
+    <div class="card">
+      <div class="card-header"><span style="font-size:18px">📷</span><h2>Foto de apertura <span style="color:var(--danger)">*</span></h2></div>
+      <div class="card-body">
+        <div class="foto-req" onclick="tomarFotoApertura()" id="fotoAperturaSlot">
+          <div class="foto-req-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>Toca para tomar foto del gimnasio</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <h2>Checklist de apertura (12 ítems)</h2>
+      </div>
+      <div class="card-body">
+        <div class="check-progress">
+          <div><div class="cp-num" id="apCheckNum">0/12</div><div class="cp-lbl">ítems completados</div></div>
+          <div style="margin-left:auto;font-size:12px;opacity:.85" id="apCheckStatus">Incompleto</div>
+        </div>
+        <div id="apChecklistItems"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span style="font-size:18px">🏋️</span><h2>Estado inicial de equipos</h2></div>
+      <div class="card-body" id="aperturaEquiposCheck"></div>
+    </div>
+    <button class="btn btn-success" id="btnAbrirGimnasio" onclick="abrirGimnasio('${turno}')" disabled>
+      🏋️ Abrir gimnasio — Turno ${etiquetaTurno(turno)}
+    </button>
+    <div style="height:12px"></div>`;
+}
+
+function bindChecklistApertura() {
+  const cont = document.getElementById('apChecklistItems');
+  if (!cont) return;
+  cont.innerHTML = CHECKLIST_APERTURA.map((item, i) => `
+    <div class="check-item" id="apChk${i}" onclick="toggleApChk(${i})">
+      <div class="check-box"></div>
+      <div class="check-text">${item}</div>
+    </div>`).join('');
+  renderEquiposCheck('aperturaEquiposCheck', 'apertura');
+}
+
+window.toggleApChk = function(i) {
+  STATE.apCheckState[i] = !STATE.apCheckState[i];
+  document.getElementById(`apChk${i}`).classList.toggle('checked', STATE.apCheckState[i]);
+  const cnt = STATE.apCheckState.filter(Boolean).length;
+  const numEl = document.getElementById('apCheckNum');
+  const stEl  = document.getElementById('apCheckStatus');
+  if (numEl) numEl.textContent = `${cnt}/12`;
+  if (stEl)  stEl.textContent  = cnt === 12 ? '✅ Listo' : 'Incompleto';
+  validarBtnAbrir();
+};
+
+function validarBtnAbrir() {
+  const btn = document.getElementById('btnAbrirGimnasio');
+  if (!btn) return;
+  btn.disabled = !(STATE.apCheckState.every(Boolean) && STATE.apFotoBlob !== null);
+}
+
+// ─── Equipos check (reutilizable) ────────────
+function renderEquiposCheck(containerId, modo) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return;
+  cont.innerHTML = EQUIPOS.map((eq) => {
+    const est = STATE.equiposStatus[eq.id] || 'ok';
+    return `<div class="equipo-item">
+      <div class="equipo-icono">${eq.icono}</div>
+      <div class="equipo-nombre">${eq.nombre}</div>
+      <div class="equipo-status-btns">
+        <button class="eq-btn ok      ${est === 'ok'       ? 'active' : ''}" onclick="setEquipo('${eq.id}','ok','${containerId}','${modo}')">OK</button>
+        <button class="eq-btn revision ${est === 'revision' ? 'active' : ''}" onclick="setEquipo('${eq.id}','revision','${containerId}','${modo}')">Rev.</button>
+        <button class="eq-btn fuera   ${est === 'fuera'    ? 'active' : ''}" onclick="setEquipo('${eq.id}','fuera','${containerId}','${modo}')">Fuera</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.setEquipo = function(id, estado, containerId, modo) {
+  STATE.equiposStatus[id] = estado;
+  renderEquiposCheck(containerId, modo);
+  // Si está en rondas, re-renderizar también allí
+  if (document.getElementById('rondaEquiposCheck')) renderEquiposCheck('rondaEquiposCheck', 'ronda');
+};
+
+// ─── APERTURA ─────────────────────────────────
+window.tomarFotoApertura = async function() {
+  const blob = await capturarFotoConSello();
+  if (!blob) return;
+  STATE.apFotoBlob = blob;
+  const slot = document.getElementById('fotoAperturaSlot');
+  if (slot) { slot.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="Apertura">`; slot.classList.add('filled'); }
+  validarBtnAbrir();
+};
+
+window.abrirGimnasio = async function(turno) {
+  const btn = document.getElementById('btnAbrirGimnasio');
+  btn.disabled = true; btn.textContent = '⏳ Abriendo...';
+  try {
+    const fotoUrl = await subirFoto(STATE.apFotoBlob, `gym/apertura/${fechaHoy()}_${turno}`);
+    const items = {};
+    CHECKLIST_APERTURA.forEach((_, i) => { items[`item_${i}`] = STATE.apCheckState[i]; });
+
+    await addDoc(collection(db, 'gym_operaciones'), {
+      tipo: 'apertura', turno,
+      operador_id: SESSION.uid, operador_nombre: SESSION.nombre,
+      fecha: fechaHoy(),
+      hora: new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' }),
+      foto_url: fotoUrl,
+      checklist: items,
+      equipos_status: { ...STATE.equiposStatus },
+      timestamp: serverTimestamp()
+    });
+
+    const updateData = {
+      [`${turno}_abierto`]: true,
+      [`${turno}_cerrado`]: false,
+      [`${turno}_hora_apertura`]: new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' }),
+      aforo_actual: 0
+    };
+    if (!STATE.turnoMananaAbierto && !STATE.turnoTardeAbierto && !STATE.turnoSabadoAbierto) {
+      updateData.total_dia = 0;
+    }
+    await setDoc(doc(db, 'gym_estado', fechaHoy()), updateData, { merge: true });
+
+    // Guardar estado equipos del día
+    await setDoc(doc(db, 'gym_equipos', fechaHoy()), {
+      ...STATE.equiposStatus, ultima_actualizacion: serverTimestamp()
+    }, { merge: true });
+
+    // Auto-novedad si hay equipos fuera
+    for (const eq of EQUIPOS) {
+      if (STATE.equiposStatus[eq.id] === 'fuera') {
+        await addDoc(collection(db, 'gym_novedades'), {
+          descripcion: `Equipo fuera de servicio al inicio del turno: ${eq.nombre}`,
+          severidad: 'MEDIO', area: eq.nombre, status: 'ABIERTO',
+          creado_por: SESSION.nombre, creado_por_id: SESSION.uid,
+          fecha: fechaHoy(), auto_generado: true, timestamp: serverTimestamp()
+        });
+      }
+    }
+
+    showToast(`🏋️ Turno ${etiquetaTurno(turno)} abierto`);
+  } catch(e) {
+    console.error(e);
+    showToast('Error al abrir. Intenta de nuevo.', 'error');
+    btn.disabled = false; btn.textContent = `🏋️ Abrir gimnasio — Turno ${etiquetaTurno(turno)}`;
+  }
+};
+
+// ─── CIERRE ───────────────────────────────────
+window.tomarFotoCierre = async function() {
+  const blob = await capturarFotoConSello();
+  if (!blob) return;
+  STATE.cierreFotoBlob = blob;
+  const slot = document.getElementById('fotoCierreSlot');
+  if (slot) { slot.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="Cierre">`; slot.classList.add('filled'); }
+};
+
+window.cerrarTurno = async function(turno) {
+  if (!STATE.cierreFotoBlob) { showToast('La foto es obligatoria para cerrar', 'error'); return; }
+  const btn = document.getElementById('btnCerrarTurno');
+  btn.disabled = true; btn.textContent = '⏳ Cerrando...';
+  try {
+    const fotoUrl = await subirFoto(STATE.cierreFotoBlob, `gym/cierre/${fechaHoy()}_${turno}`);
+    await addDoc(collection(db, 'gym_operaciones'), {
+      tipo: 'cierre', turno,
+      operador_id: SESSION.uid, operador_nombre: SESSION.nombre,
+      fecha: fechaHoy(),
+      hora: new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' }),
+      foto_url: fotoUrl,
+      equipos_status: { ...STATE.equiposStatus },
+      observaciones: document.getElementById('cierreObs').value,
+      timestamp: serverTimestamp()
+    });
+    await setDoc(doc(db, 'gym_estado', fechaHoy()), {
+      [`${turno}_cerrado`]: true,
+      [`${turno}_hora_cierre`]: new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' }),
+      aforo_actual: 0
+    }, { merge: true });
+
+    STATE.cierreFotoBlob = null;
+    showToast(`🔒 Turno ${etiquetaTurno(turno)} cerrado`);
+  } catch(e) {
+    console.error(e);
+    showToast('Error al cerrar turno', 'error');
+    btn.disabled = false; btn.textContent = '🔒 Cerrar turno';
+  }
+};
+
+// ═══════════════════════════════════════════════
+// AFORO
+// ═══════════════════════════════════════════════
+function renderAforoLock() {
+  const lock    = document.getElementById('aforoLock');
+  const content = document.getElementById('aforoContent');
+  if (!gimnasioAbierto() && !esDomingo()) {
+    lock.style.display    = 'block';
+    content.style.display = 'none';
+  } else {
+    lock.style.display    = 'none';
+    content.style.display = 'block';
+  }
+}
+
+function actualizarAforo(total) {
+  document.getElementById('aforoActualNum').textContent = total;
+  const pct = Math.min((total / 20) * 100, 100);
+  const bar = document.getElementById('aforoBarFill');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.className   = 'aforo-bar-fill';
+    if (total >= 20) bar.classList.add('danger');
+    else if (total >= 15) bar.classList.add('warn');
+  }
+  const maxAlert  = document.getElementById('alertaAforoMax');
+  const warnAlert = document.getElementById('alertaAforoWarn');
+  if (maxAlert)  maxAlert.style.display  = total >= 20 ? 'block' : 'none';
+  if (warnAlert) warnAlert.style.display = (total >= 15 && total < 20) ? 'block' : 'none';
+}
+
+window.moverAforo = async function(delta) {
+  if (!gimnasioAbierto()) { showToast('Abre el turno primero', 'warning'); return; }
+  if (delta > 0 && STATE.aforoActual >= 20) { showToast('⛔ Aforo máximo (20)', 'error'); return; }
+  if (delta < 0 && STATE.aforoActual <= 0) { showToast('No hay personas registradas', 'warning'); return; }
+  try {
+    const nuevoAforo = STATE.aforoActual + delta;
+    await setDoc(doc(db, 'gym_estado', fechaHoy()), {
+      aforo_actual: nuevoAforo,
+      ...(delta > 0 ? { total_dia: increment(1) } : {})
+    }, { merge: true });
+    await addDoc(collection(db, 'gym_movimientos'), {
+      tipo: delta > 0 ? 'entrada' : 'salida',
+      operador_id: SESSION.uid, fecha: fechaHoy(),
+      aforo_resultante: nuevoAforo, timestamp: serverTimestamp()
+    });
+  } catch(e) { console.error(e); showToast('Error al registrar movimiento', 'error'); }
+};
+
+async function cargarReservas() {
+  const lista = document.getElementById('listaReservas');
+  if (!lista) return;
+  const q = query(
+    collection(db, 'reservas'),
+    where('fecha',   '==', fechaHoy()),
+    where('espacio', '==', 'Gimnasio'),
+    where('estado',  'in', ['activa','confirmada','pagada'])
+  );
+  try {
+    const snap = await getDocs(q);
+    STATE.reservasHoy = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderReservas(STATE.reservasHoy);
+  } catch(e) {
+    console.error(e);
+    lista.innerHTML = '<div class="empty-state">Error al cargar reservas</div>';
+  }
+}
+
+function renderReservas(reservas) {
+  const lista = document.getElementById('listaReservas');
+  if (!lista) return;
+  if (!reservas.length) { lista.innerHTML = '<div class="empty-state">Sin reservas para hoy</div>'; return; }
+  lista.innerHTML = reservas.map(r => {
+    const np  = parseInt(r.numPersonas || r.num_personas || 1);
+    const ini = (r.nombre || r.nombreResidente || '?').charAt(0).toUpperCase();
+    return `<div class="asist-item">
+      <div class="asist-avatar">${ini}</div>
+      <div class="asist-info">
+        <div class="asist-nombre">${r.nombre || r.nombreResidente || '—'}</div>
+        <div class="asist-meta">🏢 ${r.torre || '—'} · Apto ${r.apartamento || r.apto || '—'} · ${r.hora || '—'}</div>
+      </div>
+      <div class="asist-np">👥 ${np}</div>
+    </div>`;
+  }).join('');
+}
+
+window.filtrarReservas = function(term) {
+  const t = term.toLowerCase();
+  renderReservas(t
+    ? STATE.reservasHoy.filter(r =>
+        (r.nombre || r.nombreResidente || '').toLowerCase().includes(t) ||
+        (r.apartamento || r.apto || '').toLowerCase().includes(t) ||
+        (r.torre || '').toLowerCase().includes(t))
+    : STATE.reservasHoy);
+};
+
+// ═══════════════════════════════════════════════
+// RONDAS
+// ═══════════════════════════════════════════════
+function renderRondasLock() {
+  const lock    = document.getElementById('rondasLock');
+  const content = document.getElementById('rondasContent');
+  if (!gimnasioAbierto()) {
+    lock.style.display    = 'block';
+    content.style.display = 'none';
+  } else {
+    lock.style.display    = 'none';
+    content.style.display = 'block';
+    renderRondasDots();
+  }
+}
+
+function renderRondasDots() {
+  const config  = getRondasConfig();
+  const horaAct = new Date().getHours();
+  const dots    = document.getElementById('rondasDots');
+  dots.innerHTML = config.map((r, i) => {
+    const ok     = STATE.rondas[i];
+    const dentroVent = horaAct >= r.inicio && horaAct < r.fin;
+    let cls = ok ? 'completada' : dentroVent ? 'activa' : '';
+    return `<div class="ronda-dot ${cls}">
+      <div class="rd-num">${ok ? '✓' : i + 1}</div>
+      <div class="rd-lbl">${r.label}</div>
+      <div class="rd-vent" style="color:${ok ? 'var(--success)' : dentroVent ? 'var(--blue)' : 'var(--muted)'}">${r.inicio}:00–${r.fin}:00</div>
+    </div>`;
+  }).join('');
+  actualizarFormRonda();
+}
+
+function proximaRondaPendiente() { return STATE.rondas.findIndex(r => !r); }
+
+function actualizarFormRonda() {
+  const idx     = proximaRondaPendiente();
+  const formCard = document.getElementById('rondaFormCard');
+  const doneMsg  = document.getElementById('rondaTodasMsg');
+  if (idx === -1) {
+    formCard.style.display = 'none'; doneMsg.style.display = 'block';
+    document.getElementById('txtRondas').textContent = '3 / 3 ✅';
+    document.getElementById('txtRondas').className   = 'status-row-val ok';
+    return;
+  }
+  formCard.style.display = 'block'; doneMsg.style.display = 'none';
+  const config  = getRondasConfig();
+  const r       = config[idx];
+  const horaAct = new Date().getHours();
+  document.getElementById('rondaFormTitle').textContent = `${r.label} (${r.inicio}:00 – ${r.fin}:00)`;
+  document.getElementById('rondaAforoInp').value = STATE.aforoActual;
+
+  // Alerta ventana
+  const alEl = document.getElementById('rondaVentanaAlert');
+  if (horaAct < r.inicio) {
+    alEl.style.display = 'block';
+    alEl.innerHTML = `<div class="alert alert-info"><div class="alert-icon">ℹ️</div><div class="alert-body">Esta ronda se registra a partir de las ${r.inicio}:00.</div></div>`;
+  } else if (horaAct >= r.fin) {
+    alEl.style.display = 'block';
+    alEl.innerHTML = `<div class="alert alert-warning"><div class="alert-icon">⚠️</div><div class="alert-body">La ventana de esta ronda venció (hasta ${r.fin}:00). Puedes registrarla igual.</div></div>`;
+  } else { alEl.style.display = 'none'; }
+
+  // Reset foto
+  STATE.rondaFotoBlob = null;
+  const slot = document.getElementById('fotoRondaSlot');
+  slot.innerHTML = `<div class="foto-req-inner">
+    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <p>Foto obligatoria de la ronda</p></div>`;
+  slot.classList.remove('filled');
+  document.getElementById('rondaObs').value = '';
+
+  renderEquiposCheck('rondaEquiposCheck', 'ronda');
+}
+
+window.tomarFotoRonda = async function() {
+  const blob = await capturarFotoConSello();
+  if (!blob) return;
+  STATE.rondaFotoBlob = blob;
+  const slot = document.getElementById('fotoRondaSlot');
+  slot.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="Ronda">`;
+  slot.classList.add('filled');
+};
+
+window.guardarRonda = async function() {
+  if (!STATE.rondaFotoBlob) { showToast('La foto es obligatoria', 'error'); return; }
+  const idx = proximaRondaPendiente();
+  if (idx === -1) { showToast('Todas las rondas completadas'); return; }
+
+  const btn = document.getElementById('btnGuardarRonda');
+  btn.disabled = true; btn.textContent = '⏳ Guardando...';
+  try {
+    const fotoUrl = await subirFoto(STATE.rondaFotoBlob, `gym/rondas/${fechaHoy()}_${SESSION.uid}_r${idx+1}`);
+    await addDoc(collection(db, 'gym_operaciones'), {
+      tipo: 'ronda', numero_ronda: idx + 1,
+      operador_id: SESSION.uid, operador_nombre: SESSION.nombre,
+      fecha: fechaHoy(),
+      hora: new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' }),
+      foto_url: fotoUrl,
+      aforo_momento: parseInt(document.getElementById('rondaAforoInp').value) || STATE.aforoActual,
+      equipos_status: { ...STATE.equiposStatus },
+      observaciones: document.getElementById('rondaObs').value,
+      timestamp: serverTimestamp()
+    });
+
+    STATE.rondas[idx] = true;
+    await setDoc(doc(db, 'gym_estado', fechaHoy()), {
+      [`ronda_${idx+1}_ok`]: true,
+      rondas_completadas: STATE.rondas.filter(Boolean).length
+    }, { merge: true });
+
+    // Guardar estado equipos actualizado
+    await setDoc(doc(db, 'gym_equipos', fechaHoy()), {
+      ...STATE.equiposStatus, ultima_actualizacion: serverTimestamp()
+    }, { merge: true });
+
+    showToast(`✅ Ronda ${idx+1} guardada`);
+    await cargarHistorialRondas();
+    renderRondasDots();
+  } catch(e) {
+    console.error(e);
+    showToast('Error al guardar ronda', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar ronda';
+  }
+};
+
+async function cargarHistorialRondas() {
+  const hist = document.getElementById('historialRondas');
+  if (!hist) return;
+  const q = query(
+    collection(db, 'gym_operaciones'),
+    where('fecha', '==', fechaHoy()),
+    where('tipo',  '==', 'ronda'),
+    orderBy('timestamp', 'asc')
+  );
+  try {
+    const snap = await getDocs(q);
+    if (snap.empty) { hist.innerHTML = '<div class="empty-state">Sin rondas registradas aún</div>'; return; }
+    hist.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      const equiposFuera = EQUIPOS.filter(e => (r.equipos_status || {})[e.id] === 'fuera').map(e => e.nombre);
+      return `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--success);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">R${r.numero_ronda}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">Ronda ${r.numero_ronda} · ${r.hora || formatHora(r.timestamp)}</div>
+          <div style="font-size:12px;color:var(--muted)">Aforo: ${r.aforo_momento} personas</div>
+          ${equiposFuera.length ? `<div style="font-size:12px;color:var(--danger);margin-top:3px">⛔ Fuera: ${equiposFuera.join(', ')}</div>` : ''}
+          ${r.observaciones ? `<div style="font-size:12px;color:var(--text);margin-top:3px">${r.observaciones}</div>` : ''}
+        </div>
+        ${r.foto_url ? `<img src="${r.foto_url}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    hist.innerHTML = '<div class="empty-state">Error al cargar</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// NOVEDADES
+// ═══════════════════════════════════════════════
+window.selSev = function(sev, btn) {
+  STATE.severidadNov = sev;
+  document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('alertaCriticoTxt').style.display = sev === 'CRÍTICO' ? 'block' : 'none';
+};
+
+window.guardarNovedad = function() {
+  const desc = document.getElementById('novDesc').value.trim();
+  if (!STATE.severidadNov) { showToast('Selecciona la severidad', 'warning'); return; }
+  if (!desc) { showToast('Escribe la descripción', 'warning'); return; }
+  if (STATE.severidadNov === 'CRÍTICO') {
+    document.getElementById('modalCritico').classList.add('show');
+  } else {
+    ejecutarNovedad(false);
+  }
+};
+
+window.confirmarCritico = function() {
+  document.getElementById('modalCritico').classList.remove('show');
+  ejecutarNovedad(true);
+};
+
+async function ejecutarNovedad(esCritico) {
+  const btn  = document.getElementById('btnGuardarNov');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  const desc = document.getElementById('novDesc').value.trim();
+  const area = document.getElementById('novArea').value;
+  try {
+    await addDoc(collection(db, 'gym_novedades'), {
+      descripcion: desc, area_afectada: area,
+      severidad: STATE.severidadNov, status: 'ABIERTO',
+      creado_por: SESSION.nombre, creado_por_id: SESSION.uid,
+      fecha: fechaHoy(), operacion_suspendida: esCritico,
+      timestamp: serverTimestamp()
+    });
+    if (esCritico) {
+      await setDoc(doc(db, 'gym_estado', fechaHoy()), {
+        suspendida: true, motivo: desc, suspendida_por: SESSION.nombre,
+        timestamp: serverTimestamp()
+      }, { merge: true });
+      await notificarCriticoGHL(desc, area);
+    }
+    document.getElementById('novDesc').value = '';
+    document.getElementById('novArea').value = '';
+    STATE.severidadNov = null;
+    document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('alertaCriticoTxt').style.display = 'none';
+    await cargarNovedades();
+    showToast(esCritico ? '⛔ Novedad crítica. Operación suspendida.' : '✅ Novedad registrada');
+  } catch(e) {
+    console.error(e); showToast('Error al guardar', 'error');
+  } finally { btn.disabled = false; btn.textContent = 'Registrar novedad'; }
+}
+
+async function cargarNovedades() {
+  const lista = document.getElementById('listaNov');
+  if (!lista) return;
+  const q = query(
+    collection(db, 'gym_novedades'),
+    where('fecha', '==', fechaHoy()),
+    orderBy('timestamp', 'desc')
+  );
+  try {
+    const snap = await getDocs(q);
+    if (snap.empty) { lista.innerHTML = '<div class="empty-state">Sin novedades hoy</div>'; return; }
+    let abiertas = 0;
+    lista.innerHTML = snap.docs.map(d => {
+      const n = d.data();
+      const sev = (n.severidad || '').toLowerCase();
+      if (n.status === 'ABIERTO') abiertas++;
+      return `<div class="novedad-item ${sev}">
+        <div class="nov-sev ${sev}">${n.severidad}${n.area_afectada ? ` · ${n.area_afectada}` : ''}</div>
+        <div class="nov-desc">${n.descripcion}</div>
+        <div class="nov-meta">${formatHora(n.timestamp)} · ${n.status}
+          ${n.status === 'CERRADO' ? ` · Cerrado por ${n.cerrado_por || '—'}` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    const badge = document.getElementById('navBadgeNov');
+    const txNov = document.getElementById('txtNovedades');
+    if (txNov) { txNov.textContent = abiertas; txNov.style.color = abiertas ? 'var(--danger)' : 'var(--muted)'; }
+    if (abiertas > 0) { badge.textContent = abiertas; badge.classList.add('show'); }
+    else badge.classList.remove('show');
+  } catch(e) {
+    lista.innerHTML = '<div class="empty-state">Error al cargar</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// FOTO CON SELLO
+// ═══════════════════════════════════════════════
+function capturarFotoConSello() {
+  return new Promise(resolve => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+    input.onchange = async e => {
+      const file = e.target.files[0];
+      if (!file) { resolve(null); return; }
+      const img    = new Image();
+      const objUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 1280;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const sello = new Date().toLocaleString('es-CO', {
+          day:'2-digit', month:'2-digit', year:'numeric',
+          hour:'2-digit', minute:'2-digit', second:'2-digit'
+        });
+        const texto = `PCO3 Ciudadela · Gimnasio · ${sello}`;
+        const fh = Math.max(14, Math.round(h * 0.025));
+        ctx.font = `bold ${fh}px DM Sans, Arial, sans-serif`;
+        const tw = ctx.measureText(texto).width;
+        const pad = 10;
+        ctx.fillStyle = 'rgba(30,58,95,0.78)';
+        ctx.fillRect(0, h - fh - pad * 2, tw + pad * 2, fh + pad * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(texto, pad, h - pad);
+        URL.revokeObjectURL(objUrl);
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.82);
+      };
+      img.onerror = () => { URL.revokeObjectURL(objUrl); resolve(null); };
+      img.src = objUrl;
+    };
+    input.oncancel = () => resolve(null);
+    input.click();
+  });
+}
+
+async function subirFoto(blob, path) {
+  const r    = ref(storage, path);
+  const snap = await uploadBytes(r, blob, { contentType: 'image/jpeg' });
+  return getDownloadURL(snap.ref);
+}
+
+async function notificarCriticoGHL(descripcion, area) {
+  const WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/TU_WEBHOOK_CRITICO';
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        evento: 'NOVEDAD_CRITICA_GIMNASIO',
+        modulo: 'B1 - Operador Gimnasio',
+        descripcion, area_afectada: area,
+        operador: SESSION.nombre,
+        fecha: fechaHoy(),
+        hora: new Date().toLocaleTimeString('es-CO'),
+        accion_requerida: 'Operación suspendida. Requiere atención inmediata.'
+      })
+    });
+  } catch(e) { console.warn('Webhook no disponible:', e); }
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+async function init() {
+  escucharEstado();
+  await cargarNovedades();
+  await cargarEquiposDashboard();
+  // Pre-seleccionar turno activo
+  turnoActivo = getTurnoActual();
+  if (turnoActivo === 'fuera_horario' || turnoActivo === 'fuera_sabado' || turnoActivo === 'domingo') {
+    turnoActivo = esSabado() ? 'sabado' : 'manana';
+  }
+}
+
+init().catch(console.error);
+
+// Refresh reservas cada 60s si está en esa sección
+setInterval(() => {
+  if (document.getElementById('sec-aforo').classList.contains('active')) cargarReservas();
+}, 60000);
+</script>
+</body>
+</html>

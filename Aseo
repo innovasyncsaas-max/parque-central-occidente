@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCO3 · Personal de Aseo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1e3a5f;--primary-light:#2d5a8e;--primary-dark:#152d4a;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#7c3aed;
+  --bg:#f0f4f8;--card:#fff;--text:#1a202c;--muted:#64748b;
+  --border:#e2e8f0;--radius:12px;--nav-w:220px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+header{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+header .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600}
+header h1{font-size:17px;font-weight:700}
+header p{font-size:12px;opacity:.8}
+.user-info{margin-left:auto;text-align:right;font-size:12px;opacity:.85}
+
+.layout{display:flex;min-height:calc(100vh - 56px)}
+main{flex:1;padding:16px;padding-bottom:90px;min-width:0}
+
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+nav button{flex:1;padding:10px 4px 8px;border:none;background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.2s}
+nav button .icon{font-size:20px}
+nav button.active{color:var(--primary);font-weight:700}
+
+@media(min-width:768px){
+  main{padding:24px;padding-bottom:24px;margin-left:var(--nav-w)}
+  nav{position:fixed;left:0;top:56px;bottom:0;right:auto;width:var(--nav-w);flex-direction:column;border-top:none;border-right:1px solid var(--border);background:#fff;padding:12px 0;box-shadow:2px 0 8px rgba(0,0,0,.04)}
+  nav button{flex:none;flex-direction:row;padding:12px 20px;font-size:13px;gap:10px;border-radius:0;justify-content:flex-start}
+  nav button.active{background:#eff6ff;color:var(--primary);border-right:3px solid var(--primary)}
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+  .checklist-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+.section{display:none}.section.active{display:block}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.card-title{font-weight:700;font-size:14px;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.section-header h2{font-size:18px;font-weight:700;color:var(--primary)}
+
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-box{background:var(--card);border-radius:var(--radius);padding:14px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.stat-box .num{font-size:28px;font-weight:700;color:var(--primary)}
+.stat-box .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.stat-box.alerta .num{color:var(--danger)}
+.stat-box.ok .num{color:var(--success)}
+.stat-box.warn .num{color:var(--warning)}
+
+.btn{width:100%;padding:12px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-warning{background:var(--warning);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:7px 14px;font-size:12px;border-radius:8px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s}
+.btn-secondary{background:var(--border);color:var(--text)}
+
+.input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;transition:.2s}
+.input:focus{outline:none;border-color:var(--primary)}
+.label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block}
+.form-group{margin-bottom:14px}
+.select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--text)}
+.select:focus{outline:none;border-color:var(--primary)}
+
+.filter-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.filter-bar::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:.2s}
+.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+.list-item{padding:14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.list-item.alta{border-left:4px solid var(--danger)}
+.list-item.media{border-left:4px solid var(--warning)}
+.list-item.baja{border-left:4px solid var(--success)}
+.list-item-title{font-weight:700;font-size:14px;margin-bottom:3px}
+.list-item-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:92vh;display:flex;flex-direction:column}
+.modal-header{padding:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header.success{background:var(--success)}
+.modal-header h3{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer}
+.modal-body{padding:16px;overflow-y:auto}
+.modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+
+.badge-estado{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-pendiente{background:#f1f5f9;color:#475569}
+.badge-en-proceso{background:#fef3c7;color:#b45309}
+.badge-completada{background:#e9d5ff;color:#6b21a8}
+.badge-aprobada{background:#d1fae5;color:#065f46}
+.badge-rechazada{background:#fee2e2;color:#b91c1c}
+.badge-critico{background:#fee2e2;color:#b91c1c}
+.badge-medio{background:#fef3c7;color:#b45309}
+
+.empty{text-align:center;padding:30px 16px;color:var(--muted)}
+.empty .icon{font-size:36px;margin-bottom:8px}
+.empty p{font-size:13px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+.foto-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border:2px dashed var(--border);border-radius:10px;background:var(--bg);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s}
+.foto-btn.tiene-foto{border-color:var(--success);color:var(--success);background:#f0fdf4}
+.foto-preview{width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-top:8px;display:none;cursor:pointer}
+
+.prioridad-tag{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase}
+.prioridad-alta{background:#fee2e2;color:#b91c1c}
+.prioridad-media{background:#fef3c7;color:#b45309}
+.prioridad-baja{background:#d1fae5;color:#065f46}
+
+/* ── CHECKLIST ── */
+.checklist-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.area-card{border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:.2s}
+.area-card.limpio{border-color:var(--success)}
+.area-card.en-proceso{border-color:var(--warning)}
+.area-card.pendiente{border-color:var(--border)}
+.area-header{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.area-icon{font-size:24px}
+.area-info{flex:1}
+.area-nombre{font-weight:700;font-size:14px}
+.area-estado{font-size:12px;margin-top:2px}
+.area-botones{display:flex;gap:0;border-top:1px solid var(--border)}
+.area-btn{flex:1;padding:10px 6px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;border-right:1px solid var(--border)}
+.area-btn:last-child{border-right:none}
+.area-btn.activo-pend{background:#f1f5f9;color:#475569}
+.area-btn.activo-proc{background:#fef3c7;color:#b45309}
+.area-btn.activo-limp{background:#d1fae5;color:#065f46}
+
+.tabs{display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:16px}
+.tab{flex:1;padding:9px;text-align:center;border:none;background:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s}
+.tab.active{background:var(--card);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+.progreso-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:8px 0}
+.progreso-fill{height:100%;background:var(--success);border-radius:4px;transition:.4s}
+
+canvas{display:none}
+</style>
+</head>
+<body>
+<canvas id="canvas-sello"></canvas>
+
+<header>
+  <div>
+    <div class="badge">🧹 ASEO</div>
+    <h1>PCO3 Ciudadela</h1>
+    <p id="headerFecha">—</p>
+  </div>
+  <div class="user-info">
+    <div id="headerNombre">Aseo</div>
+    <div>Personal de Aseo</div>
+  </div>
+</header>
+
+<div class="layout">
+<main>
+
+<!-- INICIO -->
+<div id="sec-inicio" class="section active">
+  <div class="section-header"><h2>Mi Turno</h2></div>
+
+  <div class="card" style="border-left:4px solid var(--primary)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-weight:700;font-size:15px" id="turno-label">Turno Mañana</div>
+        <div style="font-size:12px;color:var(--muted)" id="turno-hora">Cargando...</div>
+      </div>
+      <div id="turno-icon" style="font-size:32px">🌅</div>
+    </div>
+    <div class="progreso-bar" style="margin-top:12px">
+      <div class="progreso-fill" id="checklist-progreso" style="width:0%"></div>
+    </div>
+    <div style="font-size:12px;color:var(--muted)" id="checklist-progreso-label">0 de 8 áreas limpias</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box" id="box-t-pendientes">
+      <div class="num" id="stat-t-pendientes">0</div>
+      <div class="lbl">Tareas pendientes</div>
+    </div>
+    <div class="stat-box" id="box-t-proceso">
+      <div class="num" id="stat-t-proceso">0</div>
+      <div class="lbl">En proceso</div>
+    </div>
+    <div class="stat-box" id="box-t-comp">
+      <div class="num" id="stat-t-comp">0</div>
+      <div class="lbl">Completadas</div>
+    </div>
+    <div class="stat-box" id="box-areas-limp">
+      <div class="num" id="stat-areas-limp">0</div>
+      <div class="lbl">Áreas limpias</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Áreas pendientes de limpieza</div>
+    <div id="areas-pendientes-lista">
+      <div class="empty"><div class="icon">✅</div><p>Todas las áreas marcadas</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- MIS TAREAS -->
+<div id="sec-tareas" class="section">
+  <div class="section-header"><h2>Mis Tareas</h2></div>
+
+  <div class="filter-bar" id="filtro-tareas-as-chips">
+    <div class="chip active" data-val="activas" onclick="setFiltroTareasAs(this)">Activas</div>
+    <div class="chip" data-val="pendiente" onclick="setFiltroTareasAs(this)">Pendientes</div>
+    <div class="chip" data-val="en_proceso" onclick="setFiltroTareasAs(this)">En proceso</div>
+    <div class="chip" data-val="completada_pendiente_revision" onclick="setFiltroTareasAs(this)">Enviadas</div>
+    <div class="chip" data-val="rechazada" onclick="setFiltroTareasAs(this)">Devueltas</div>
+  </div>
+
+  <div id="lista-tareas-aseo">
+    <div class="empty"><div class="icon">🔄</div><p>Cargando tareas...</p></div>
+  </div>
+</div>
+
+<!-- CHECKLIST ASEO -->
+<div id="sec-checklist" class="section">
+  <div class="section-header"><h2>Checklist de Limpieza</h2></div>
+
+  <div class="tabs">
+    <button class="tab" id="tab-manana" onclick="setTurnoChecklist('manana',this)">🌅 Mañana</button>
+    <button class="tab" id="tab-tarde" onclick="setTurnoChecklist('tarde',this)">🌆 Tarde</button>
+  </div>
+
+  <div style="margin-bottom:12px">
+    <div class="progreso-bar">
+      <div class="progreso-fill" id="checklist-prog-fill" style="width:0%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">
+      <span id="checklist-prog-label">0 de 8 áreas limpias</span>
+      <span id="checklist-turno-label">—</span>
+    </div>
+  </div>
+
+  <div class="checklist-grid" id="checklist-areas"></div>
+
+  <button class="btn btn-primary" style="margin-top:8px" onclick="guardarChecklist()">💾 Guardar progreso</button>
+</div>
+
+<!-- REPORTAR NOVEDAD -->
+<div id="sec-novedad" class="section">
+  <div class="section-header"><h2>Reportar Novedad</h2></div>
+
+  <div class="card">
+    <div class="card-title">⚠️ Nueva novedad</div>
+
+    <div class="form-group">
+      <label class="label">Tipo de novedad *</label>
+      <select class="select" id="nov-tipo-as">
+        <option value="Falta de insumos">🧴 Falta de insumos</option>
+        <option value="Área en mal estado">🚧 Área en mal estado</option>
+        <option value="Daño encontrado">🔨 Daño encontrado</option>
+        <option value="Derrame o suciedad mayor">💧 Derrame o suciedad mayor</option>
+        <option value="Plaga">🐛 Plaga / insectos</option>
+        <option value="Riesgo para residentes">⚠️ Riesgo para residentes</option>
+        <option value="Equipo de aseo dañado">🧹 Equipo de aseo dañado</option>
+        <option value="Otro">📋 Otro</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Área / Ubicación *</label>
+      <select class="select" id="nov-area-as">
+        <option value="Entrada principal">Entrada principal</option>
+        <option value="Corredores">Corredores</option>
+        <option value="Parqueaderos">Parqueaderos</option>
+        <option value="Zona BBQ">Zona BBQ</option>
+        <option value="Baños piscina">Baños piscina</option>
+        <option value="Baños gimnasio">Baños gimnasio</option>
+        <option value="Piscina">Piscina</option>
+        <option value="Gimnasio">Gimnasio</option>
+        <option value="Ascensores">Ascensores</option>
+        <option value="Áreas verdes">Áreas verdes</option>
+        <option value="Torres / pisos">Torres / pisos</option>
+        <option value="Cuarto de aseo">Cuarto de aseo</option>
+        <option value="Otro">Otro</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Descripción *</label>
+      <textarea class="input" id="nov-desc-as" rows="4" placeholder="Describe la novedad con detalle..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Nivel de urgencia *</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <label style="display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:10px;cursor:pointer" id="as-nivel-medio-label">
+          <input type="radio" name="nov-nivel-as" value="MEDIO" checked onchange="actualizarNivelAs()">
+          <span style="font-weight:600;font-size:13px">🟡 MEDIO</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:10px;cursor:pointer" id="as-nivel-critico-label">
+          <input type="radio" name="nov-nivel-as" value="CRÍTICO" onchange="actualizarNivelAs()">
+          <span style="font-weight:600;font-size:13px">🔴 CRÍTICO</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Foto de evidencia *</label>
+      <input type="file" accept="image/*" capture="environment" id="nov-foto-as-input" style="display:none" onchange="procesarFotoNovAs(this)">
+      <div class="foto-btn" id="nov-foto-as-btn" onclick="document.getElementById('nov-foto-as-input').click()">
+        📷 Tomar foto
+      </div>
+      <img id="nov-foto-as-preview" class="foto-preview">
+    </div>
+
+    <button class="btn btn-danger" onclick="enviarNovedadAs()">🚨 Enviar Novedad</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<nav>
+  <button class="active" onclick="navTo('inicio',this)"><span class="icon">🏠</span>Inicio</button>
+  <button onclick="navTo('tareas',this)" id="nav-t-btn"><span class="icon">📋</span>Tareas</button>
+  <button onclick="navTo('checklist',this)"><span class="icon">✅</span>Checklist</button>
+  <button onclick="navTo('novedad',this)"><span class="icon">⚠️</span>Reportar</button>
+</nav>
+
+<!-- MODAL COMPLETAR TAREA -->
+<div class="modal-overlay" id="modal-completar-as">
+  <div class="modal">
+    <div class="modal-header success"><h3>Completar Tarea</h3><button class="modal-close" onclick="cerrarModal('modal-completar-as')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="label">Tarea</label>
+        <div id="completar-as-titulo" style="font-weight:700;padding:10px;background:var(--bg);border-radius:8px;font-size:13px"></div>
+      </div>
+      <div class="form-group">
+        <label class="label">Notas de trabajo realizado *</label>
+        <textarea class="input" id="completar-as-notas" rows="4" placeholder="Qué se hizo, insumos usados, tiempo, observaciones..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="label">Foto de evidencia *</label>
+        <input type="file" accept="image/*" capture="environment" id="completar-as-foto-input" style="display:none" onchange="procesarFotoCompletarAs(this)">
+        <div class="foto-btn" id="completar-as-foto-btn" onclick="document.getElementById('completar-as-foto-input').click()">
+          📷 Tomar foto de evidencia
+        </div>
+        <img id="completar-as-foto-preview" class="foto-preview">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-completar-as')">Cancelar</button>
+      <button class="btn btn-success btn-sm" style="flex:1" id="btn-confirmar-comp-as" onclick="confirmarCompletarAs()">Enviar para revisión</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE TAREA -->
+<div class="modal-overlay" id="modal-detalle-as">
+  <div class="modal">
+    <div class="modal-header"><h3>Detalle de Tarea</h3><button class="modal-close" onclick="cerrarModal('modal-detalle-as')">✕</button></div>
+    <div class="modal-body" id="modal-detalle-as-body"></div>
+    <div class="modal-footer" id="modal-detalle-as-footer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, addDoc, updateDoc, setDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+const firebaseConfig = {
+  apiKey: "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+  authDomain: "registro-residentes.firebaseapp.com",
+  projectId: "registro-residentes",
+  storageBucket: "registro-residentes.firebasestorage.app",
+  messagingSenderId: "646123326163",
+  appId: "1:646123326163:web:8b35b955e7b3692536a226"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ─── ÁREAS CHECKLIST ──────────────────────────────────────
+const AREAS = [
+  {id:'entrada',    nombre:'Entrada principal',  icono:'🚪'},
+  {id:'corredores', nombre:'Corredores torres',  icono:'🏢'},
+  {id:'parqueaderos',nombre:'Parqueaderos',      icono:'🚗'},
+  {id:'bbq',        nombre:'Zona BBQ / Social',  icono:'🔥'},
+  {id:'banos_pisc', nombre:'Baños piscina/gym',  icono:'🚿'},
+  {id:'pasillos',   nombre:'Pasillos / Escaleras',icono:'🪜'},
+  {id:'ascensores', nombre:'Ascensores',          icono:'🛗'},
+  {id:'areas_verdes',nombre:'Áreas verdes',       icono:'🌿'},
+];
+
+// ─── STATE ────────────────────────────────────────────────
+const S = {
+  uid:'', nombre:'Aseo',
+  tareas:[], historial:[],
+  filtroTareasAs:'activas',
+  tarea_sel:null,
+  fotoNovBlob:null, fotoCompletarBlob:null,
+  turnoChecklist:'manana',
+  checklistData:{},
+  enviando:false
+};
+
+// ─── HELPERS ──────────────────────────────────────────────
+const fechaHoy = () => new Date().toISOString().split('T')[0];
+const ffd = ts => { if(!ts) return '--'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); };
+const toast = msg => { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); };
+const cerrarModal = id => document.getElementById(id).classList.remove('open');
+window.cerrarModal = cerrarModal;
+
+// ─── SESSION ──────────────────────────────────────────────
+(()=>{
+  const p = new URLSearchParams(window.location.search);
+  S.uid = p.get('uid')||localStorage.getItem('pco3_uid')||'aseo_demo';
+  S.nombre = p.get('nombre')||localStorage.getItem('pco3_nombre')||'Aseo';
+  if(p.get('uid')) localStorage.setItem('pco3_uid',S.uid);
+  if(p.get('nombre')) localStorage.setItem('pco3_nombre',S.nombre);
+  document.getElementById('headerNombre').textContent = S.nombre;
+
+  const hoy = new Date();
+  document.getElementById('headerFecha').textContent = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+
+  const hora = hoy.getHours();
+  const esTarde = hora >= 13;
+  S.turnoChecklist = esTarde ? 'tarde' : 'manana';
+
+  document.getElementById('turno-label').textContent = esTarde ? 'Turno Tarde' : 'Turno Mañana';
+  document.getElementById('turno-hora').textContent = esTarde ? '1:00 pm – 9:00 pm' : '6:00 am – 1:00 pm';
+  document.getElementById('turno-icon').textContent = esTarde ? '🌆' : '🌅';
+
+  // Activar tab correcto
+  document.getElementById(esTarde?'tab-tarde':'tab-manana').classList.add('active');
+  document.getElementById(esTarde?'tab-manana':'tab-tarde').classList.remove('active');
+  document.getElementById('checklist-turno-label').textContent = esTarde?'Turno Tarde':'Turno Mañana';
+})();
+
+// ─── FOTO CON SELLO ───────────────────────────────────────
+function aplicarSello(file, modulo, callback) {
+  const img = new Image();
+  const objUrl = URL.createObjectURL(file);
+  img.onload = () => {
+    const MAX = 400;
+    let w = img.width, h = img.height;
+    if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    const ahora = new Date();
+    const sello = `PCO3 Ciudadela · ${modulo} · ${ahora.toLocaleDateString('es-CO')} ${ahora.toLocaleTimeString('es-CO')}`;
+    const fh = Math.max(10, Math.round(h * 0.06));
+    ctx.font = `bold ${fh}px Arial, sans-serif`;
+    const tw = ctx.measureText(sello).width;
+    const px = 6, py = 4;
+    ctx.fillStyle = 'rgba(30,58,95,.78)';
+    ctx.fillRect(0, h - fh - py * 2, tw + px * 2, fh + py * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(sello, px, h - py - 2);
+    URL.revokeObjectURL(objUrl);
+    callback(canvas.toDataURL('image/jpeg', 0.6));
+  };
+  img.onerror = () => { URL.revokeObjectURL(objUrl); callback(null); };
+  img.src = objUrl;
+}
+
+async function subirFoto(base64) { return base64; }
+
+window.procesarFotoNovAs = function(input) {
+  if(!input.files[0]) return;
+  aplicarSello(input.files[0],'Aseo',blob=>{
+    S.fotoNovBlob=blob;
+    const prev=document.getElementById('nov-foto-as-preview');
+    prev.src=blob; prev.style.display='block';
+    const btn=document.getElementById('nov-foto-as-btn');
+    btn.classList.add('tiene-foto'); btn.textContent='✅ Foto lista — toca para cambiar';
+  });
+};
+
+window.procesarFotoCompletarAs = function(input) {
+  if(!input.files[0]) return;
+  aplicarSello(input.files[0],'Aseo',blob=>{
+    S.fotoCompletarBlob=blob;
+    const prev=document.getElementById('completar-as-foto-preview');
+    prev.src=blob; prev.style.display='block';
+    const btn=document.getElementById('completar-as-foto-btn');
+    btn.classList.add('tiene-foto'); btn.textContent='✅ Foto lista — toca para cambiar';
+  });
+};
+
+window.actualizarNivelAs = function() {
+  const val=document.querySelector('input[name="nov-nivel-as"]:checked').value;
+  document.getElementById('as-nivel-medio-label').style.borderColor=val==='MEDIO'?'var(--warning)':'var(--border)';
+  document.getElementById('as-nivel-critico-label').style.borderColor=val==='CRÍTICO'?'var(--danger)':'var(--border)';
+};
+
+// ─── LISTENERS ────────────────────────────────────────────
+function iniciarListeners() {
+  const hoy = fechaHoy();
+
+  onSnapshot(
+    query(collection(db,'tareas_mantenimiento'),where('fecha','==',hoy),where('asignado_a','==','aseo'),orderBy('creado_en','desc')),
+    snap=>{
+      S.tareas=snap.docs.map(d=>({id:d.id,...d.data()}));
+      actualizarStatsAs();
+      renderTareasAs();
+      renderAreasPendientes();
+    }
+  );
+
+  cargarChecklist();
+}
+
+// ─── STATS ────────────────────────────────────────────────
+function actualizarStatsAs() {
+  const pend=S.tareas.filter(t=>t.estado==='pendiente').length;
+  const proc=S.tareas.filter(t=>t.estado==='en_proceso').length;
+  const comp=S.tareas.filter(t=>t.estado==='completada_pendiente_revision'||t.estado==='aprobada').length;
+  document.getElementById('stat-t-pendientes').textContent=pend;
+  document.getElementById('stat-t-proceso').textContent=proc;
+  document.getElementById('stat-t-comp').textContent=comp;
+  document.getElementById('box-t-pendientes').className='stat-box'+(pend>0?' warn':'');
+  document.getElementById('nav-t-btn').querySelector('.icon').textContent=(pend+proc)>0?'🔴':'📋';
+}
+
+function actualizarProgresoInicio() {
+  const turnoData = S.checklistData[S.turnoChecklist]||{};
+  const limpias = AREAS.filter(a=>turnoData[a.id]==='limpio').length;
+  const pct = Math.round(limpias/AREAS.length*100);
+  document.getElementById('checklist-progreso').style.width=pct+'%';
+  document.getElementById('checklist-progreso-label').textContent=`${limpias} de ${AREAS.length} áreas limpias`;
+  document.getElementById('stat-areas-limp').textContent=limpias;
+  document.getElementById('box-areas-limp').className='stat-box'+(limpias===AREAS.length?' ok':limpias>0?' warn':'');
+}
+
+function renderAreasPendientes() {
+  const turnoData=S.checklistData[S.turnoChecklist]||{};
+  const pendientes=AREAS.filter(a=>turnoData[a.id]!=='limpio');
+  const cont=document.getElementById('areas-pendientes-lista');
+  if(!pendientes.length){ cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>¡Todas las áreas marcadas como limpias!</p></div>'; return; }
+  cont.innerHTML=pendientes.map(a=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:20px">${a.icono}</span>
+      <div style="flex:1;font-weight:600;font-size:13px">${a.nombre}</div>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:#fef3c7;color:#b45309;font-weight:600">${turnoData[a.id]==='en-proceso'?'En proceso':'Pendiente'}</span>
+    </div>`).join('');
+}
+
+// ─── TAREAS ASEO ──────────────────────────────────────────
+window.setFiltroTareasAs = function(el) {
+  S.filtroTareasAs=el.dataset.val;
+  document.querySelectorAll('#filtro-tareas-as-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderTareasAs();
+};
+
+function renderTareasAs() {
+  let lista=[...S.tareas];
+  const f=S.filtroTareasAs;
+  if(f==='activas') lista=lista.filter(t=>t.estado==='pendiente'||t.estado==='en_proceso'||t.estado==='rechazada');
+  else lista=lista.filter(t=>t.estado===f);
+
+  const cont=document.getElementById('lista-tareas-aseo');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin tareas en esta categoría</p></div>'; return; }
+
+  const estadoInfo={
+    pendiente:{badge:'badge-pendiente',label:'Pendiente',icon:'⏳'},
+    en_proceso:{badge:'badge-en-proceso',label:'En proceso',icon:'🔄'},
+    completada_pendiente_revision:{badge:'badge-completada',label:'En revisión',icon:'🔍'},
+    aprobada:{badge:'badge-aprobada',label:'Aprobada',icon:'✅'},
+    rechazada:{badge:'badge-rechazada',label:'Devuelta',icon:'↩️'}
+  };
+
+  cont.innerHTML=lista.map(t=>{
+    const ei=estadoInfo[t.estado]||{badge:'badge-pendiente',label:t.estado,icon:'📋'};
+    return `
+    <div class="list-item ${t.prioridad}">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <span class="prioridad-tag prioridad-${t.prioridad}">${t.prioridad}</span>
+        <span class="badge-estado ${ei.badge}">${ei.icon} ${ei.label}</span>
+      </div>
+      <div class="list-item-title">${t.titulo}</div>
+      <div class="list-item-sub">${t.area||'—'} ${t.descripcion?'· '+t.descripcion.substring(0,50):''}</div>
+      ${t.rechazo_motivo?`<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:8px;font-size:12px;margin:6px 0;color:#b91c1c"><strong>Devuelta:</strong> ${t.rechazo_motivo}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn-sm btn-secondary" onclick="verDetalleAs('${t.id}')">Detalle</button>
+        ${t.estado==='pendiente'?`<button class="btn-sm btn-warning" onclick="iniciarTareaAs('${t.id}')">▶ Iniciar</button>`:''}
+        ${t.estado==='en_proceso'?`<button class="btn-sm btn-success" onclick="abrirCompletarAs('${t.id}')">✅ Completar</button>`:''}
+        ${t.estado==='rechazada'?`<button class="btn-sm btn-warning" onclick="iniciarTareaAs('${t.id}')">↩️ Reiniciar</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.iniciarTareaAs = async function(id) {
+  try{
+    await updateDoc(doc(db,'tareas_mantenimiento',id),{estado:'en_proceso',iniciado_en:serverTimestamp(),iniciado_por:S.uid});
+    toast('Tarea iniciada');
+  }catch(e){ toast('Error'); }
+};
+
+window.abrirCompletarAs = function(id) {
+  const t=S.tareas.find(x=>x.id===id); if(!t) return;
+  S.tarea_sel=t; S.fotoCompletarBlob=null;
+  document.getElementById('completar-as-titulo').textContent=t.titulo;
+  document.getElementById('completar-as-notas').value='';
+  document.getElementById('completar-as-foto-preview').style.display='none';
+  document.getElementById('completar-as-foto-btn').className='foto-btn';
+  document.getElementById('completar-as-foto-btn').textContent='📷 Tomar foto de evidencia';
+  document.getElementById('modal-completar-as').classList.add('open');
+};
+
+window.confirmarCompletarAs = async function() {
+  const notas=document.getElementById('completar-as-notas').value.trim();
+  if(!notas){ toast('Describe el trabajo realizado'); return; }
+  if(!S.fotoCompletarBlob){ toast('La foto de evidencia es obligatoria'); return; }
+  if(S.enviando) return;
+  S.enviando=true;
+  const btn=document.getElementById('btn-confirmar-comp-as');
+  btn.textContent='Subiendo...'; btn.disabled=true;
+  try{
+    const fotoUrl=await subirFoto(S.fotoCompletarBlob,`tareas/${S.tarea_sel.id}_${Date.now()}.jpg`);
+    await updateDoc(doc(db,'tareas_mantenimiento',S.tarea_sel.id),{
+      estado:'completada_pendiente_revision',
+      completado_notas:notas, foto_evidencia:fotoUrl,
+      completado_por:S.uid, completado_por_nombre:S.nombre, completado_en:serverTimestamp()
+    });
+    cerrarModal('modal-completar-as'); toast('Tarea enviada para revisión ✅');
+  }catch(e){ toast('Error al enviar'); }
+  finally{ S.enviando=false; btn.textContent='Enviar para revisión'; btn.disabled=false; }
+};
+
+window.verDetalleAs = function(id) {
+  const t=S.tareas.find(x=>x.id===id); if(!t) return;
+  const estadoBadges={pendiente:'badge-pendiente',en_proceso:'badge-en-proceso',completada_pendiente_revision:'badge-completada',aprobada:'badge-aprobada',rechazada:'badge-rechazada'};
+  const estadoLabels={pendiente:'Pendiente',en_proceso:'En proceso',completada_pendiente_revision:'En revisión',aprobada:'Aprobada',rechazada:'Devuelta'};
+  document.getElementById('modal-detalle-as-body').innerHTML=`
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="prioridad-tag prioridad-${t.prioridad}">${t.prioridad}</span>
+      <span class="badge-estado ${estadoBadges[t.estado]||'badge-pendiente'}">${estadoLabels[t.estado]||t.estado}</span>
+    </div>
+    <div class="form-group"><span class="label">Tarea</span><div style="font-weight:700;font-size:14px">${t.titulo}</div></div>
+    <div class="form-group"><span class="label">Área</span><div>${t.area||'—'}</div></div>
+    ${t.descripcion?`<div class="form-group"><span class="label">Descripción</span><div style="font-size:13px">${t.descripcion}</div></div>`:''}
+    ${t.completado_notas?`<div class="form-group"><span class="label">Trabajo realizado</span><div style="font-size:13px">${t.completado_notas}</div></div>`:''}
+    ${t.foto_evidencia?`<div class="form-group"><span class="label">Foto evidencia</span><img src="${t.foto_evidencia}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;cursor:pointer" onclick="window.open('${t.foto_evidencia}','_blank')"></div>`:''}
+    ${t.rechazo_motivo?`<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;font-size:13px;color:#b91c1c"><strong>Devuelta:</strong> ${t.rechazo_motivo}</div>`:''}`;
+  document.getElementById('modal-detalle-as-footer').innerHTML=
+    `<button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-detalle-as')">Cerrar</button>
+    ${t.estado==='en_proceso'?`<button class="btn btn-success btn-sm" style="flex:1" onclick="cerrarModal('modal-detalle-as');abrirCompletarAs('${t.id}')">Completar</button>`:''}`;
+  document.getElementById('modal-detalle-as').classList.add('open');
+};
+
+// ─── CHECKLIST ────────────────────────────────────────────
+async function cargarChecklist() {
+  const clave = `${fechaHoy()}_${S.uid}`;
+  const docRef = doc(db,'aseo_checklist',clave);
+  const snap = await getDoc(docRef);
+  if(snap.exists()){
+    S.checklistData = snap.data().turnos || {};
+  } else {
+    S.checklistData = {manana:{}, tarde:{}};
+  }
+  renderChecklist();
+  actualizarProgresoInicio();
+  renderAreasPendientes();
+}
+
+window.setTurnoChecklist = function(turno, el) {
+  S.turnoChecklist=turno;
+  document.querySelectorAll('#sec-checklist .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  document.getElementById('checklist-turno-label').textContent=turno==='manana'?'Turno Mañana':'Turno Tarde';
+  renderChecklist();
+  actualizarProgresoInicio();
+};
+
+function renderChecklist() {
+  const turnoData=S.checklistData[S.turnoChecklist]||{};
+  const limpias=AREAS.filter(a=>turnoData[a.id]==='limpio').length;
+  document.getElementById('checklist-prog-fill').style.width=Math.round(limpias/AREAS.length*100)+'%';
+  document.getElementById('checklist-prog-label').textContent=`${limpias} de ${AREAS.length} áreas limpias`;
+
+  document.getElementById('checklist-areas').innerHTML=AREAS.map(a=>{
+    const estado=turnoData[a.id]||'pendiente';
+    const claseCard=estado==='limpio'?'limpio':estado==='en-proceso'?'en-proceso':'pendiente';
+    return `
+    <div class="area-card ${claseCard}" id="card-${a.id}">
+      <div class="area-header">
+        <span class="area-icon">${a.icono}</span>
+        <div class="area-info">
+          <div class="area-nombre">${a.nombre}</div>
+          <div class="area-estado" id="estado-label-${a.id}" style="color:${estado==='limpio'?'var(--success)':estado==='en-proceso'?'var(--warning)':'var(--muted)'}">
+            ${estado==='limpio'?'✅ Limpio':estado==='en-proceso'?'🔄 En proceso':'⏳ Pendiente'}
+          </div>
+        </div>
+      </div>
+      <div class="area-botones">
+        <button class="area-btn ${estado==='pendiente'?'activo-pend':''}" onclick="setEstadoArea('${a.id}','pendiente')">⏳ Pend.</button>
+        <button class="area-btn ${estado==='en-proceso'?'activo-proc':''}" onclick="setEstadoArea('${a.id}','en-proceso')">🔄 Proceso</button>
+        <button class="area-btn ${estado==='limpio'?'activo-limp':''}" onclick="setEstadoArea('${a.id}','limpio')">✅ Limpio</button>
+      </div>
+    </div>`; }).join('');
+}
+
+window.setEstadoArea = function(areaId, estado) {
+  if(!S.checklistData[S.turnoChecklist]) S.checklistData[S.turnoChecklist]={};
+  S.checklistData[S.turnoChecklist][areaId]=estado;
+  renderChecklist();
+  actualizarProgresoInicio();
+  renderAreasPendientes();
+};
+
+window.guardarChecklist = async function() {
+  const clave=`${fechaHoy()}_${S.uid}`;
+  try{
+    await setDoc(doc(db,'aseo_checklist',clave),{
+      uid:S.uid, nombre:S.nombre, fecha:fechaHoy(),
+      turnos:S.checklistData,
+      actualizado_en:serverTimestamp()
+    });
+    toast('Checklist guardado ✅');
+  }catch(e){ toast('Error al guardar'); }
+};
+
+// ─── ENVIAR NOVEDAD ───────────────────────────────────────
+window.enviarNovedadAs = async function() {
+  const desc=document.getElementById('nov-desc-as').value.trim();
+  if(!desc){ toast('Escribe la descripción'); return; }
+  if(!S.fotoNovBlob){ toast('La foto es obligatoria'); return; }
+  if(S.enviando) return;
+  S.enviando=true;
+  const btn=document.querySelector('#sec-novedad .btn-danger');
+  btn.textContent='Enviando...'; btn.disabled=true;
+  const nivel=document.querySelector('input[name="nov-nivel-as"]:checked').value;
+  try{
+    const fotoUrl=await subirFoto(S.fotoNovBlob,`novedades_aseo/${Date.now()}.jpg`);
+    await addDoc(collection(db,'novedades_mantenimiento'),{
+      tipo:document.getElementById('nov-tipo-as').value,
+      area:document.getElementById('nov-area-as').value,
+      descripcion:desc, nivel, foto_url:fotoUrl,
+      estado:'abierta', fecha:fechaHoy(),
+      reportado_por:S.uid, reportado_por_nombre:S.nombre,
+      rol:'aseo', creado_en:serverTimestamp()
+    });
+    document.getElementById('nov-desc-as').value='';
+    document.getElementById('nov-foto-as-preview').style.display='none';
+    document.getElementById('nov-foto-as-btn').className='foto-btn';
+    document.getElementById('nov-foto-as-btn').textContent='📷 Tomar foto';
+    document.querySelectorAll('input[name="nov-nivel-as"]')[0].checked=true;
+    actualizarNivelAs(); S.fotoNovBlob=null;
+    toast('Novedad reportada ✅');
+  }catch(e){ toast('Error al enviar'); }
+  finally{ S.enviando=false; btn.textContent='🚨 Enviar Novedad'; btn.disabled=false; }
+};
+
+// ─── NAV ──────────────────────────────────────────────────
+window.navTo = function(sec,btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active');
+  btn.classList.add('active');
+};
+
+actualizarNivelAs();
+iniciarListeners();
+</script>
+</body>
+</html>

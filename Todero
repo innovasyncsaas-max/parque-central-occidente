@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCO3 · Todero</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1e3a5f;--primary-light:#2d5a8e;--primary-dark:#152d4a;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--purple:#7c3aed;
+  --bg:#f0f4f8;--card:#fff;--text:#1a202c;--muted:#64748b;
+  --border:#e2e8f0;--radius:12px;--nav-w:220px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+header .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600}
+header h1{font-size:17px;font-weight:700}
+header p{font-size:12px;opacity:.8}
+.user-info{margin-left:auto;text-align:right;font-size:12px;opacity:.85}
+.layout{display:flex;min-height:calc(100vh - 56px)}
+main{flex:1;padding:16px;padding-bottom:90px;min-width:0}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+nav button{flex:1;padding:10px 4px 8px;border:none;background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.2s;position:relative}
+nav button .icon{font-size:20px}
+nav button.active{color:var(--primary);font-weight:700}
+.nav-badge{position:absolute;top:4px;right:calc(50% - 18px);background:var(--danger);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 4px}
+.nav-badge.show{display:flex}
+@media(min-width:768px){
+  main{padding:24px;padding-bottom:24px;margin-left:var(--nav-w)}
+  nav{position:fixed;left:0;top:56px;bottom:0;right:auto;width:var(--nav-w);flex-direction:column;border-top:none;border-right:1px solid var(--border);background:#fff;padding:12px 0;box-shadow:2px 0 8px rgba(0,0,0,.04)}
+  nav button{flex:none;flex-direction:row;padding:12px 20px;font-size:13px;gap:10px;border-radius:0;justify-content:flex-start}
+  nav button.active{background:#eff6ff;color:var(--primary);border-right:3px solid var(--primary)}
+  .nav-badge{position:static;margin-left:auto}
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+}
+.section{display:none}.section.active{display:block}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.card-title{font-weight:700;font-size:14px;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.section-header h2{font-size:18px;font-weight:700;color:var(--primary)}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-box{background:var(--card);border-radius:var(--radius);padding:14px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.stat-box .num{font-size:28px;font-weight:700;color:var(--primary)}
+.stat-box .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.stat-box.alerta .num{color:var(--danger)}
+.stat-box.ok .num{color:var(--success)}
+.stat-box.warn .num{color:var(--warning)}
+.btn{width:100%;padding:12px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-warning{background:var(--warning);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:7px 14px;font-size:12px;border-radius:8px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s;display:inline-block}
+.btn-secondary{background:var(--border);color:var(--text)}
+.input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;transition:.2s}
+.input:focus{outline:none;border-color:var(--primary)}
+.label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block}
+.form-group{margin-bottom:14px}
+.select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--text)}
+.filter-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.filter-bar::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:.2s}
+.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.list-item{padding:14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.list-item.alta{border-left:4px solid var(--danger)}
+.list-item.media{border-left:4px solid var(--warning)}
+.list-item.baja{border-left:4px solid var(--success)}
+.list-item-title{font-weight:700;font-size:14px;margin-bottom:3px}
+.list-item-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:92vh;display:flex;flex-direction:column}
+.modal-header{padding:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header.success{background:var(--success)}
+.modal-header.warning{background:var(--warning)}
+.modal-header h3{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1}
+.modal-body{padding:16px;overflow-y:auto}
+.modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.badge-estado{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-pendiente{background:#f1f5f9;color:#475569}
+.badge-en-proceso{background:#fef3c7;color:#b45309}
+.badge-completada{background:#e9d5ff;color:#6b21a8}
+.badge-aprobada{background:#d1fae5;color:#065f46}
+.badge-rechazada{background:#fee2e2;color:#b91c1c}
+.empty{text-align:center;padding:30px 16px;color:var(--muted)}
+.empty .icon{font-size:36px;margin-bottom:8px}
+.empty p{font-size:13px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;max-width:90vw}
+.toast.show{opacity:1}
+.toast.error{background:var(--danger)}
+.urgente-banner{background:#fef2f2;border:2px solid var(--danger);border-radius:12px;padding:14px;margin-bottom:14px}
+.urgente-title{font-weight:700;font-size:14px;color:var(--danger);margin-bottom:4px}
+.devuelta-banner{background:#fef3c7;border:2px solid var(--warning);border-radius:12px;padding:14px;margin-bottom:14px}
+.devuelta-title{font-weight:700;font-size:14px;color:var(--warning);margin-bottom:4px}
+.foto-preview{width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-top:8px;display:none;cursor:pointer}
+.foto-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border:2px dashed var(--border);border-radius:10px;background:var(--bg);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s}
+.foto-btn:hover{border-color:var(--primary);color:var(--primary)}
+.foto-btn.tiene-foto{border-color:var(--success);color:var(--success);background:#f0fdf4}
+.prioridad-tag{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase}
+.prioridad-alta{background:#fee2e2;color:#b91c1c}
+.prioridad-media{background:#fef3c7;color:#b45309}
+.prioridad-baja{background:#d1fae5;color:#065f46}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="badge">🔧 TODERO</div>
+    <h1>PCO3 Ciudadela</h1>
+    <p id="headerFecha">—</p>
+  </div>
+  <div class="user-info">
+    <div id="headerNombre">Todero</div>
+    <div>Mantenimiento</div>
+  </div>
+</header>
+
+<div class="layout">
+<main>
+
+<!-- INICIO -->
+<div id="sec-inicio" class="section active">
+  <div class="section-header"><h2>Mi Día</h2></div>
+
+  <div class="stat-grid">
+    <div class="stat-box" id="box-pendientes">
+      <div class="num" id="stat-pendientes">0</div>
+      <div class="lbl">Pendientes</div>
+    </div>
+    <div class="stat-box" id="box-proceso">
+      <div class="num" id="stat-proceso">0</div>
+      <div class="lbl">En proceso</div>
+    </div>
+    <div class="stat-box" id="box-completadas">
+      <div class="num" id="stat-completadas">0</div>
+      <div class="lbl">Para revisar</div>
+    </div>
+    <div class="stat-box" id="box-rechazadas">
+      <div class="num" id="stat-rechazadas">0</div>
+      <div class="lbl">Devueltas</div>
+    </div>
+  </div>
+
+  <div id="urgentes-cont"></div>
+  <div id="devueltas-cont"></div>
+
+  <div class="card">
+    <div class="card-title">📋 Próximas tareas</div>
+    <div id="proximas-lista">
+      <div class="empty"><div class="icon">🔧</div><p>Sin tareas asignadas hoy</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- MIS TAREAS -->
+<div id="sec-tareas" class="section">
+  <div class="section-header"><h2>Mis Tareas</h2></div>
+
+  <div class="filter-bar" id="filtro-tareas-chips">
+    <div class="chip active" data-val="activas" onclick="setFiltroTareas(this)">Activas</div>
+    <div class="chip" data-val="pendiente" onclick="setFiltroTareas(this)">Pendientes</div>
+    <div class="chip" data-val="en_proceso" onclick="setFiltroTareas(this)">En proceso</div>
+    <div class="chip" data-val="completada_pendiente_revision" onclick="setFiltroTareas(this)">Enviadas</div>
+    <div class="chip" data-val="rechazada" onclick="setFiltroTareas(this)">Devueltas</div>
+    <div class="chip" data-val="aprobada" onclick="setFiltroTareas(this)">Aprobadas</div>
+  </div>
+
+  <div id="lista-tareas-todero">
+    <div class="empty"><div class="icon">🔄</div><p>Cargando tareas...</p></div>
+  </div>
+</div>
+
+<!-- REPORTAR NOVEDAD -->
+<div id="sec-novedad" class="section">
+  <div class="section-header"><h2>Reportar Novedad</h2></div>
+
+  <div class="card">
+    <div class="card-title">⚠️ Nueva novedad de mantenimiento</div>
+
+    <div class="form-group">
+      <label class="label">Tipo de novedad *</label>
+      <select class="select" id="nov-tipo">
+        <option value="Avería eléctrica">⚡ Avería eléctrica</option>
+        <option value="Avería hidráulica">💧 Avería hidráulica</option>
+        <option value="Daño estructural">🏗️ Daño estructural</option>
+        <option value="Daño en fachada">🧱 Daño en fachada</option>
+        <option value="Equipo dañado">⚙️ Equipo dañado</option>
+        <option value="Riesgo de seguridad">🔒 Riesgo de seguridad</option>
+        <option value="Fuga de agua">🌊 Fuga de agua</option>
+        <option value="Iluminación">💡 Iluminación</option>
+        <option value="Otro">📋 Otro</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Área / Ubicación *</label>
+      <select class="select" id="nov-area">
+        <option value="Piscina">Piscina</option>
+        <option value="Gimnasio">Gimnasio</option>
+        <option value="Zona BBQ">Zona BBQ</option>
+        <option value="Salón Social">Salón Social</option>
+        <option value="Parqueaderos">Parqueaderos</option>
+        <option value="Acceso principal">Acceso principal</option>
+        <option value="Corredores">Corredores</option>
+        <option value="Cuarto de bombas">Cuarto de bombas</option>
+        <option value="Red eléctrica">Red eléctrica</option>
+        <option value="Torres - pisos">Torres / Pisos</option>
+        <option value="Ascensores">Ascensores</option>
+        <option value="Áreas verdes">Áreas verdes</option>
+        <option value="Otro">Otro</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Descripción detallada *</label>
+      <textarea class="input" id="nov-descripcion" rows="4" placeholder="Describe la novedad con el mayor detalle posible..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Nivel de urgencia *</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <label style="display:flex;align-items:center;gap:6px;padding:10px;border:2px solid var(--border);border-radius:10px;cursor:pointer" id="nivel-baja-label">
+          <input type="radio" name="nov-nivel" value="baja" onchange="actualizarNivel()">
+          <span style="font-weight:600;font-size:12px">🟢 BAJA</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:10px;border:2px solid var(--border);border-radius:10px;cursor:pointer" id="nivel-media-label">
+          <input type="radio" name="nov-nivel" value="media" checked onchange="actualizarNivel()">
+          <span style="font-weight:600;font-size:12px">🟡 MEDIA</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:10px;border:2px solid var(--border);border-radius:10px;cursor:pointer" id="nivel-critica-label">
+          <input type="radio" name="nov-nivel" value="critica" onchange="actualizarNivel()">
+          <span style="font-weight:600;font-size:12px">🔴 CRÍTICA</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Foto de evidencia *</label>
+      <input type="file" accept="image/*" capture="environment" id="nov-foto-input" style="display:none" onchange="procesarFotoNov(this)">
+      <div class="foto-btn" id="nov-foto-btn" onclick="document.getElementById('nov-foto-input').click()">
+        📷 Tomar foto de la novedad
+      </div>
+      <img id="nov-foto-preview" class="foto-preview">
+    </div>
+
+    <button class="btn btn-danger" onclick="enviarNovedad()">🚨 Enviar Novedad</button>
+  </div>
+</div>
+
+<!-- HISTORIAL -->
+<div id="sec-historial" class="section">
+  <div class="section-header"><h2>Historial (7 días)</h2></div>
+  <div id="lista-historial">
+    <div class="empty"><div class="icon">🔄</div><p>Cargando historial...</p></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<nav>
+  <button class="active" onclick="navTo('inicio',this)"><span class="icon">🏠</span>Inicio</button>
+  <button onclick="navTo('tareas',this)" id="nav-tareas-btn"><span class="icon">📋</span>Mis Tareas<div class="nav-badge" id="badge-tareas">0</div></button>
+  <button onclick="navTo('novedad',this)"><span class="icon">⚠️</span>Reportar</button>
+  <button onclick="navTo('historial',this)"><span class="icon">📂</span>Historial</button>
+</nav>
+
+<!-- MODAL COMPLETAR TAREA -->
+<div class="modal-overlay" id="modal-completar">
+  <div class="modal">
+    <div class="modal-header success"><h3>Completar Tarea</h3><button class="modal-close" onclick="cerrarModal('modal-completar')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="label">Tarea</label>
+        <div id="completar-titulo" style="font-weight:700;padding:10px;background:var(--bg);border-radius:8px;font-size:13px"></div>
+      </div>
+      <div class="form-group">
+        <label class="label">Notas de trabajo realizado *</label>
+        <textarea class="input" id="completar-notas" rows="4" placeholder="Describe qué se hizo, materiales usados, tiempo, observaciones..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="label">Foto de evidencia (antes/después) *</label>
+        <input type="file" accept="image/*" capture="environment" id="completar-foto-input" style="display:none" onchange="procesarFotoCompletar(this)">
+        <div class="foto-btn" id="completar-foto-btn" onclick="document.getElementById('completar-foto-input').click()">
+          📷 Tomar foto de evidencia
+        </div>
+        <img id="completar-foto-preview" class="foto-preview">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-completar')">Cancelar</button>
+      <button class="btn btn-success btn-sm" style="flex:1" id="btn-confirmar-completar" onclick="confirmarCompletar()">Enviar para revisión</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE TAREA -->
+<div class="modal-overlay" id="modal-detalle">
+  <div class="modal">
+    <div class="modal-header"><h3>Detalle de Tarea</h3><button class="modal-close" onclick="cerrarModal('modal-detalle')">✕</button></div>
+    <div class="modal-body" id="modal-detalle-body"></div>
+    <div class="modal-footer" id="modal-detalle-footer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, addDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+const firebaseConfig = {
+  apiKey: "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+  authDomain: "registro-residentes.firebaseapp.com",
+  projectId: "registro-residentes",
+  storageBucket: "registro-residentes.firebasestorage.app",
+  messagingSenderId: "646123326163",
+  appId: "1:646123326163:web:8b35b955e7b3692536a226"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ─── STATE ────────────────────────────────────────────────
+const S = {
+  uid:'', nombre:'Todero',
+  tareas:[], historial:[],
+  filtroTareas:'activas',
+  tareaaSel:null,
+  fotoNovBlob:null, fotoCompletarBlob:null,
+  enviando:false
+};
+
+// ─── HELPERS ──────────────────────────────────────────────
+// FIX: zona horaria - fecha local de Bogotá
+function fechaHoy() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+function fechaHaceNDias(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+const ffd = ts => { if(!ts) return '--'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); };
+const toast = (msg, tipo) => { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(tipo==='error'?' error':''); setTimeout(()=>t.classList.remove('show'),3000); };
+const cerrarModal = id => document.getElementById(id).classList.remove('open');
+window.cerrarModal = cerrarModal;
+
+// FIX: wrapper para listeners con manejo de errores explícito.
+// Sin esto, las queries que requieren índice fallan en silencio.
+function escuchar(q, onData, etiqueta) {
+  return onSnapshot(q, onData, error => {
+    console.error(`❌ Error en listener "${etiqueta}":`, error.code, error.message);
+    if (error.code === 'failed-precondition') {
+      console.error(`🔧 FALTA ÍNDICE COMPUESTO para "${etiqueta}". Busca arriba el URL que dice "create_composite=..." y créalo en Firebase Console. Espera 2-3 minutos a que termine de habilitarse.`);
+      toast(`Falta índice: ${etiqueta} (ver consola F12)`, 'error');
+    } else if (error.code === 'permission-denied') {
+      console.error(`🔒 Permiso denegado para "${etiqueta}". Revisa firestore.rules.`);
+    }
+  });
+}
+
+// ─── SESSION ──────────────────────────────────────────────
+(()=>{
+  const p = new URLSearchParams(window.location.search);
+  S.uid = p.get('uid')||localStorage.getItem('pco3_uid')||'todero_demo';
+  S.nombre = p.get('nombre')||localStorage.getItem('pco3_nombre')||'Todero';
+  if(p.get('uid')) localStorage.setItem('pco3_uid',S.uid);
+  if(p.get('nombre')) localStorage.setItem('pco3_nombre',S.nombre);
+  document.getElementById('headerNombre').textContent = S.nombre;
+  const hoy = new Date();
+  document.getElementById('headerFecha').textContent = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+})();
+
+// ─── FOTO CON SELLO ───────────────────────────────────────
+function aplicarSello(file, modulo, callback) {
+  const img = new Image();
+  const objUrl = URL.createObjectURL(file);
+  img.onload = () => {
+    const MAX = 400;
+    let w = img.width, h = img.height;
+    if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    const ahora = new Date();
+    const sello = `PCO3 Ciudadela · ${modulo} · ${ahora.toLocaleDateString('es-CO')} ${ahora.toLocaleTimeString('es-CO')}`;
+    const fh = Math.max(10, Math.round(h * 0.06));
+    ctx.font = `bold ${fh}px Arial, sans-serif`;
+    const tw = ctx.measureText(sello).width;
+    const px = 6, py = 4;
+    ctx.fillStyle = 'rgba(30,58,95,.78)';
+    ctx.fillRect(0, h - fh - py * 2, tw + px * 2, fh + py * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(sello, px, h - py - 2);
+    URL.revokeObjectURL(objUrl);
+    callback(canvas.toDataURL('image/jpeg', 0.6));
+  };
+  img.onerror = () => { URL.revokeObjectURL(objUrl); callback(null); };
+  img.src = objUrl;
+}
+
+async function subirFoto(base64) { return base64; }
+
+window.procesarFotoNov = function(input) {
+  if(!input.files[0]) return;
+  aplicarSello(input.files[0], 'Mantenimiento', blob => {
+    S.fotoNovBlob = blob;
+    const prev = document.getElementById('nov-foto-preview');
+    prev.src = blob; prev.style.display = 'block';
+    document.getElementById('nov-foto-btn').classList.add('tiene-foto');
+    document.getElementById('nov-foto-btn').textContent = '✅ Foto lista — toca para cambiar';
+  });
+};
+
+window.procesarFotoCompletar = function(input) {
+  if(!input.files[0]) return;
+  aplicarSello(input.files[0], 'Mantenimiento', blob => {
+    S.fotoCompletarBlob = blob;
+    const prev = document.getElementById('completar-foto-preview');
+    prev.src = blob; prev.style.display = 'block';
+    document.getElementById('completar-foto-btn').classList.add('tiene-foto');
+    document.getElementById('completar-foto-btn').textContent = '✅ Foto lista — toca para cambiar';
+  });
+};
+
+window.actualizarNivel = function() {
+  const val = document.querySelector('input[name="nov-nivel"]:checked').value;
+  document.getElementById('nivel-baja-label').style.borderColor = val==='baja'?'var(--success)':'var(--border)';
+  document.getElementById('nivel-media-label').style.borderColor = val==='media'?'var(--warning)':'var(--border)';
+  document.getElementById('nivel-critica-label').style.borderColor = val==='critica'?'var(--danger)':'var(--border)';
+};
+
+// ─── LISTENERS ────────────────────────────────────────────
+function iniciarListeners() {
+  const hoy = fechaHoy();
+
+  // Tareas del día asignadas a todero
+  escuchar(
+    query(collection(db,'tareas_mantenimiento'), where('fecha','==',hoy), where('asignado_a','==','todero'), orderBy('creado_en','desc')),
+    snap => {
+      S.tareas = snap.docs.map(d=>({id:d.id,...d.data()}));
+      actualizarStats();
+      renderTareas();
+      renderProximas();
+      renderUrgentes();
+      renderDevueltas();
+    },
+    'tareas del día'
+  );
+
+  // Historial 7 días
+  const fechaCorte = fechaHaceNDias(7);
+  escuchar(
+    query(collection(db,'tareas_mantenimiento'), where('asignado_a','==','todero'), where('fecha','>=',fechaCorte), orderBy('fecha','desc'), orderBy('creado_en','desc')),
+    snap => {
+      S.historial = snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>t.fecha!==hoy);
+      renderHistorial();
+    },
+    'historial 7 días'
+  );
+}
+
+// ─── STATS ────────────────────────────────────────────────
+function actualizarStats() {
+  const pend = S.tareas.filter(t=>t.estado==='pendiente').length;
+  const proc = S.tareas.filter(t=>t.estado==='en_proceso').length;
+  const comp = S.tareas.filter(t=>t.estado==='completada_pendiente_revision').length;
+  const rech = S.tareas.filter(t=>t.estado==='rechazada').length;
+
+  document.getElementById('stat-pendientes').textContent = pend;
+  document.getElementById('stat-proceso').textContent = proc;
+  document.getElementById('stat-completadas').textContent = comp;
+  document.getElementById('stat-rechazadas').textContent = rech;
+
+  document.getElementById('box-pendientes').className = 'stat-box'+(pend>0?' warn':'');
+  document.getElementById('box-rechazadas').className = 'stat-box'+(rech>0?' alerta':'');
+  document.getElementById('box-completadas').className = 'stat-box'+(comp>0?' ok':'');
+
+  const totalActivo = pend + proc + rech;
+  const badge = document.getElementById('badge-tareas');
+  if (totalActivo > 0) { badge.textContent = totalActivo; badge.classList.add('show'); }
+  else badge.classList.remove('show');
+}
+
+function renderUrgentes() {
+  const urgentes = S.tareas.filter(t=>t.prioridad==='alta'&&t.estado==='pendiente');
+  const cont = document.getElementById('urgentes-cont');
+  if(!urgentes.length){ cont.innerHTML=''; return; }
+  cont.innerHTML = urgentes.map(t=>`
+    <div class="urgente-banner">
+      <div class="urgente-title">🚨 Tarea urgente sin iniciar</div>
+      <div style="font-weight:600;font-size:13px">${t.titulo}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">${t.area||'—'}</div>
+      <button class="btn-sm btn-danger" style="margin-top:8px" onclick="iniciarTarea('${t.id}')">Iniciar ahora</button>
+    </div>`).join('');
+}
+
+function renderDevueltas() {
+  const devueltas = S.tareas.filter(t=>t.estado==='rechazada');
+  const cont = document.getElementById('devueltas-cont');
+  if(!devueltas.length){ cont.innerHTML=''; return; }
+  cont.innerHTML = devueltas.map(t=>`
+    <div class="devuelta-banner">
+      <div class="devuelta-title">↩️ Tarea devuelta para corregir</div>
+      <div style="font-weight:600;font-size:13px">${t.titulo}</div>
+      <div style="font-size:12px;background:#fff;padding:8px;border-radius:6px;margin-top:6px;color:#92400e"><strong>Mensaje:</strong> ${t.rechazo_motivo||'Sin mensaje'}</div>
+      <button class="btn-sm btn-warning" style="margin-top:8px" onclick="iniciarTarea('${t.id}')">Reanudar</button>
+    </div>`).join('');
+}
+
+function renderProximas() {
+  const activas = S.tareas.filter(t=>t.estado==='pendiente'||t.estado==='en_proceso').slice(0,5);
+  const cont = document.getElementById('proximas-lista');
+  if(!activas.length){ cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin tareas pendientes</p></div>'; return; }
+  cont.innerHTML = activas.map(t=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:22px">${t.estado==='en_proceso'?'🔄':'⏳'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.titulo}</div>
+        <div style="font-size:11px;color:var(--muted)">${t.area||'—'} · <span class="prioridad-tag prioridad-${t.prioridad}">${t.prioridad}</span></div>
+      </div>
+      ${t.estado==='pendiente'
+        ?`<button class="btn-sm btn-warning" onclick="iniciarTarea('${t.id}')">Iniciar</button>`
+        :`<button class="btn-sm btn-success" onclick="abrirCompletar('${t.id}')">Completar</button>`}
+    </div>`).join('');
+}
+
+window.setFiltroTareas = function(el) {
+  S.filtroTareas = el.dataset.val;
+  document.querySelectorAll('#filtro-tareas-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderTareas();
+};
+
+function renderTareas() {
+  let lista = [...S.tareas];
+  const f = S.filtroTareas;
+  if(f==='activas') lista = lista.filter(t=>t.estado==='pendiente'||t.estado==='en_proceso'||t.estado==='rechazada');
+  else lista = lista.filter(t=>t.estado===f);
+
+  const cont = document.getElementById('lista-tareas-todero');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin tareas en esta categoría</p></div>'; return; }
+
+  cont.innerHTML = lista.map(t=>{
+    const estadoInfo = {
+      pendiente:{badge:'badge-pendiente',label:'Pendiente',icon:'⏳'},
+      en_proceso:{badge:'badge-en-proceso',label:'En proceso',icon:'🔄'},
+      completada_pendiente_revision:{badge:'badge-completada',label:'En revisión',icon:'🔍'},
+      aprobada:{badge:'badge-aprobada',label:'Aprobada',icon:'✅'},
+      rechazada:{badge:'badge-rechazada',label:'Devuelta',icon:'↩️'}
+    };
+    const ei = estadoInfo[t.estado]||{badge:'badge-pendiente',label:t.estado,icon:'📋'};
+    return `
+    <div class="list-item ${t.prioridad}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
+        <div style="flex:1">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+            <span class="prioridad-tag prioridad-${t.prioridad}">${t.prioridad}</span>
+            <span class="badge-estado ${ei.badge}">${ei.icon} ${ei.label}</span>
+          </div>
+          <div class="list-item-title">${t.titulo}</div>
+          <div class="list-item-sub">${t.area||'—'} ${t.descripcion?'· '+t.descripcion.substring(0,50):''}</div>
+          ${t.fecha_limite?`<div class="list-item-sub" style="margin-top:2px">⏰ Límite: ${t.fecha_limite}</div>`:''}
+        </div>
+      </div>
+      ${t.rechazo_motivo?`<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:8px;font-size:12px;margin-bottom:8px;color:#b91c1c"><strong>Motivo devolución:</strong> ${t.rechazo_motivo}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-sm btn-secondary" onclick="verDetalle('${t.id}')">Ver detalle</button>
+        ${t.estado==='pendiente'?`<button class="btn-sm btn-warning" onclick="iniciarTarea('${t.id}')">▶ Iniciar</button>`:''}
+        ${t.estado==='en_proceso'?`<button class="btn-sm btn-success" onclick="abrirCompletar('${t.id}')">✅ Completar</button>`:''}
+        ${t.estado==='rechazada'?`<button class="btn-sm btn-warning" onclick="iniciarTarea('${t.id}')">↩️ Reanudar</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.iniciarTarea = async function(id) {
+  try {
+    await updateDoc(doc(db,'tareas_mantenimiento',id),{
+      estado:'en_proceso',
+      iniciado_en:serverTimestamp(),
+      iniciado_por:S.uid
+    });
+    toast('Tarea iniciada');
+  } catch(e){ console.error(e); toast('Error al iniciar', 'error'); }
+};
+
+window.abrirCompletar = function(id) {
+  const t = S.tareas.find(x=>x.id===id); if(!t) return;
+  S.tareaaSel = t;
+  S.fotoCompletarBlob = null;
+  document.getElementById('completar-titulo').textContent = t.titulo;
+  document.getElementById('completar-notas').value = '';
+  document.getElementById('completar-foto-preview').style.display = 'none';
+  document.getElementById('completar-foto-btn').className = 'foto-btn';
+  document.getElementById('completar-foto-btn').textContent = '📷 Tomar foto de evidencia';
+  document.getElementById('modal-completar').classList.add('open');
+};
+
+window.confirmarCompletar = async function() {
+  const notas = document.getElementById('completar-notas').value.trim();
+  if(!notas){ toast('Describe el trabajo realizado', 'error'); return; }
+  if(!S.fotoCompletarBlob){ toast('La foto de evidencia es obligatoria', 'error'); return; }
+  if(S.enviando) return;
+  S.enviando = true;
+  const btn = document.getElementById('btn-confirmar-completar');
+  btn.textContent = 'Subiendo...'; btn.disabled = true;
+  try {
+    const fotoUrl = await subirFoto(S.fotoCompletarBlob);
+    await updateDoc(doc(db,'tareas_mantenimiento',S.tareaaSel.id),{
+      estado:'completada_pendiente_revision',
+      completado_notas:notas,
+      foto_evidencia:fotoUrl,
+      completado_por:S.uid,
+      completado_por_nombre:S.nombre,
+      completado_en:serverTimestamp()
+    });
+    cerrarModal('modal-completar');
+    toast('✅ Tarea enviada para revisión');
+  } catch(e){ console.error(e); toast('Error al enviar', 'error'); }
+  finally { S.enviando=false; btn.textContent='Enviar para revisión'; btn.disabled=false; }
+};
+
+window.verDetalle = function(id) {
+  const t = S.tareas.find(x=>x.id===id)||S.historial.find(x=>x.id===id); if(!t) return;
+  const estadoInfo = {
+    pendiente:{badge:'badge-pendiente',label:'Pendiente'},
+    en_proceso:{badge:'badge-en-proceso',label:'En proceso'},
+    completada_pendiente_revision:{badge:'badge-completada',label:'En revisión'},
+    aprobada:{badge:'badge-aprobada',label:'Aprobada'},
+    rechazada:{badge:'badge-rechazada',label:'Devuelta'}
+  };
+  const ei = estadoInfo[t.estado]||{badge:'badge-pendiente',label:t.estado};
+  document.getElementById('modal-detalle-body').innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="prioridad-tag prioridad-${t.prioridad}">${t.prioridad}</span>
+      <span class="badge-estado ${ei.badge}">${ei.label}</span>
+    </div>
+    <div class="form-group"><span class="label">Tarea</span><div style="font-weight:700;font-size:14px">${t.titulo}</div></div>
+    <div class="form-group"><span class="label">Área</span><div>${t.area||'—'}</div></div>
+    ${t.descripcion?`<div class="form-group"><span class="label">Descripción</span><div style="font-size:13px">${t.descripcion}</div></div>`:''}
+    ${t.fecha_limite?`<div class="form-group"><span class="label">Fecha límite</span><div>${t.fecha_limite}</div></div>`:''}
+    ${t.creado_por_nombre?`<div class="form-group"><span class="label">Asignada por</span><div style="font-size:13px">${t.creado_por_nombre}</div></div>`:''}
+    ${t.completado_notas?`<div class="form-group"><span class="label">Trabajo realizado</span><div style="font-size:13px">${t.completado_notas}</div></div>`:''}
+    ${t.foto_evidencia?`<div class="form-group"><span class="label">Foto evidencia</span><img src="${t.foto_evidencia}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;cursor:pointer" onclick="window.open('${t.foto_evidencia}','_blank')"></div>`:''}
+    ${t.rechazo_motivo?`<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;font-size:13px;color:#b91c1c"><strong>↩️ Devuelta:</strong> ${t.rechazo_motivo}</div>`:''}`;
+  document.getElementById('modal-detalle-footer').innerHTML =
+    `<button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-detalle')">Cerrar</button>
+    ${t.estado==='en_proceso'?`<button class="btn btn-success btn-sm" style="flex:1" onclick="cerrarModal('modal-detalle');abrirCompletar('${t.id}')">Completar</button>`:''}
+    ${t.estado==='pendiente'?`<button class="btn btn-warning btn-sm" style="flex:1" onclick="cerrarModal('modal-detalle');iniciarTarea('${t.id}')">Iniciar</button>`:''}
+    ${t.estado==='rechazada'?`<button class="btn btn-warning btn-sm" style="flex:1" onclick="cerrarModal('modal-detalle');iniciarTarea('${t.id}')">Reanudar</button>`:''}`;
+  document.getElementById('modal-detalle').classList.add('open');
+};
+
+window.enviarNovedad = async function() {
+  const desc = document.getElementById('nov-descripcion').value.trim();
+  if(!desc){ toast('Escribe la descripción', 'error'); return; }
+  if(!S.fotoNovBlob){ toast('La foto de evidencia es obligatoria', 'error'); return; }
+  if(S.enviando) return;
+  S.enviando = true;
+  const btn = document.querySelector('#sec-novedad .btn-danger');
+  btn.textContent = 'Enviando...'; btn.disabled = true;
+  const nivel = document.querySelector('input[name="nov-nivel"]:checked').value;
+  const tipo = document.getElementById('nov-tipo').value;
+  const area = document.getElementById('nov-area').value;
+  try {
+    const fotoUrl = await subirFoto(S.fotoNovBlob);
+    // FIX: escribe AMBOS campos (nivel/severidad y estado/status) para que coordinador y admin lo vean
+    await addDoc(collection(db,'novedades_mantenimiento'),{
+      tipo, area, descripcion:desc,
+      nivel,
+      severidad: nivel.toUpperCase()==='CRITICA'?'CRÍTICO':nivel.toUpperCase()==='MEDIA'?'MEDIO':'BAJO',
+      foto_url:fotoUrl,
+      estado:'abierta',
+      status:'ABIERTO',
+      fecha:fechaHoy(),
+      reportado_por:S.uid,
+      reportado_por_nombre:S.nombre,
+      creado_por:S.nombre,
+      rol:'todero',
+      creado_en:serverTimestamp(),
+      timestamp:serverTimestamp()
+    });
+    document.getElementById('nov-descripcion').value='';
+    document.getElementById('nov-foto-preview').style.display='none';
+    document.getElementById('nov-foto-btn').className='foto-btn';
+    document.getElementById('nov-foto-btn').textContent='📷 Tomar foto de la novedad';
+    document.querySelector('input[name="nov-nivel"][value="media"]').checked=true;
+    actualizarNivel();
+    S.fotoNovBlob=null;
+    toast('✅ Novedad reportada correctamente');
+  } catch(e){ console.error(e); toast('Error al enviar novedad', 'error'); }
+  finally { S.enviando=false; btn.textContent='🚨 Enviar Novedad'; btn.disabled=false; }
+};
+
+function renderHistorial() {
+  const cont = document.getElementById('lista-historial');
+  if(!S.historial.length){ cont.innerHTML='<div class="empty"><div class="icon">📂</div><p>Sin registros en los últimos 7 días</p></div>'; return; }
+
+  const porFecha = {};
+  S.historial.forEach(t=>{ if(!porFecha[t.fecha]) porFecha[t.fecha]=[];  porFecha[t.fecha].push(t); });
+
+  cont.innerHTML = Object.entries(porFecha).map(([fecha,tareas])=>`
+    <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;margin-top:8px;text-transform:uppercase">${fecha}</div>
+    ${tareas.map(t=>{
+      const estadoBadges = {aprobada:'badge-aprobada',rechazada:'badge-rechazada',completada_pendiente_revision:'badge-completada',en_proceso:'badge-en-proceso',pendiente:'badge-pendiente'};
+      const estadoLabels = {aprobada:'✅ Aprobada',rechazada:'↩️ Devuelta',completada_pendiente_revision:'🔍 En revisión',en_proceso:'🔄 En proceso',pendiente:'⏳ Pendiente'};
+      return `<div class="list-item ${t.prioridad}" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div class="list-item-title">${t.titulo}</div>
+            <div class="list-item-sub">${t.area||'—'}</div>
+          </div>
+          <span class="badge-estado ${estadoBadges[t.estado]||'badge-pendiente'}">${estadoLabels[t.estado]||t.estado}</span>
+        </div>
+        ${t.rechazo_motivo?`<div style="font-size:11px;color:var(--danger);margin-top:4px">Devuelta: ${t.rechazo_motivo}</div>`:''}
+      </div>`;
+    }).join('')}`).join('');
+}
+
+window.navTo = function(sec,btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active');
+  btn.classList.add('active');
+};
+
+actualizarNivel();
+iniciarListeners();
+</script>
+</body>
+</html>

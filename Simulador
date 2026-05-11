@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCO3 · Simulador de Día Completo</title>
+<style>
+:root {
+  --primary: #1e3a5f;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --purple: #7c3aed;
+  --bg: #f0f4f8;
+  --card: #fff;
+  --border: #e2e8f0;
+  --text: #1a202c;
+  --muted: #64748b;
+  --radius: 12px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #0f2040, #1e3a5f);
+  color: #fff;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.header h1 { font-size: 20px; font-weight: 700; }
+.header p { font-size: 13px; opacity: .75; margin-top: 4px; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+/* CARDS */
+.card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 16px; overflow: hidden; }
+.card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: #fafcff; }
+.card-header h2 { font-size: 14px; font-weight: 700; color: var(--primary); }
+.card-body { padding: 18px; }
+
+/* STATUS STRIP */
+.status-strip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px;
+  background: #f0fdf4; border-bottom: 1px solid #86efac;
+  font-size: 13px; color: #065f46; font-weight: 600;
+  display: none;
+}
+.status-strip.show { display: flex; }
+.status-strip.error { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+
+/* GRID */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+@media(max-width:600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ROLE CARDS */
+.role-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--card);
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.role-card:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30,58,95,.1); }
+.role-card .role-icon { font-size: 24px; margin-bottom: 6px; }
+.role-card .role-name { font-weight: 700; font-size: 13px; color: var(--primary); }
+.role-card .role-desc { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+.role-card .role-url { font-size: 10px; color: var(--muted); margin-top: 8px; word-break: break-all; background: var(--bg); padding: 4px 6px; border-radius: 6px; }
+.role-card input.url-input {
+  width: 100%; font-size: 11px; padding: 4px 6px; margin-top: 6px;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--bg);
+  color: var(--text); font-family: monospace;
+}
+.role-card input.url-input:focus { outline: none; border-color: var(--primary); }
+.open-btn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; margin-top: 8px; padding: 7px 10px;
+  background: var(--primary); color: #fff; border: none;
+  border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; width: 100%; font-family: inherit;
+  transition: background .2s;
+}
+.open-btn:hover { background: #2d5a8e; }
+.open-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+/* SEED BUTTONS */
+.seed-section { margin-bottom: 16px; }
+.btn-seed {
+  display: flex; align-items: center; gap: 8px;
+  padding: 13px 20px; border: none; border-radius: 10px;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all .2s; width: 100%;
+  justify-content: center;
+}
+.btn-seed-primary { background: var(--primary); color: #fff; }
+.btn-seed-primary:hover { background: #2d5a8e; }
+.btn-seed-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.btn-seed-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fca5a5; }
+.btn-seed-danger:hover { background: #fee2e2; }
+
+/* SCENARIO STEPS */
+.scenario-step {
+  display: flex; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.scenario-step:last-child { border-bottom: none; }
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-role { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.step-action { font-size: 13px; font-weight: 600; margin-top: 2px; }
+.step-desc { font-size: 12px; color: var(--muted); margin-top:2px; line-height: 1.5; }
+.step-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+
+/* PROGRESS */
+.progress-wrap { margin: 16px 0 0; }
+.progress-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+.progress-bar { height: 8px; background: var(--border); border-radius: 8px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--success); border-radius: 8px; transition: width .5s ease; width: 0%; }
+
+/* STATS ROW */
+.stats-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.stat-pill {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  display: flex; align-items: center; gap: 5px;
+}
+.stat-pill.ok { background: #d1fae5; color: #065f46; border-color: #86efac; }
+.stat-pill.pending { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+
+/* LOG */
+.log-box {
+  background: #0f172a; color: #94a3b8;
+  border-radius: 8px; padding: 12px;
+  font-family: monospace; font-size: 11px;
+  max-height: 180px; overflow-y: auto;
+  line-height: 1.7;
+  display: none;
+}
+.log-box.show { display: block; }
+.log-line.ok { color: #10b981; }
+.log-line.err { color: #ef4444; }
+.log-line.info { color: #60a5fa; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 4px 0 16px; }
+.section-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏗️ PCO3 — Simulador de Día Completo</h1>
+  <p>Genera datos realistas en Firebase y lanza todos los módulos sincronizados</p>
+</div>
+
+<div class="container">
+
+  <!-- URLS DE LOS MÓDULOS -->
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:18px">🔗</span>
+      <h2>Paso 1 — URLs de los módulos en GHL</h2>
+    </div>
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Pega aquí las URLs públicas de cada módulo en Innova Sync. Quedan guardadas en el navegador.</p>
+      <div class="grid-2">
+        <div class="role-card">
+          <div class="role-icon">🏊</div>
+          <div class="role-name">Piscinero</div>
+          <input class="url-input" id="url-piscinero" placeholder="https://..." oninput="guardarUrl('piscinero',this.value)">
+          <button class="open-btn" onclick="abrirModulo('piscinero','Piscinero Test','piscinero_sim')">Abrir</button>
+        </div>
+        <div class="role-card">
+          <div class="role-icon">🏊</div>
+          <div class="role-name">Operador Piscina</div>
+          <input class="url-input" id="url-operador-piscina" placeholder="https://..." oninput="guardarUrl('operador-piscina',this.value)">
+          <button class="open-btn" onclick="abrirModulo('operador-piscina','Operador Sim','operador_pool_sim')">Abrir</button>
+        </div>
+        <div class="role-card">
+          <div class="role-icon">🔧</div>
+          <div class="role-name">Todero</div>
+          <input class="url-input" id="url-todero" placeholder="https://..." oninput="guardarUrl('todero',this.value)">
+          <button class="open-btn" onclick="abrirModulo('todero','Todero Test','todero_sim')">Abrir</button>
+        </div>
+        <div class="role-card">
+          <div class="role-icon">📊</div>
+          <div class="role-name">Coordinador</div>
+          <input class="url-input" id="url-coordinador" placeholder="https://..." oninput="guardarUrl('coordinador',this.value)">
+          <button class="open-btn" onclick="abrirModulo('coordinador','Coord Sim','coord_sim')">Abrir</button>
+        </div>
+        <div class="role-card">
+          <div class="role-icon">📋</div>
+          <div class="role-name">Asistente</div>
+          <input class="url-input" id="url-asistente" placeholder="https://..." oninput="guardarUrl('asistente',this.value)">
+          <button class="open-btn" onclick="abrirModulo('asistente','Asistente Sim','asist_sim')">Abrir</button>
+        </div>
+        <div class="role-card">
+          <div class="role-icon">🛡️</div>
+          <div class="role-name">Vigilante</div>
+          <input class="url-input" id="url-vigilante" placeholder="https://..." oninput="guardarUrl('vigilante',this.value)">
+          <button class="open-btn" onclick="abrirModulo('vigilante','Vigilante Sim','vig_sim')">Abrir</button>
+        </div>
+        <div class="role-card">
+          <div class="role-icon">⭐</div>
+          <div class="role-name">SUPSEC</div>
+          <input class="url-input" id="url-supsec" placeholder="https://..." oninput="guardarUrl('supsec',this.value)">
+          <button class="open-btn" onclick="abrirModulo('supsec','SUPSEC Sim','supsec_sim')">Abrir</button>
+        </div>
+        <div class="role-card">
+          <div class="role-icon">👑</div>
+          <div class="role-name">Administrador</div>
+          <input class="url-input" id="url-administrador" placeholder="https://..." oninput="guardarUrl('administrador',this.value)">
+          <button class="open-btn" onclick="abrirModulo('administrador','Admin Sim','admin_sim')">Abrir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEED DE DATOS -->
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:18px">🌱</span>
+      <h2>Paso 2 — Generar datos del día de simulación</h2>
+    </div>
+
+    <div class="status-strip" id="status-strip"></div>
+
+    <div class="card-body">
+      <div class="stats-row" id="stats-row" style="display:none">
+        <div class="stat-pill ok" id="pill-reservas">✓ Reservas</div>
+        <div class="stat-pill ok" id="pill-accesos">✓ Accesos</div>
+        <div class="stat-pill ok" id="pill-tareas">✓ Tareas</div>
+        <div class="stat-pill ok" id="pill-novedades">✓ Novedades</div>
+        <div class="stat-pill ok" id="pill-pqr">✓ PQRs</div>
+        <div class="stat-pill ok" id="pill-corr">✓ Correspondencia</div>
+      </div>
+
+      <div class="progress-wrap" id="progress-wrap" style="display:none">
+        <div class="progress-label"><span id="progress-txt">Preparando...</span><span id="progress-pct">0%</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <button class="btn-seed btn-seed-primary" id="btn-seed" onclick="seedData()" style="flex:2">
+          🌱 Generar datos del día de hoy
+        </button>
+        <button class="btn-seed btn-seed-danger" onclick="limpiarDatos()" style="flex:1">
+          🗑️ Limpiar datos de hoy
+        </button>
+      </div>
+
+      <div class="log-box" id="log-box"></div>
+
+      <p style="font-size:12px;color:var(--muted);margin-top:10px">
+        Los datos se crean con fecha de <strong>hoy</strong>. Al abrir los módulos verás todo sincronizado en tiempo real.
+      </p>
+    </div>
+  </div>
+
+  <!-- ESCENARIO DEL DÍA -->
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:18px">🎬</span>
+      <h2>Paso 3 — Guión del día de simulación</h2>
+    </div>
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Sigue este guión con las pestañas abiertas. Cada acción es visible en tiempo real en los otros módulos.</p>
+
+      <div class="scenario-step">
+        <div class="step-num">1</div>
+        <div class="step-icon">🏊</div>
+        <div>
+          <div class="step-role">Piscinero · 8:00am</div>
+          <div class="step-action">Completar el checklist de apertura</div>
+          <div class="step-desc">Entra al módulo Piscinero → Checklist → Marca los 12 ítems → Guarda. Aparece ✅ en el dashboard del Coordinador.</div>
+        </div>
+      </div>
+
+      <div class="scenario-step">
+        <div class="step-num">2</div>
+        <div class="step-icon">🛡️</div>
+        <div>
+          <div class="step-role">Vigilante · 8:15am</div>
+          <div class="step-action">Registrar visitante + primera ronda</div>
+          <div class="step-desc">Entra al módulo Vigilante → Acceso → Registra un visitante → Luego Rondas → Selecciona "Perimetral" → Toma foto → Guarda. El SUPSEC lo ve en tiempo real.</div>
+        </div>
+      </div>
+
+      <div class="scenario-step">
+        <div class="step-num">3</div>
+        <div class="step-icon">🔧</div>
+        <div>
+          <div class="step-role">Todero · 9:00am</div>
+          <div class="step-action">Iniciar y completar la tarea asignada</div>
+          <div class="step-desc">La tarea "Reparar llave de paso piso 3" ya está creada. Todero → Mis Tareas → Iniciar → (hacer el trabajo) → Completar → Foto + notas. El Coordinador recibe la notificación.</div>
+        </div>
+      </div>
+
+      <div class="scenario-step">
+        <div class="step-num">4</div>
+        <div class="step-icon">📊</div>
+        <div>
+          <div class="step-role">Coordinador · 9:15am</div>
+          <div class="step-action">Verificar tarea → Aprobar o devolver</div>
+          <div class="step-desc">Coordinador → Tareas → "Para verificar" → Ver foto y notas del Todero → Aprobar ✅. O si algo falta, usar "↩️ Devolver con diagnóstico". El Todero recibe el mensaje al instante.</div>
+        </div>
+      </div>
+
+      <div class="scenario-step">
+        <div class="step-num">5</div>
+        <div class="step-icon">🏊</div>
+        <div>
+          <div class="step-role">Operador Piscina · 10:00am</div>
+          <div class="step-action">Abrir piscina + registrar primera ronda</div>
+          <div class="step-desc">Operador → Apertura → Foto + pH + cloro + checklist → "Abrir piscina". Luego Aforo → registra entradas con ➕. El Piscinero ve el aforo en su dashboard.</div>
+        </div>
+      </div>
+
+      <div class="scenario-step">
+        <div class="step-num">6</div>
+        <div class="step-icon">🚨</div>
+        <div>
+          <div class="step-role">Piscinero · 11:00am</div>
+          <div class="step-action">Reportar novedad CRÍTICA (suspensión)</div>
+          <div class="step-desc">Piscinero → Novedades → Severidad CRÍTICO → "Cloro fuera de rango peligroso" → Confirmar. Aparece banner rojo en Coordinador, SUPSEC y Administrador. La piscina queda SUSPENDIDA.</div>
+        </div>
+      </div>
+
+      <div class="scenario-step">
+        <div class="step-num">7</div>
+        <div class="step-icon">📊</div>
+        <div>
+          <div class="step-role">Coordinador · 11:05am</div>
+          <div class="step-action">Ver suspensión → Reactivar servicio</div>
+          <div class="step-desc">Coordinador → Servicios → Banner rojo "Piscina SUSPENDIDA" → Botón "▶ Reactivar" → Escribir motivo → Confirmar. El Piscinero y Operador ven la piscina activa de nuevo.</div>
+        </div>
+      </div>
+
+      <div class="scenario-step">
+        <div class="step-num">8</div>
+        <div class="step-icon">📋</div>
+        <div>
+          <div class="step-role">Asistente · 2:00pm</div>
+          <div class="step-action">Gestionar PQR de residente + correspondencia</div>
+          <div class="step-desc">Ya hay una PQR creada. Asistente → PQR → "Gestionar" → Escribe respuesta → Cambia estado a "En gestión". Luego Mora/Correspondencia → Marcar paquete como entregado.</div>
+        </div>
+      </div>
+
+      <div class="scenario-step">
+        <div class="step-num">9</div>
+        <div class="step-icon">📊</div>
+        <div>
+          <div class="step-role">Coordinador · 5:00pm</div>
+          <div class="step-action">Cerrar novedades del día</div>
+          <div class="step-desc">Coordinador → Novedades → filtro "Listo cierre" → Cerrar cada novedad con comentario. El sistema queda limpio para el día siguiente.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DATOS CREADOS -->
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:18px">📦</span>
+      <h2>¿Qué datos se crean al hacer Seed?</h2>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div>
+          <div class="section-title">Reservas de piscina</div>
+          <div style="font-size:13px;line-height:1.8;color:var(--muted)">
+            • Carlos Rueda · T1-302 · 10:00am · 3 personas<br>
+            • María Gómez · T2-501 · 2:00pm · 5 personas<br>
+            • Pedro Torres · T3-108 · 4:00pm · 2 personas
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Accesos de seguridad</div>
+          <div style="font-size:13px;line-height:1.8;color:var(--muted)">
+            • Visitante: Juan López → T1-101<br>
+            • Domicilio: Rappi → T2-405<br>
+            • Vehículo: ABC-123 Mazda Rojo
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Tareas de mantenimiento</div>
+          <div style="font-size:13px;line-height:1.8;color:var(--muted)">
+            • Reparar llave de paso piso 3 (Alta · Todero)<br>
+            • Limpieza zona BBQ post-evento (Media · Aseo)<br>
+            • Revisar iluminación parqueadero (Baja · Todero)
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Novedades del sistema</div>
+          <div style="font-size:13px;line-height:1.8;color:var(--muted)">
+            • Seguridad: Ruido excesivo T3-202 (Media)<br>
+            • Piscina: Fuga menor en filtro (Media)<br>
+            • PQR: Queja por ruido de vecino
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Correspondencia</div>
+          <div style="font-size:13px;line-height:1.8;color:var(--muted)">
+            • Paquete Amazon → T1-201<br>
+            • Carta Bancolombia → T2-304<br>
+            • Documento legal → T3-501
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Mora (control)</div>
+          <div style="font-size:13px;line-height:1.8;color:var(--muted)">
+            • T1-401 Hernández · 2 meses<br>
+            • T2-203 Vargas · 1 mes<br>
+            • T3-302 Mejía · Al día ✅
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, addDoc, setDoc, doc, getDocs, query, where, deleteDoc, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+  authDomain: "registro-residentes.firebaseapp.com",
+  projectId: "registro-residentes",
+  storageBucket: "registro-residentes.firebasestorage.app",
+  messagingSenderId: "646123326163",
+  appId: "1:646123326163:web:8b35b955e7b3692536a226"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// FIX: zona horaria Bogotá
+function fechaHoy() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+const HOY = fechaHoy();
+let totalSteps = 0;
+let doneSteps = 0;
+
+// LOG
+function log(msg, tipo='info') {
+  const box = document.getElementById('log-box');
+  box.classList.add('show');
+  const line = document.createElement('div');
+  line.className = `log-line ${tipo}`;
+  line.textContent = `[${new Date().toLocaleTimeString('es-CO')}] ${msg}`;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setProgress(txt, pct) {
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('progress-txt').textContent = txt;
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function setStatus(msg, esError = false) {
+  const strip = document.getElementById('status-strip');
+  strip.textContent = msg;
+  strip.classList.add('show');
+  strip.classList.toggle('error', esError);
+}
+
+// GUARDAR URLs EN LOCALSTORAGE
+window.guardarUrl = function(modulo, url) {
+  localStorage.setItem(`pco3_sim_url_${modulo}`, url);
+};
+
+// ABRIR MÓDULO EN NUEVA PESTAÑA
+window.abrirModulo = function(modulo, nombre, uid) {
+  const input = document.getElementById(`url-${modulo}`);
+  const url = (input && input.value.trim()) || localStorage.getItem(`pco3_sim_url_${modulo}`) || '';
+  if (!url) {
+    alert(`Pega primero la URL del módulo "${modulo}"`);
+    return;
+  }
+  const sep = url.includes('?') ? '&' : '?';
+  window.open(`${url}${sep}uid=${uid}&nombre=${encodeURIComponent(nombre)}&rol=${modulo}`, '_blank');
+};
+
+// CARGAR URLs GUARDADAS
+function cargarUrlsGuardadas() {
+  const modulos = ['piscinero','operador-piscina','todero','coordinador','asistente','vigilante','supsec','administrador'];
+  modulos.forEach(m => {
+    const saved = localStorage.getItem(`pco3_sim_url_${m}`);
+    const el = document.getElementById(`url-${m}`);
+    if (saved && el) el.value = saved;
+  });
+}
+cargarUrlsGuardadas();
+
+// SEED DATA
+window.seedData = async function() {
+  const btn = document.getElementById('btn-seed');
+  btn.disabled = true; btn.textContent = '⏳ Generando datos...';
+  document.getElementById('stats-row').style.display = 'flex';
+  document.getElementById('log-box').innerHTML = '';
+
+  try {
+    log('Iniciando seed de datos para ' + HOY, 'info');
+    setProgress('Creando reservas de piscina...', 10);
+
+    // 1. RESERVAS DE PISCINA
+    const reservas = [
+      { nombre: 'Carlos Rueda', nombre_residente: 'Carlos Rueda', torre: 'T1', apartamento: '302', torre_apto: 'T1-302', espacio: 'Piscina & Jacuzzi', fecha: HOY, hora: '10:00', numPersonas: 3, num_personas: 3, estado: 'confirmada', creado_en: serverTimestamp() },
+      { nombre: 'María Gómez', nombre_residente: 'María Gómez', torre: 'T2', apartamento: '501', torre_apto: 'T2-501', espacio: 'Piscina & Jacuzzi', fecha: HOY, hora: '14:00', numPersonas: 5, num_personas: 5, estado: 'confirmada', creado_en: serverTimestamp() },
+      { nombre: 'Pedro Torres', nombre_residente: 'Pedro Torres', torre: 'T3', apartamento: '108', torre_apto: 'T3-108', espacio: 'Piscina & Jacuzzi', fecha: HOY, hora: '16:00', numPersonas: 2, num_personas: 2, estado: 'pendiente', creado_en: serverTimestamp() },
+      { nombre: 'Sandra Villa', nombre_residente: 'Sandra Villa', torre: 'T1', apartamento: '505', torre_apto: 'T1-505', espacio: 'BBQ Comunal', fecha: HOY, hora: '12:00', numPersonas: 8, num_personas: 8, estado: 'confirmada', creado_en: serverTimestamp() },
+    ];
+    for (const r of reservas) await addDoc(collection(db, 'reservas'), r);
+    log(`✓ ${reservas.length} reservas creadas`, 'ok');
+    document.getElementById('pill-reservas').textContent = `✓ ${reservas.length} Reservas`;
+    setProgress('Creando accesos...', 25);
+
+    // 2. ACCESOS SEGURIDAD
+    const accesos = [
+      { tipo: 'visitante', nombre: 'Juan López', documento: '12345678', torre: 'T1', apto: '101', torre_apto: 'T1-101', fecha: HOY, estado: 'ingreso', vig_nombre: 'Vigilante Sim', vig_id: 'vig_sim', timestamp: serverTimestamp() },
+      { tipo: 'domicilio', empresa: 'Rappi', nombre: 'Carlos Delivery', torre: 'T2', apto: '405', torre_apto: 'T2-405', fecha: HOY, estado: 'salida', hora_salida: serverTimestamp(), vig_nombre: 'Vigilante Sim', vig_id: 'vig_sim', timestamp: serverTimestamp() },
+      { tipo: 'vehiculo', placa: 'ABC123', marca: 'Mazda', color: 'Rojo', nombre: 'Luis Peña', torre: 'T3', apto: '201', torre_apto: 'T3-201', fecha: HOY, estado: 'ingreso', vig_nombre: 'Vigilante Sim', vig_id: 'vig_sim', timestamp: serverTimestamp() },
+    ];
+    for (const a of accesos) await addDoc(collection(db, 'accesos'), a);
+    log(`✓ ${accesos.length} accesos creados`, 'ok');
+    document.getElementById('pill-accesos').textContent = `✓ ${accesos.length} Accesos`;
+    setProgress('Creando tareas de mantenimiento...', 40);
+
+    // 3. TAREAS MANTENIMIENTO
+    const tareas = [
+      { titulo: 'Reparar llave de paso piso 3', descripcion: 'Hay fuga de agua en el baño del piso 3, torre 1. Residente reportó goteo constante.', area: 'Torres', prioridad: 'alta', asignado_a: 'todero', estado: 'pendiente', fecha: HOY, creado_por: 'coord_sim', creado_por_nombre: 'Coordinador Sim', creado_en: serverTimestamp() },
+      { titulo: 'Limpieza zona BBQ post-evento', descripcion: 'Limpieza general de la zona BBQ después del evento del fin de semana.', area: 'Zona BBQ', prioridad: 'media', asignado_a: 'aseo', estado: 'pendiente', fecha: HOY, creado_por: 'coord_sim', creado_por_nombre: 'Coordinador Sim', creado_en: serverTimestamp() },
+      { titulo: 'Revisar iluminación parqueadero sótano', descripcion: '3 bombillas fundidas en el parqueadero. Visibilidad reducida en zona B.', area: 'Parqueaderos', prioridad: 'baja', asignado_a: 'todero', estado: 'pendiente', fecha: HOY, creado_por: 'coord_sim', creado_por_nombre: 'Coordinador Sim', creado_en: serverTimestamp() },
+    ];
+    for (const t of tareas) await addDoc(collection(db, 'tareas_mantenimiento'), t);
+    log(`✓ ${tareas.length} tareas creadas`, 'ok');
+    document.getElementById('pill-tareas').textContent = `✓ ${tareas.length} Tareas`;
+    setProgress('Creando novedades...', 55);
+
+    // 4. NOVEDADES
+    const novSeg = [
+      { tipo: 'convivencia', area: 'Torre 3 piso 2', descripcion: 'Residente del 302 reporta ruido excesivo proveniente del apartamento 202. Música alta después de las 10pm.', nivel: 'media', severidad: 'MEDIO', estado: 'abierta', status: 'ABIERTO', fecha: HOY, vig_nombre: 'Vigilante Sim', vig_uid: 'vig_sim', creado_por: 'Vigilante Sim', creado_en: serverTimestamp(), timestamp: serverTimestamp() },
+    ];
+    for (const n of novSeg) await addDoc(collection(db, 'seg_novedades'), n);
+
+    const novPool = [
+      { tipo: 'Fuga de agua', area: 'Cuarto de filtros', descripcion: 'Se detecta fuga menor en la conexión del filtro principal. No afecta la operación aún pero requiere revisión urgente.', nivel: 'media', severidad: 'MEDIO', estado: 'abierta', status: 'ABIERTO', fecha: HOY, piscinero_nombre: 'Piscinero Test', creado_por: 'Piscinero Test', modulo_origen: 'A', creado_en: serverTimestamp(), timestamp: serverTimestamp() },
+    ];
+    for (const n of novPool) await addDoc(collection(db, 'pool_novedades'), n);
+
+    log('✓ 2 novedades creadas (seguridad + piscina)', 'ok');
+    document.getElementById('pill-novedades').textContent = '✓ 2 Novedades';
+    setProgress('Creando PQRs...', 70);
+
+    // 5. PQRs
+    const pqrs = [
+      { tipo: 'queja', torre_apto: 'T3-302', nombre_residente: 'Luisa Martínez', descripcion: 'El vecino del apartamento 202 pone música muy alta todas las noches. Ya he hablado con él directamente sin resultado. Solicito intervención de administración.', canal: 'presencial', estado: 'abierto', fecha: HOY, creado_por: 'asist_sim', creado_por_nombre: 'Asistente Sim', creado_en: serverTimestamp() },
+      { tipo: 'solicitud', torre_apto: 'T1-105', nombre_residente: 'Roberto Ávila', descripcion: 'Solicito información sobre el proceso para registrar un vehículo adicional en el parqueadero de visitantes. Tengo un segundo carro y no sé si hay disponibilidad.', canal: 'telefono', estado: 'abierto', fecha: HOY, creado_por: 'asist_sim', creado_por_nombre: 'Asistente Sim', creado_en: serverTimestamp() },
+    ];
+    for (const p of pqrs) await addDoc(collection(db, 'pqr'), p);
+    log(`✓ ${pqrs.length} PQRs creadas`, 'ok');
+    document.getElementById('pill-pqr').textContent = `✓ ${pqrs.length} PQRs`;
+    setProgress('Creando correspondencia...', 80);
+
+    // 6. CORRESPONDENCIA
+    const corr = [
+      { tipo: 'paquete', torre_apto: 'T1-201', remitente: 'Amazon', descripcion: 'Caja mediana - electrónica', entregado: false, fecha: HOY, registrado_por: 'asist_sim', registrado_por_nombre: 'Asistente Sim', hora_recepcion: serverTimestamp() },
+      { tipo: 'carta', torre_apto: 'T2-304', remitente: 'Bancolombia', descripcion: 'Extracto bancario + tarjeta', entregado: false, fecha: HOY, registrado_por: 'asist_sim', registrado_por_nombre: 'Asistente Sim', hora_recepcion: serverTimestamp() },
+      { tipo: 'documento', torre_apto: 'T3-501', remitente: 'Notaría 42', descripcion: 'Escritura de propiedad', entregado: true, fecha: HOY, registrado_por: 'asist_sim', registrado_por_nombre: 'Asistente Sim', hora_recepcion: serverTimestamp(), fecha_entrega: serverTimestamp(), entregado_por: 'asist_sim' },
+    ];
+    for (const c of corr) await addDoc(collection(db, 'correspondencia'), c);
+    log(`✓ ${corr.length} correspondencias creadas`, 'ok');
+    document.getElementById('pill-corr').textContent = `✓ ${corr.length} Correspondencia`;
+    setProgress('Creando control de mora...', 90);
+
+    // 7. MORA
+    const mora = [
+      { nombre_residente: 'Jorge Hernández', torre_apto: 'T1-401', en_mora: true, mora: true, meses_mora: 2, cuotas_pendientes: 2, valor_mora: 960000 },
+      { nombre_residente: 'Carmen Vargas', torre_apto: 'T2-203', en_mora: true, mora: true, meses_mora: 1, cuotas_pendientes: 1, valor_mora: 480000 },
+      { nombre_residente: 'Felipe Mejía', torre_apto: 'T3-302', en_mora: false, mora: false, meses_mora: 0 },
+    ];
+    for (const m of mora) await addDoc(collection(db, 'mora'), m);
+    log('✓ 3 registros de mora creados', 'ok');
+
+    // 8. ESTADO PISCINA (activa)
+    await setDoc(doc(db, 'pool_estado', HOY), {
+      abierta: false, cerrada: false, suspendida: false,
+      aforo_actual: 0, total_dia: 0,
+      timestamp: serverTimestamp()
+    }, { merge: true });
+
+    setProgress('¡Datos creados exitosamente!', 100);
+    log('✅ SEED COMPLETO — Todos los datos del día están en Firebase', 'ok');
+    setStatus('✅ Datos generados. Abre los módulos y comienza la simulación.');
+
+  } catch(e) {
+    console.error(e);
+    log('❌ Error: ' + e.message, 'err');
+    setStatus('❌ Error al generar datos: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ Datos generados — volver a generar';
+  }
+};
+
+// LIMPIAR DATOS
+window.limpiarDatos = async function() {
+  if(!confirm(`¿Eliminar TODOS los datos de hoy (${HOY}) en Firebase? Esta acción no se puede deshacer.`)) return;
+
+  const colecciones = ['reservas','accesos','tareas_mantenimiento','seg_novedades','pool_novedades','gym_novedades','novedades_mantenimiento','pqr','correspondencia','mora'];
+  log('Limpiando datos del día ' + HOY + '...', 'info');
+  setProgress('Limpiando...', 10);
+
+  let total = 0;
+  for (const col of colecciones) {
+    try {
+      const snap = await getDocs(query(collection(db, col), where('fecha', '==', HOY)));
+      for (const d of snap.docs) { await deleteDoc(d.ref); total++; }
+      log(`✓ ${col}: ${snap.docs.length} documentos eliminados`, 'ok');
+    } catch(e) {
+      log(`⚠️ ${col}: ${e.message}`, 'err');
+    }
+  }
+
+  setProgress('Limpieza completa', 100);
+  log(`🗑️ Total: ${total} documentos eliminados`, 'info');
+  setStatus(`🗑️ ${total} documentos eliminados de la fecha ${HOY}`);
+  document.getElementById('btn-seed').textContent = '🌱 Generar datos del día de hoy';
+};
+</script>
+</body>
+</html>

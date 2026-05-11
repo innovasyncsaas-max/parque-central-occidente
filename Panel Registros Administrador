@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Admin — Registros de Residentes</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --white: #fff;
+  --text: #1a1a2e;
+  --text2: #5a5a72;
+  --border: #e0ddd6;
+  --accent: #2d6a4f;
+  --accent2: #40916c;
+  --accent-light: #d8f3dc;
+  --red: #e63946;
+  --red-light: #ffe8ea;
+  --blue: #1d4ed8;
+  --blue-light: #dbeafe;
+  --yellow: #d97706;
+  --yellow-light: #fef3c7;
+  --font: 'DM Sans', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); font-family:var(--font); color:var(--text); min-height:100vh; }
+
+.topbar {
+  background:var(--accent);
+  padding:16px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+.topbar-title { color:white; font-size:18px; font-weight:700; letter-spacing:0.5px; }
+.topbar-sub { color:rgba(255,255,255,0.7); font-size:12px; margin-top:2px; }
+
+.container { max-width:1200px; margin:0 auto; padding:24px 16px; }
+
+.stats-row {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+  gap:12px;
+  margin-bottom:24px;
+}
+.stat-card {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+  text-align:center;
+}
+.stat-val { font-size:32px; font-weight:700; color:var(--accent); }
+.stat-lbl { font-size:12px; color:var(--text2); margin-top:4px; letter-spacing:0.5px; }
+
+.toolbar {
+  display:flex;
+  gap:10px;
+  margin-bottom:16px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.search-input {
+  flex:1;
+  min-width:200px;
+  padding:10px 14px;
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  font-family:var(--font);
+  font-size:14px;
+  outline:none;
+}
+.search-input:focus { border-color:var(--accent); }
+.btn {
+  padding:10px 18px;
+  border-radius:8px;
+  font-family:var(--font);
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  border:none;
+  transition:all 0.2s;
+  white-space:nowrap;
+}
+.btn-green { background:var(--accent); color:white; }
+.btn-green:hover { background:var(--accent2); }
+.btn-outline { background:var(--white); color:var(--accent); border:1.5px solid var(--accent); }
+.btn-outline:hover { background:var(--accent-light); }
+.btn-red { background:var(--red); color:white; }
+.btn-red:hover { background:#c1121f; }
+.btn-yellow { background:var(--yellow); color:white; }
+.btn-yellow:hover { background:#b45309; }
+
+.table-wrap {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  overflow-x:auto;
+}
+table { width:100%; border-collapse:collapse; font-size:13px; min-width:900px; }
+thead { background:var(--accent); color:white; }
+th { padding:12px 14px; text-align:left; font-weight:600; letter-spacing:0.5px; font-size:12px; white-space:nowrap; }
+td { padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--accent-light); }
+.badge {
+  display:inline-block;
+  padding:3px 8px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.badge-green { background:var(--accent-light); color:var(--accent); }
+.badge-gray { background:#f0f0f0; color:var(--text2); }
+
+.loading { text-align:center; padding:40px; color:var(--text2); }
+.spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+.empty { text-align:center; padding:40px; color:var(--text2); font-size:14px; }
+
+/* ── MODAL BASE ── */
+.modal {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.55);
+  z-index:100;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+.modal.open { display:flex; }
+.modal-box {
+  background:var(--white);
+  border-radius:16px;
+  padding:24px;
+  max-width:680px;
+  width:100%;
+  max-height:92vh;
+  overflow-y:auto;
+}
+.modal-title { font-size:18px; font-weight:700; color:var(--accent); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.modal-footer { margin-top:20px; display:flex; justify-content:flex-end; gap:10px; }
+
+/* ── DETAIL ── */
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; }
+.detail-item label { font-size:11px; color:var(--text2); letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:2px; }
+.detail-item span { font-size:13px; font-weight:500; }
+.detail-section { font-size:12px; font-weight:700; color:var(--accent); letter-spacing:1px; text-transform:uppercase; margin:16px 0 8px; padding-top:12px; border-top:1px solid var(--border); }
+
+/* ── EDIT FORM ── */
+.edit-section { font-size:11px; font-weight:700; color:var(--accent); letter-spacing:1px; text-transform:uppercase; margin:18px 0 10px; padding-top:14px; border-top:1px solid var(--border); }
+.edit-section:first-of-type { margin-top:0; padding-top:0; border-top:none; }
+.edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
+.edit-field { display:flex; flex-direction:column; gap:4px; }
+.edit-field.full { grid-column:1/-1; }
+.edit-label { font-size:12px; font-weight:600; color:var(--text); }
+.edit-input {
+  padding:9px 12px;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  font-family:var(--font);
+  font-size:14px;
+  color:var(--text);
+  outline:none;
+  transition:border-color 0.2s;
+  appearance:none; -webkit-appearance:none;
+}
+.edit-input:focus { border-color:var(--accent); background:var(--white); }
+select.edit-input {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5a72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  padding-right:34px;
+}
+
+.toast {
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--accent);
+  color:white;
+  padding:12px 24px;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:600;
+  z-index:999;
+  transition:transform 0.3s ease;
+  box-shadow:0 4px 16px rgba(0,0,0,0.2);
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.error { background:var(--red); }
+
+.saving-overlay {
+  position:absolute; inset:0;
+  background:rgba(255,255,255,0.8);
+  border-radius:16px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:10px;
+  z-index:10;
+}
+.saving-overlay.show { display:flex; }
+.modal-box { position:relative; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">🏠 Panel Admin — Residentes</div>
+    <div class="topbar-sub">Registros del conjunto residencial</div>
+  </div>
+  <div style="color:white;font-size:12px;" id="last-update"></div>
+</div>
+
+<div class="container">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val" id="stat-total">0</div><div class="stat-lbl">Total Registros</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-hoy">0</div><div class="stat-lbl">Registros Hoy</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-propietarios">0</div><div class="stat-lbl">Propietarios Habitan</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-mascotas">0</div><div class="stat-lbl">Con Mascotas</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-carros">0</div><div class="stat-lbl">Con Carro(s)</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" class="search-input" id="search" placeholder="🔍 Buscar por nombre, torre, apto..." oninput="filterTable()">
+    <button class="btn btn-green" onclick="exportCSV()">📥 Exportar CSV</button>
+    <button class="btn btn-outline" onclick="loadData()">🔄 Actualizar</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="loading" id="loading-state">
+      <div class="spinner"></div>
+      Cargando registros...
+    </div>
+    <table id="main-table" style="display:none">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Fecha</th>
+          <th>Torre/Apto</th>
+          <th>Propietario</th>
+          <th>Residente</th>
+          <th>Teléfono</th>
+          <th>Habita</th>
+          <th>Mascotas</th>
+          <th>Vehículos</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="empty" id="empty-state" style="display:none">No hay registros aún.</div>
+  </div>
+</div>
+
+<!-- MODAL VER DETALLE -->
+<div class="modal" id="detail-modal" onclick="closeModalBg(event,'detail-modal')">
+  <div class="modal-box">
+    <div class="modal-title">👁 <span id="modal-title">Detalle del Registro</span></div>
+    <div id="modal-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-yellow" onclick="switchToEdit()">✏️ Editar este registro</button>
+      <button class="btn btn-outline" onclick="closeModalDirect('detail-modal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal" id="edit-modal" onclick="closeModalBg(event,'edit-modal')">
+  <div class="modal-box">
+    <div class="saving-overlay" id="saving-overlay">
+      <div class="spinner"></div>
+      <span style="font-size:14px;color:var(--text2);font-weight:500;">Guardando cambios...</span>
+    </div>
+    <div class="modal-title">✏️ Editar Registro — <span id="edit-modal-title"></span></div>
+
+    <!-- Inmueble -->
+    <div class="edit-section">🏢 Inmueble</div>
+    <div class="edit-grid">
+      <div class="edit-field">
+        <label class="edit-label">Torre</label>
+        <select class="edit-input" id="e-torre">
+          <option value="1">Torre 1</option>
+          <option value="2">Torre 2</option>
+          <option value="3">Torre 3</option>
+          <option value="4">Torre 4</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Apartamento</label>
+        <input type="number" class="edit-input" id="e-apto" min="1">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">¿Tiene depósito?</label>
+        <select class="edit-input" id="e-tiene-deposito">
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Número depósito</label>
+        <input type="text" class="edit-input" id="e-num-deposito" placeholder="Ej: D-101">
+      </div>
+    </div>
+
+    <!-- Propietario -->
+    <div class="edit-section">👤 Propietario</div>
+    <div class="edit-grid">
+      <div class="edit-field full">
+        <label class="edit-label">Nombre completo</label>
+        <input type="text" class="edit-input" id="e-nombre-propietario">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Teléfono</label>
+        <input type="tel" class="edit-input" id="e-tel-propietario">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Email</label>
+        <input type="email" class="edit-input" id="e-email-propietario">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">¿Habita el inmueble?</label>
+        <select class="edit-input" id="e-habita">
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Quien diligencia -->
+    <div class="edit-section">📝 Quien diligencia</div>
+    <div class="edit-grid">
+      <div class="edit-field full">
+        <label class="edit-label">Nombre completo</label>
+        <input type="text" class="edit-input" id="e-nombre-residente">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Teléfono</label>
+        <input type="tel" class="edit-input" id="e-tel-residente">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Email</label>
+        <input type="email" class="edit-input" id="e-email-residente">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Tipo de documento</label>
+        <select class="edit-input" id="e-tipo-doc">
+          <option>Cédula de Ciudadanía</option>
+          <option>Cédula de Extranjería</option>
+          <option>Pasaporte</option>
+          <option>Tarjeta de Identidad</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Número de documento</label>
+        <input type="text" class="edit-input" id="e-num-doc">
+      </div>
+    </div>
+
+    <!-- Composición -->
+    <div class="edit-section">👨‍👩‍👧‍👦 Composición del Hogar</div>
+    <div class="edit-grid">
+      <div class="edit-field">
+        <label class="edit-label">¿Hay menores?</label>
+        <select class="edit-input" id="e-tiene-menores">
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Cant. menores</label>
+        <input type="number" class="edit-input" id="e-cant-menores" min="0">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">¿Hay adultos?</label>
+        <select class="edit-input" id="e-tiene-adultos">
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Cant. adultos</label>
+        <input type="number" class="edit-input" id="e-cant-adultos" min="0">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">¿Hay adultos mayores?</label>
+        <select class="edit-input" id="e-tiene-adultos-m">
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Cant. adultos mayores</label>
+        <input type="number" class="edit-input" id="e-cant-adultos-m" min="0">
+      </div>
+    </div>
+
+    <!-- Mascotas -->
+    <div class="edit-section">🐾 Mascotas</div>
+    <div class="edit-grid">
+      <div class="edit-field">
+        <label class="edit-label">¿Tiene mascotas?</label>
+        <select class="edit-input" id="e-tiene-mascotas">
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Cantidad</label>
+        <select class="edit-input" id="e-cant-mascotas">
+          <option value="">—</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </div>
+      <!-- Mascota 1 -->
+      <div class="edit-field"><label class="edit-label">M1 — Tipo</label><select class="edit-input" id="e-m1-tipo"><option value="">—</option><option>Perro</option><option>Gato</option><option>Ave</option><option>Otro</option></select></div>
+      <div class="edit-field"><label class="edit-label">M1 — Nombre</label><input type="text" class="edit-input" id="e-m1-nombre"></div>
+      <div class="edit-field"><label class="edit-label">M1 — Raza</label><input type="text" class="edit-input" id="e-m1-raza"></div>
+      <div class="edit-field"><label class="edit-label">M1 — Tamaño</label><select class="edit-input" id="e-m1-tamano"><option value="">—</option><option>Pequeño</option><option>Mediano</option><option>Grande</option></select></div>
+      <!-- Mascota 2 -->
+      <div class="edit-field"><label class="edit-label">M2 — Tipo</label><select class="edit-input" id="e-m2-tipo"><option value="">—</option><option>Perro</option><option>Gato</option><option>Ave</option><option>Otro</option></select></div>
+      <div class="edit-field"><label class="edit-label">M2 — Nombre</label><input type="text" class="edit-input" id="e-m2-nombre"></div>
+      <div class="edit-field"><label class="edit-label">M2 — Raza</label><input type="text" class="edit-input" id="e-m2-raza"></div>
+      <div class="edit-field"><label class="edit-label">M2 — Tamaño</label><select class="edit-input" id="e-m2-tamano"><option value="">—</option><option>Pequeño</option><option>Mediano</option><option>Grande</option></select></div>
+    </div>
+
+    <!-- Carros -->
+    <div class="edit-section">🚗 Carros</div>
+    <div class="edit-grid">
+      <div class="edit-field"><label class="edit-label">¿Tiene Carro 1?</label><select class="edit-input" id="e-tiene-c1"><option value="Sí">Sí</option><option value="No">No</option></select></div>
+      <div class="edit-field"><label class="edit-label">C1 — Placa</label><input type="text" class="edit-input" id="e-c1-placa"></div>
+      <div class="edit-field"><label class="edit-label">C1 — Marca</label><input type="text" class="edit-input" id="e-c1-marca"></div>
+      <div class="edit-field"><label class="edit-label">C1 — Modelo</label><input type="text" class="edit-input" id="e-c1-modelo"></div>
+      <div class="edit-field"><label class="edit-label">C1 — Color</label><input type="text" class="edit-input" id="e-c1-color"></div>
+      <div class="edit-field"><label class="edit-label">C1 — Parqueadero</label><input type="text" class="edit-input" id="e-c1-num-parq" placeholder="Ej: P-101"></div>
+
+      <div class="edit-field"><label class="edit-label">¿Tiene Carro 2?</label><select class="edit-input" id="e-tiene-c2"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+      <div class="edit-field"><label class="edit-label">C2 — Placa</label><input type="text" class="edit-input" id="e-c2-placa"></div>
+      <div class="edit-field"><label class="edit-label">C2 — Marca</label><input type="text" class="edit-input" id="e-c2-marca"></div>
+      <div class="edit-field"><label class="edit-label">C2 — Modelo</label><input type="text" class="edit-input" id="e-c2-modelo"></div>
+      <div class="edit-field"><label class="edit-label">C2 — Color</label><input type="text" class="edit-input" id="e-c2-color"></div>
+      <div class="edit-field"><label class="edit-label">C2 — Parqueadero</label><input type="text" class="edit-input" id="e-c2-num-parq" placeholder="Ej: P-102"></div>
+    </div>
+
+    <!-- Motos -->
+    <div class="edit-section">🏍️ Motos</div>
+    <div class="edit-grid">
+      <div class="edit-field"><label class="edit-label">¿Tiene Moto 1?</label><select class="edit-input" id="e-tiene-mo1"><option value="Sí">Sí</option><option value="No">No</option></select></div>
+      <div class="edit-field"><label class="edit-label">Mo1 — Tipo</label><select class="edit-input" id="e-mo1-tipo"><option value="">—</option><option>Eléctrica</option><option>Combustión</option></select></div>
+      <div class="edit-field"><label class="edit-label">Mo1 — Placa</label><input type="text" class="edit-input" id="e-mo1-placa"></div>
+      <div class="edit-field"><label class="edit-label">Mo1 — Marca</label><input type="text" class="edit-input" id="e-mo1-marca"></div>
+      <div class="edit-field"><label class="edit-label">Mo1 — Modelo</label><input type="text" class="edit-input" id="e-mo1-modelo"></div>
+      <div class="edit-field"><label class="edit-label">Mo1 — Color</label><input type="text" class="edit-input" id="e-mo1-color"></div>
+      <div class="edit-field"><label class="edit-label">Mo1 — Parqueadero</label><input type="text" class="edit-input" id="e-mo1-num-parq"></div>
+
+      <div class="edit-field"><label class="edit-label">¿Tiene Moto 2?</label><select class="edit-input" id="e-tiene-mo2"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+      <div class="edit-field"><label class="edit-label">Mo2 — Tipo</label><select class="edit-input" id="e-mo2-tipo"><option value="">—</option><option>Eléctrica</option><option>Combustión</option></select></div>
+      <div class="edit-field"><label class="edit-label">Mo2 — Placa</label><input type="text" class="edit-input" id="e-mo2-placa"></div>
+      <div class="edit-field"><label class="edit-label">Mo2 — Marca</label><input type="text" class="edit-input" id="e-mo2-marca"></div>
+      <div class="edit-field"><label class="edit-label">Mo2 — Modelo</label><input type="text" class="edit-input" id="e-mo2-modelo"></div>
+      <div class="edit-field"><label class="edit-label">Mo2 — Color</label><input type="text" class="edit-input" id="e-mo2-color"></div>
+      <div class="edit-field"><label class="edit-label">Mo2 — Parqueadero</label><input type="text" class="edit-input" id="e-mo2-num-parq"></div>
+    </div>
+
+    <!-- Bicicletas -->
+    <div class="edit-section">🚲 Bicicletas</div>
+    <div class="edit-grid">
+      <div class="edit-field"><label class="edit-label">¿Tiene bicicleta?</label><select class="edit-input" id="e-tiene-bici"><option value="Sí">Sí</option><option value="No">No</option></select></div>
+      <div class="edit-field"><label class="edit-label">Cantidad</label><input type="number" class="edit-input" id="e-bici-cantidad" min="1"></div>
+      <div class="edit-field"><label class="edit-label">Marca</label><input type="text" class="edit-input" id="e-bici-marca"></div>
+      <div class="edit-field"><label class="edit-label">Color</label><input type="text" class="edit-input" id="e-bici-color"></div>
+      <div class="edit-field"><label class="edit-label">Bicicletero</label><input type="text" class="edit-input" id="e-bici-num-parq" placeholder="Ej: B-03"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModalDirect('edit-modal')">Cancelar</button>
+      <button class="btn btn-green" onclick="saveEdit()">💾 Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+  authDomain: "registro-residentes.firebaseapp.com",
+  projectId: "registro-residentes",
+  storageBucket: "registro-residentes.firebasestorage.app",
+  messagingSenderId: "646123326163",
+  appId: "1:646123326163:web:8b35b955e7b3692536a226"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.deleteResidente = async function(id) {
+  await deleteDoc(doc(db, "residentes", id));
+};
+
+window.fetchResidentes = async function() {
+  const snapshot = await getDocs(collection(db, "residentes"));
+  const docs = [];
+  snapshot.forEach(d => docs.push({ id: d.id, ...d.data() }));
+  return docs.sort((a,b) => (b.fechaRegistro?.seconds||0) - (a.fechaRegistro?.seconds||0));
+};
+
+window.updateResidente = async function(id, data) {
+  await updateDoc(doc(db, "residentes", id), data);
+};
+</script>
+
+<script>
+let allData = [];
+let currentIdx = null;
+
+// ── CARGA Y RENDER ────────────────────────────────────────────────────────
+async function loadData() {
+  document.getElementById('loading-state').style.display = 'block';
+  document.getElementById('main-table').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'none';
+  try {
+    allData = await window.fetchResidentes();
+    renderTable(allData);
+    updateStats(allData);
+    document.getElementById('last-update').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-CO');
+  } catch(e) {
+    document.getElementById('loading-state').innerHTML = '❌ Error cargando datos. Verifica la conexión.';
+    console.error(e);
+  }
+}
+
+function renderTable(data) {
+  document.getElementById('loading-state').style.display = 'none';
+  if(!data.length) { document.getElementById('empty-state').style.display = 'block'; return; }
+  document.getElementById('main-table').style.display = 'table';
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = data.map((r, i) => {
+    const fecha = r.fechaRegistro ? new Date(r.fechaRegistro.seconds * 1000).toLocaleDateString('es-CO') : '—';
+    const vehiculos = [
+      r.tieneCarro1==='Sí'?'🚗':'', r.tieneCarro2==='Sí'?'🚗':'',
+      r.tieneMoto1==='Sí'?'🏍️':'', r.tieneMoto2==='Sí'?'🏍️':'',
+      r.tieneBici==='Sí'?'🚲':''
+    ].filter(Boolean).join(' ') || '—';
+    const globalIdx = allData.indexOf(r);
+    return `
+      <tr>
+        <td style="color:var(--text2)">${i+1}</td>
+        <td style="white-space:nowrap">${fecha}</td>
+        <td><strong>Torre ${r.torre||'—'}</strong><br><span style="color:var(--text2)">Apto ${r.apto||'—'}</span></td>
+        <td>${r.nombrePropietario||'—'}</td>
+        <td>${r.nombreResidente||'—'}</td>
+        <td style="white-space:nowrap">${r.telResidente||'—'}</td>
+        <td><span class="badge ${r.habitaPropietario==='Sí'?'badge-green':'badge-gray'}">${r.habitaPropietario||'—'}</span></td>
+        <td><span class="badge ${r.tieneMascotas==='Sí'?'badge-green':'badge-gray'}">${r.tieneMascotas||'—'}</span></td>
+        <td>${vehiculos}</td>
+        <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-outline" style="padding:6px 10px;font-size:11px" onclick="showDetail(${globalIdx})">👁 Ver</button>
+          <button class="btn btn-yellow" style="padding:6px 10px;font-size:11px" onclick="openEdit(${globalIdx})">✏️ Editar</button>
+          <button class="btn btn-red" style="padding:6px 10px;font-size:11px" onclick="deleteRecord('${r.id}', ${globalIdx})">🗑</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function updateStats(data) {
+  document.getElementById('stat-total').textContent = data.length;
+  const hoy = new Date().toLocaleDateString('es-CO');
+  document.getElementById('stat-hoy').textContent = data.filter(r => r.fechaRegistro && new Date(r.fechaRegistro.seconds*1000).toLocaleDateString('es-CO')===hoy).length;
+  document.getElementById('stat-propietarios').textContent = data.filter(r=>r.habitaPropietario==='Sí').length;
+  document.getElementById('stat-mascotas').textContent = data.filter(r=>r.tieneMascotas==='Sí').length;
+  document.getElementById('stat-carros').textContent = data.filter(r=>r.tieneCarro1==='Sí'||r.tieneCarro2==='Sí').length;
+}
+
+function filterTable() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = allData.filter(r =>
+    (r.nombreResidente||'').toLowerCase().includes(q) ||
+    (r.nombrePropietario||'').toLowerCase().includes(q) ||
+    (r.torre||'').toString().includes(q) ||
+    (r.apto||'').toString().includes(q) ||
+    (r.telResidente||'').includes(q)
+  );
+  renderTable(filtered);
+}
+
+// ── VER DETALLE ───────────────────────────────────────────────────────────
+function showDetail(idx) {
+  currentIdx = idx;
+  const r = allData[idx];
+  document.getElementById('modal-title').textContent = `Torre ${r.torre||'—'} — Apto ${r.apto||'—'}`;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-item"><label>Torre</label><span>${r.torre||'—'}</span></div>
+      <div class="detail-item"><label>Apartamento</label><span>${r.apto||'—'}</span></div>
+      <div class="detail-item"><label>Depósito</label><span>${r.tieneDeposito||'—'} ${r.numDeposito?'— '+r.numDeposito:''}</span></div>
+    </div>
+    <div class="detail-section">Propietario</div>
+    <div class="detail-grid">
+      <div class="detail-item"><label>Nombre</label><span>${r.nombrePropietario||'—'}</span></div>
+      <div class="detail-item"><label>Teléfono</label><span>${r.telPropietario||'—'}</span></div>
+      <div class="detail-item"><label>Email</label><span>${r.emailPropietario||'—'}</span></div>
+      <div class="detail-item"><label>Habita el inmueble</label><span>${r.habitaPropietario||'—'}</span></div>
+    </div>
+    <div class="detail-section">Quien diligencia</div>
+    <div class="detail-grid">
+      <div class="detail-item"><label>Nombre</label><span>${r.nombreResidente||'—'}</span></div>
+      <div class="detail-item"><label>Teléfono</label><span>${r.telResidente||'—'}</span></div>
+      <div class="detail-item"><label>Email</label><span>${r.emailResidente||'—'}</span></div>
+      <div class="detail-item"><label>Documento</label><span>${r.tipoDoc||'—'} ${r.numDoc||''}</span></div>
+    </div>
+    <div class="detail-section">Composición del Hogar</div>
+    <div class="detail-grid">
+      <div class="detail-item"><label>Menores de 18</label><span>${r.tieneMenores||'—'} ${r.cantMenores?'('+r.cantMenores+')':''}</span></div>
+      <div class="detail-item"><label>Adultos</label><span>${r.tieneAdultos||'—'} ${r.cantAdultos?'('+r.cantAdultos+')':''}</span></div>
+      <div class="detail-item"><label>Adultos mayores</label><span>${r.tieneAdultosMayores||'—'} ${r.cantAdultosMayores?'('+r.cantAdultosMayores+')':''}</span></div>
+    </div>
+    ${r.tieneMascotas==='Sí'?`
+    <div class="detail-section">Mascotas</div>
+    <div class="detail-grid">
+      ${r.m1Nombre?`<div class="detail-item"><label>Mascota 1</label><span>${r.m1Tipo||''} — ${r.m1Nombre} (${r.m1Raza||'—'}, ${r.m1Tamano||'—'})</span></div>`:''}
+      ${r.m2Nombre?`<div class="detail-item"><label>Mascota 2</label><span>${r.m2Tipo||''} — ${r.m2Nombre} (${r.m2Raza||'—'}, ${r.m2Tamano||'—'})</span></div>`:''}
+    </div>`:''}
+    ${r.tieneCarro1==='Sí'||r.tieneCarro2==='Sí'?`
+    <div class="detail-section">Carros</div>
+    <div class="detail-grid">
+      ${r.tieneCarro1==='Sí'?`<div class="detail-item"><label>Carro 1</label><span>${r.c1Placa||'—'} — ${r.c1Marca||''} ${r.c1Modelo||''} ${r.c1Color||''} ${r.c1NumParq?'| P: '+r.c1NumParq:''}</span></div>`:''}
+      ${r.tieneCarro2==='Sí'?`<div class="detail-item"><label>Carro 2</label><span>${r.c2Placa||'—'} — ${r.c2Marca||''} ${r.c2Modelo||''} ${r.c2Color||''} ${r.c2NumParq?'| P: '+r.c2NumParq:''}</span></div>`:''}
+    </div>`:''}
+    ${r.tieneMoto1==='Sí'||r.tieneMoto2==='Sí'?`
+    <div class="detail-section">Motos</div>
+    <div class="detail-grid">
+      ${r.tieneMoto1==='Sí'?`<div class="detail-item"><label>Moto 1</label><span>${r.mo1Placa||'—'} — ${r.mo1Marca||''} ${r.mo1Modelo||''} (${r.mo1Tipo||''}) ${r.mo1NumParq?'| P: '+r.mo1NumParq:''}</span></div>`:''}
+      ${r.tieneMoto2==='Sí'?`<div class="detail-item"><label>Moto 2</label><span>${r.mo2Placa||'—'} — ${r.mo2Marca||''} ${r.mo2Modelo||''} (${r.mo2Tipo||''}) ${r.mo2NumParq?'| P: '+r.mo2NumParq:''}</span></div>`:''}
+    </div>`:''}
+    ${r.tieneBici==='Sí'?`
+    <div class="detail-section">Bicicletas</div>
+    <div class="detail-grid">
+      <div class="detail-item"><label>Cantidad</label><span>${r.biciCantidad||'—'}</span></div>
+      <div class="detail-item"><label>Marca / Color</label><span>${r.biciMarca||'—'} / ${r.biciColor||'—'}</span></div>
+      ${r.biciNumParq?`<div class="detail-item"><label>Bicicletero</label><span>${r.biciNumParq}</span></div>`:''}
+    </div>`:''}
+  `;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function switchToEdit() {
+  closeModalDirect('detail-modal');
+  openEdit(currentIdx);
+}
+
+// ── EDITAR ────────────────────────────────────────────────────────────────
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.value = val || '';
+}
+
+function openEdit(idx) {
+  currentIdx = idx;
+  const r = allData[idx];
+  document.getElementById('edit-modal-title').textContent = `Torre ${r.torre||'—'} — Apto ${r.apto||'—'}`;
+
+  // Inmueble
+  setVal('e-torre', r.torre);
+  setVal('e-apto', r.apto);
+  setVal('e-tiene-deposito', r.tieneDeposito);
+  setVal('e-num-deposito', r.numDeposito);
+
+  // Propietario
+  setVal('e-nombre-propietario', r.nombrePropietario);
+  setVal('e-tel-propietario', r.telPropietario);
+  setVal('e-email-propietario', r.emailPropietario);
+  setVal('e-habita', r.habitaPropietario);
+
+  // Quien diligencia
+  setVal('e-nombre-residente', r.nombreResidente);
+  setVal('e-tel-residente', r.telResidente);
+  setVal('e-email-residente', r.emailResidente);
+  setVal('e-tipo-doc', r.tipoDoc);
+  setVal('e-num-doc', r.numDoc);
+
+  // Composición
+  setVal('e-tiene-menores', r.tieneMenores);
+  setVal('e-cant-menores', r.cantMenores);
+  setVal('e-tiene-adultos', r.tieneAdultos);
+  setVal('e-cant-adultos', r.cantAdultos);
+  setVal('e-tiene-adultos-m', r.tieneAdultosMayores);
+  setVal('e-cant-adultos-m', r.cantAdultosMayores);
+
+  // Mascotas
+  setVal('e-tiene-mascotas', r.tieneMascotas);
+  setVal('e-cant-mascotas', r.cantMascotas);
+  setVal('e-m1-tipo', r.m1Tipo); setVal('e-m1-nombre', r.m1Nombre); setVal('e-m1-raza', r.m1Raza); setVal('e-m1-tamano', r.m1Tamano);
+  setVal('e-m2-tipo', r.m2Tipo); setVal('e-m2-nombre', r.m2Nombre); setVal('e-m2-raza', r.m2Raza); setVal('e-m2-tamano', r.m2Tamano);
+
+  // Carros
+  setVal('e-tiene-c1', r.tieneCarro1); setVal('e-c1-placa', r.c1Placa); setVal('e-c1-marca', r.c1Marca); setVal('e-c1-modelo', r.c1Modelo); setVal('e-c1-color', r.c1Color); setVal('e-c1-num-parq', r.c1NumParq);
+  setVal('e-tiene-c2', r.tieneCarro2); setVal('e-c2-placa', r.c2Placa); setVal('e-c2-marca', r.c2Marca); setVal('e-c2-modelo', r.c2Modelo); setVal('e-c2-color', r.c2Color); setVal('e-c2-num-parq', r.c2NumParq);
+
+  // Motos
+  setVal('e-tiene-mo1', r.tieneMoto1); setVal('e-mo1-tipo', r.mo1Tipo); setVal('e-mo1-placa', r.mo1Placa); setVal('e-mo1-marca', r.mo1Marca); setVal('e-mo1-modelo', r.mo1Modelo); setVal('e-mo1-color', r.mo1Color); setVal('e-mo1-num-parq', r.mo1NumParq);
+  setVal('e-tiene-mo2', r.tieneMoto2); setVal('e-mo2-tipo', r.mo2Tipo); setVal('e-mo2-placa', r.mo2Placa); setVal('e-mo2-marca', r.mo2Marca); setVal('e-mo2-modelo', r.mo2Modelo); setVal('e-mo2-color', r.mo2Color); setVal('e-mo2-num-parq', r.mo2NumParq);
+
+  // Bicicletas
+  setVal('e-tiene-bici', r.tieneBici); setVal('e-bici-cantidad', r.biciCantidad); setVal('e-bici-marca', r.biciMarca); setVal('e-bici-color', r.biciColor); setVal('e-bici-num-parq', r.biciNumParq);
+
+  document.getElementById('edit-modal').classList.add('open');
+  document.querySelector('#edit-modal .modal-box').scrollTop = 0;
+}
+
+function gv(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+async function saveEdit() {
+  const r = allData[currentIdx];
+  document.getElementById('saving-overlay').classList.add('show');
+
+  const updated = {
+    torre: gv('e-torre'), apto: gv('e-apto'),
+    tieneDeposito: gv('e-tiene-deposito'), numDeposito: gv('e-num-deposito'),
+    nombrePropietario: gv('e-nombre-propietario'), telPropietario: gv('e-tel-propietario'),
+    emailPropietario: gv('e-email-propietario'), habitaPropietario: gv('e-habita'),
+    nombreResidente: gv('e-nombre-residente'), telResidente: gv('e-tel-residente'),
+    emailResidente: gv('e-email-residente'), tipoDoc: gv('e-tipo-doc'), numDoc: gv('e-num-doc'),
+    tieneMenores: gv('e-tiene-menores'), cantMenores: gv('e-cant-menores'),
+    tieneAdultos: gv('e-tiene-adultos'), cantAdultos: gv('e-cant-adultos'),
+    tieneAdultosMayores: gv('e-tiene-adultos-m'), cantAdultosMayores: gv('e-cant-adultos-m'),
+    tieneMascotas: gv('e-tiene-mascotas'), cantMascotas: gv('e-cant-mascotas'),
+    m1Tipo: gv('e-m1-tipo'), m1Nombre: gv('e-m1-nombre'), m1Raza: gv('e-m1-raza'), m1Tamano: gv('e-m1-tamano'),
+    m2Tipo: gv('e-m2-tipo'), m2Nombre: gv('e-m2-nombre'), m2Raza: gv('e-m2-raza'), m2Tamano: gv('e-m2-tamano'),
+    tieneCarro1: gv('e-tiene-c1'), c1Placa: gv('e-c1-placa'), c1Marca: gv('e-c1-marca'), c1Modelo: gv('e-c1-modelo'), c1Color: gv('e-c1-color'), c1NumParq: gv('e-c1-num-parq'),
+    tieneCarro2: gv('e-tiene-c2'), c2Placa: gv('e-c2-placa'), c2Marca: gv('e-c2-marca'), c2Modelo: gv('e-c2-modelo'), c2Color: gv('e-c2-color'), c2NumParq: gv('e-c2-num-parq'),
+    tieneMoto1: gv('e-tiene-mo1'), mo1Tipo: gv('e-mo1-tipo'), mo1Placa: gv('e-mo1-placa'), mo1Marca: gv('e-mo1-marca'), mo1Modelo: gv('e-mo1-modelo'), mo1Color: gv('e-mo1-color'), mo1NumParq: gv('e-mo1-num-parq'),
+    tieneMoto2: gv('e-tiene-mo2'), mo2Tipo: gv('e-mo2-tipo'), mo2Placa: gv('e-mo2-placa'), mo2Marca: gv('e-mo2-marca'), mo2Modelo: gv('e-mo2-modelo'), mo2Color: gv('e-mo2-color'), mo2NumParq: gv('e-mo2-num-parq'),
+    tieneBici: gv('e-tiene-bici'), biciCantidad: gv('e-bici-cantidad'), biciMarca: gv('e-bici-marca'), biciColor: gv('e-bici-color'), biciNumParq: gv('e-bici-num-parq')
+  };
+
+  try {
+    await window.updateResidente(r.id, updated);
+    Object.assign(allData[currentIdx], updated);
+    document.getElementById('saving-overlay').classList.remove('show');
+    closeModalDirect('edit-modal');
+    renderTable(allData);
+    updateStats(allData);
+    showToast('✅ Registro actualizado correctamente');
+  } catch(e) {
+    document.getElementById('saving-overlay').classList.remove('show');
+    showToast('❌ Error al guardar. Intenta de nuevo.', true);
+    console.error(e);
+  }
+}
+
+// ── BORRAR ────────────────────────────────────────────────────────────────
+async function deleteRecord(id, idx) {
+  const r = allData[idx];
+  if(!confirm(`¿Borrar el registro de ${r.nombreResidente} — Torre ${r.torre} Apto ${r.apto}?\n\nEsta acción no se puede deshacer.`)) return;
+  try {
+    await window.deleteResidente(id);
+    allData.splice(idx, 1);
+    renderTable(allData);
+    updateStats(allData);
+    showToast('🗑 Registro eliminado');
+  } catch(e) {
+    showToast('❌ Error al borrar. Intenta de nuevo.', true);
+    console.error(e);
+  }
+}
+
+// ── MODALES ───────────────────────────────────────────────────────────────
+function closeModalBg(e, id) {
+  if(e.target.id === id) document.getElementById(id).classList.remove('open');
+}
+function closeModalDirect(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── EXPORT CSV ────────────────────────────────────────────────────────────
+function exportCSV() {
+  if(!allData.length) { alert('No hay datos para exportar'); return; }
+  const headers = ['Fecha','Torre','Apto','Depósito','Num Depósito','Nombre Propietario','Tel Propietario','Email Propietario','Nombre Residente','Tel Residente','Email Residente','Tipo Doc','Num Doc','Propietario Habita','Tiene Menores','Cant Menores','Tiene Adultos','Cant Adultos','Tiene Adultos Mayores','Cant Adultos Mayores','Tiene Mascotas','Cant Mascotas','M1 Tipo','M1 Nombre','M1 Raza','M1 Tamaño','M2 Tipo','M2 Nombre','M2 Raza','M2 Tamaño','Carro 1','C1 Placa','C1 Marca','C1 Modelo','C1 Color','C1 Parq','Carro 2','C2 Placa','C2 Marca','C2 Modelo','C2 Color','C2 Parq','Moto 1','Mo1 Tipo','Mo1 Placa','Mo1 Marca','Mo1 Modelo','Mo1 Color','Mo1 Parq','Moto 2','Mo2 Tipo','Mo2 Placa','Mo2 Marca','Mo2 Modelo','Mo2 Color','Mo2 Parq','Bicicleta','Bici Cantidad','Bici Marca','Bici Color','Bici Parq'];
+  const rows = allData.map(r => {
+    const fecha = r.fechaRegistro ? new Date(r.fechaRegistro.seconds*1000).toLocaleDateString('es-CO') : '';
+    return [fecha,r.torre,r.apto,r.tieneDeposito,r.numDeposito,r.nombrePropietario,r.telPropietario,r.emailPropietario,r.nombreResidente,r.telResidente,r.emailResidente,r.tipoDoc,r.numDoc,r.habitaPropietario,r.tieneMenores,r.cantMenores,r.tieneAdultos,r.cantAdultos,r.tieneAdultosMayores,r.cantAdultosMayores,r.tieneMascotas,r.cantMascotas,r.m1Tipo,r.m1Nombre,r.m1Raza,r.m1Tamano,r.m2Tipo,r.m2Nombre,r.m2Raza,r.m2Tamano,r.tieneCarro1,r.c1Placa,r.c1Marca,r.c1Modelo,r.c1Color,r.c1NumParq,r.tieneCarro2,r.c2Placa,r.c2Marca,r.c2Modelo,r.c2Color,r.c2NumParq,r.tieneMoto1,r.mo1Tipo,r.mo1Placa,r.mo1Marca,r.mo1Modelo,r.mo1Color,r.mo1NumParq,r.tieneMoto2,r.mo2Tipo,r.mo2Placa,r.mo2Marca,r.mo2Modelo,r.mo2Color,r.mo2NumParq,r.tieneBici,r.biciCantidad,r.biciMarca,r.biciColor,r.biciNumParq]
+      .map(v => `"${(v||'').toString().replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `residentes_${new Date().toLocaleDateString('es-CO').replace(/\//g,'-')}.csv`;
+  a.click();
+}
+
+window.addEventListener('load', () => setTimeout(loadData, 500));
+</script>
+</body>
+</html>

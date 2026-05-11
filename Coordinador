@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCO3 · Coordinador</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#1e3a5f; --primary-light:#2d5a8e; --primary-dark:#152d4a;
+  --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --purple:#7c3aed;
+  --bg:#f0f4f8; --card:#fff; --text:#1a202c; --muted:#64748b;
+  --border:#e2e8f0; --radius:12px; --nav-w:220px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+header .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600}
+header h1{font-size:17px;font-weight:700}
+header p{font-size:12px;opacity:.8}
+.user-info{margin-left:auto;text-align:right;font-size:12px;opacity:.85}
+.layout{display:flex;min-height:calc(100vh - 56px)}
+main{flex:1;padding:16px;padding-bottom:90px;min-width:0}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+nav button{flex:1;padding:10px 4px 8px;border:none;background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:9.5px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.2s;position:relative}
+nav button .icon{font-size:19px}
+nav button.active{color:var(--primary);font-weight:700}
+.nav-badge{position:absolute;top:4px;right:calc(50% - 18px);background:var(--danger);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 4px}
+.nav-badge.show{display:flex}
+@media(min-width:768px){
+  main{padding:24px;padding-bottom:24px;margin-left:var(--nav-w)}
+  nav{position:fixed;left:0;top:56px;bottom:0;right:auto;width:var(--nav-w);flex-direction:column;border-top:none;border-right:1px solid var(--border);background:#fff;padding:12px 0;box-shadow:2px 0 8px rgba(0,0,0,.04);overflow-y:auto}
+  nav button{flex:none;flex-direction:row;padding:12px 20px;font-size:13px;gap:10px;border-radius:0;justify-content:flex-start;text-align:left}
+  nav button.active{background:#eff6ff;color:var(--primary);border-right:3px solid var(--primary)}
+  nav button .icon{font-size:18px}
+  .nav-badge{position:static;margin-left:auto}
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+  .stat-grid-3{grid-template-columns:repeat(3,1fr)}
+  header h1{font-size:19px}
+}
+.section{display:none}.section.active{display:block}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.card-title{font-weight:700;font-size:14px;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.section-header h2{font-size:18px;font-weight:700;color:var(--primary)}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat-box{background:var(--card);border-radius:var(--radius);padding:14px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.stat-box .num{font-size:24px;font-weight:700;color:var(--primary)}
+.stat-box .lbl{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.3}
+.stat-box.alerta .num{color:var(--danger)}
+.stat-box.ok .num{color:var(--success)}
+.stat-box.warn .num{color:var(--warning)}
+.badge-estado{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-critico{background:#fee2e2;color:#b91c1c}
+.badge-medio{background:#fef3c7;color:#b45309}
+.badge-bajo{background:#d1fae5;color:#065f46}
+.badge-abierta{background:#dbeafe;color:#1d4ed8}
+.badge-listo{background:#e9d5ff;color:#6b21a8}
+.badge-cerrada{background:#f1f5f9;color:#475569}
+.btn{width:100%;padding:12px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-warning{background:var(--warning);color:#fff}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-secondary{background:var(--border);color:var(--text)}
+.input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);transition:.2s;background:#fff}
+.input:focus{outline:none;border-color:var(--primary)}
+.label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block}
+.form-group{margin-bottom:12px}
+.select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.list-item{padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--card)}
+.list-item.critico,.list-item.critica{border-left:4px solid var(--danger)}
+.list-item.medio,.list-item.media{border-left:4px solid var(--warning)}
+.list-item.bajo,.list-item.baja{border-left:4px solid var(--success)}
+.list-item-title{font-weight:600;font-size:13px}
+.list-item-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.tabs{display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:16px;overflow-x:auto}
+.tab{flex:1;padding:8px 10px;text-align:center;border:none;background:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;transition:.2s;min-width:fit-content}
+.tab.active{background:var(--card);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.filter-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.filter-bar::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:.2s}
+.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:92vh;display:flex;flex-direction:column}
+.modal-header{padding:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header.danger{background:var(--danger)}
+.modal-header.success{background:var(--success)}
+.modal-header.warning{background:var(--warning)}
+.modal-header h3{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer}
+.modal-body{padding:16px;overflow-y:auto}
+.modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 1.5s infinite;display:inline-block}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.live-indicator{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--success);font-weight:600}
+.empty{text-align:center;padding:28px 16px;color:var(--muted)}
+.empty .icon{font-size:34px;margin-bottom:8px}
+.empty p{font-size:13px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;max-width:90vw}
+.toast.show{opacity:1}
+.toast.error{background:var(--danger)}
+.alert-critical{background:#fef2f2;border:2px solid var(--danger);border-radius:12px;padding:14px;margin-bottom:12px}
+.alert-critical-title{font-weight:700;font-size:14px;color:var(--danger);margin-bottom:4px}
+.alert-suspendido{background:#fef2f2;border:2px solid var(--danger);border-radius:12px;padding:14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.module-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase}
+.module-seg{background:#dbeafe;color:#1d4ed8}
+.module-pool{background:#e0f2fe;color:#0369a1}
+.module-gym{background:#f3e8ff;color:#7c3aed}
+.module-mtto{background:#fef3c7;color:#92400e}
+.servicio-card{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:#fafcff}
+.servicio-card.suspendido{background:#fef2f2;border-color:#fca5a5}
+.servicio-info{flex:1;min-width:0}
+.servicio-nombre{font-weight:700;font-size:14px}
+.servicio-estado{font-size:12px;margin-top:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="badge">COORDINADOR</div>
+    <h1>PCO3 Ciudadela</h1>
+    <p id="headerFecha">—</p>
+  </div>
+  <div class="user-info">
+    <div id="headerNombre">Coordinador</div>
+    <div>Administración</div>
+  </div>
+</header>
+
+<div class="layout">
+<main>
+
+<!-- DASHBOARD -->
+<div id="sec-dashboard" class="section active">
+  <div class="section-header">
+    <h2>Dashboard Operativo</h2>
+    <div class="live-indicator"><div class="live-dot"></div>EN VIVO</div>
+  </div>
+
+  <div id="alertas-criticas-cont"></div>
+  <div id="servicios-suspendidos-cont"></div>
+
+  <div class="card">
+    <div class="card-title">📊 Estado del conjunto</div>
+    <div class="stat-grid-3">
+      <div class="stat-box" id="box-piscina">
+        <div class="num" id="stat-piscina">—</div>
+        <div class="lbl">Piscina</div>
+      </div>
+      <div class="stat-box" id="box-gimnasio">
+        <div class="num" id="stat-gimnasio">—</div>
+        <div class="lbl">Gimnasio</div>
+      </div>
+      <div class="stat-box" id="box-seguridad">
+        <div class="num" id="stat-seguridad">—</div>
+        <div class="lbl">Seguridad</div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box" id="box-nov">
+        <div class="num" id="stat-nov-total">0</div>
+        <div class="lbl">Novedades abiertas</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="stat-listo-cierre">0</div>
+        <div class="lbl">Listo para cerrar</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="stat-tareas-pend">0</div>
+        <div class="lbl">Tareas pendientes</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="stat-verificacion">0</div>
+        <div class="lbl">Para verificar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⏳ Pendientes de cierre</div>
+    <div id="pendientes-cierre-lista">
+      <div class="empty"><div class="icon">✅</div><p>Sin novedades listas para cerrar</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICIOS -->
+<div id="sec-servicios" class="section">
+  <div class="section-header"><h2>Estado de Servicios</h2></div>
+
+  <div class="card">
+    <div class="card-title">🏊 Piscina y Jacuzzi</div>
+    <div class="servicio-card" id="serv-piscina">
+      <div style="font-size:32px" id="serv-piscina-icon">🟢</div>
+      <div class="servicio-info">
+        <div class="servicio-nombre">Servicio de piscina</div>
+        <div class="servicio-estado" id="serv-piscina-estado">Cargando…</div>
+      </div>
+      <div id="serv-piscina-acciones"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💪 Gimnasio</div>
+    <div class="servicio-card" id="serv-gym">
+      <div style="font-size:32px" id="serv-gym-icon">🟢</div>
+      <div class="servicio-info">
+        <div class="servicio-nombre">Servicio de gimnasio</div>
+        <div class="servicio-estado" id="serv-gym-estado">Cargando…</div>
+      </div>
+      <div id="serv-gym-acciones"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NOVEDADES -->
+<div id="sec-novedades" class="section">
+  <div class="section-header"><h2>Novedades del Sistema</h2></div>
+  <div class="tabs" id="tabs-modulo-nov">
+    <button class="tab active" onclick="setTabNov('seg',this)">🔒 Seguridad</button>
+    <button class="tab" onclick="setTabNov('pool',this)">🏊 Piscina</button>
+    <button class="tab" onclick="setTabNov('gym',this)">💪 Gimnasio</button>
+    <button class="tab" onclick="setTabNov('mtto',this)">🔧 Mantenimiento</button>
+  </div>
+  <div class="filter-bar" id="filtro-nov-chips">
+    <div class="chip active" data-val="todas" onclick="setFiltroNov(this)">Todas</div>
+    <div class="chip" data-val="abiertas" onclick="setFiltroNov(this)">Abiertas</div>
+    <div class="chip" data-val="criticas" onclick="setFiltroNov(this)">Críticas</div>
+    <div class="chip" data-val="listo" onclick="setFiltroNov(this)">Listo cierre</div>
+    <div class="chip" data-val="cerradas" onclick="setFiltroNov(this)">Cerradas</div>
+  </div>
+  <div id="lista-novedades">
+    <div class="empty"><div class="icon">🔄</div><p>Cargando...</p></div>
+  </div>
+</div>
+
+<!-- TAREAS -->
+<div id="sec-tareas" class="section">
+  <div class="section-header"><h2>Órdenes de Trabajo</h2></div>
+  <button class="btn btn-primary" style="margin-bottom:16px" onclick="abrirModalTarea()">+ Nueva Tarea</button>
+  <div class="filter-bar">
+    <div class="chip active" data-val="todas" onclick="setFiltroTarea(this)">Todas</div>
+    <div class="chip" data-val="pendiente" onclick="setFiltroTarea(this)">Pendientes</div>
+    <div class="chip" data-val="en_proceso" onclick="setFiltroTarea(this)">En proceso</div>
+    <div class="chip" data-val="completada_pendiente_revision" onclick="setFiltroTarea(this)">Para verificar</div>
+    <div class="chip" data-val="aprobada" onclick="setFiltroTarea(this)">Aprobadas</div>
+    <div class="chip" data-val="rechazada" onclick="setFiltroTarea(this)">Devueltas</div>
+  </div>
+  <div id="lista-tareas">
+    <div class="empty"><div class="icon">🔄</div><p>Cargando tareas...</p></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<nav>
+  <button class="active" onclick="navTo('dashboard',this)"><span class="icon">📊</span>Dashboard</button>
+  <button onclick="navTo('servicios',this)" id="nav-serv-btn"><span class="icon">⚙️</span>Servicios<div class="nav-badge" id="badge-serv">0</div></button>
+  <button onclick="navTo('novedades',this)" id="nav-nov-btn"><span class="icon">🚨</span>Novedades<div class="nav-badge" id="badge-nov">0</div></button>
+  <button onclick="navTo('tareas',this)" id="nav-tareas-btn"><span class="icon">🔧</span>Tareas<div class="nav-badge" id="badge-tareas">0</div></button>
+</nav>
+
+<!-- MODAL CERRAR NOVEDAD -->
+<div class="modal-overlay" id="modal-cerrar-nov">
+  <div class="modal">
+    <div class="modal-header success"><h3>Cerrar Novedad</h3><button class="modal-close" onclick="cerrarModal('modal-cerrar-nov')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="label">Novedad</label>
+        <div id="cerrar-nov-titulo" style="font-weight:600;padding:8px;background:var(--bg);border-radius:8px;font-size:13px"></div>
+      </div>
+      <div class="form-group">
+        <label class="label">Comentario de cierre *</label>
+        <textarea class="input" id="cerrar-nov-comentario" rows="4" placeholder="Describe cómo se resolvió la novedad..."></textarea>
+      </div>
+      <div id="cerrar-nov-reactivar" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px;font-size:12px;color:#92400e">
+        ⚠️ Esta novedad crítica suspendió el servicio. Al cerrarla, <strong>el servicio se reactivará automáticamente</strong>.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-cerrar-nov')">Cancelar</button>
+      <button class="btn btn-success btn-sm" style="flex:1" onclick="confirmarCierreFinal()">Cerrar Definitivamente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE NOVEDAD -->
+<div class="modal-overlay" id="modal-nov-detalle">
+  <div class="modal">
+    <div class="modal-header"><h3>Detalle Novedad</h3><button class="modal-close" onclick="cerrarModal('modal-nov-detalle')">✕</button></div>
+    <div class="modal-body" id="modal-nov-body"></div>
+    <div class="modal-footer" id="modal-nov-footer"></div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA TAREA -->
+<div class="modal-overlay" id="modal-tarea">
+  <div class="modal">
+    <div class="modal-header"><h3>Nueva Orden de Trabajo</h3><button class="modal-close" onclick="cerrarModal('modal-tarea')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="label">Título *</label>
+        <input type="text" class="input" id="tarea-titulo" placeholder="Ej: Reparar tubería zona BBQ">
+      </div>
+      <div class="form-group">
+        <label class="label">Descripción</label>
+        <textarea class="input" id="tarea-desc" rows="3" placeholder="Detalles de la tarea..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">Área</label>
+          <select class="select" id="tarea-area">
+            <option value="Piscina">Piscina</option>
+            <option value="Gimnasio">Gimnasio</option>
+            <option value="Zonas comunes">Zonas comunes</option>
+            <option value="Parqueaderos">Parqueaderos</option>
+            <option value="Acceso principal">Acceso principal</option>
+            <option value="Torres">Torres</option>
+            <option value="Redes hidráulicas">Redes hidráulicas</option>
+            <option value="Eléctrico">Eléctrico</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">Prioridad</label>
+          <select class="select" id="tarea-prioridad">
+            <option value="alta">🔴 Alta</option>
+            <option value="media" selected>🟡 Media</option>
+            <option value="baja">🟢 Baja</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="label">Asignar a *</label>
+        <select class="select" id="tarea-asignado">
+          <option value="">Seleccionar...</option>
+          <option value="todero">🔧 Todero</option>
+          <option value="aseo">🧹 Personal de Aseo</option>
+          <option value="seguridad">👮 Seguridad</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="label">Fecha límite</label>
+        <input type="date" class="input" id="tarea-fecha-limite">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-tarea')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="guardarTarea()">Crear Tarea</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL APROBAR TAREA -->
+<div class="modal-overlay" id="modal-tarea-detalle">
+  <div class="modal">
+    <div class="modal-header"><h3>Verificar Tarea</h3><button class="modal-close" onclick="cerrarModal('modal-tarea-detalle')">✕</button></div>
+    <div class="modal-body" id="modal-tarea-body"></div>
+    <div class="modal-footer" id="modal-tarea-footer"></div>
+  </div>
+</div>
+
+<!-- MODAL DEVOLVER TAREA -->
+<div class="modal-overlay" id="modal-devolver">
+  <div class="modal">
+    <div class="modal-header warning"><h3>Devolver con diagnóstico</h3><button class="modal-close" onclick="cerrarModal('modal-devolver')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">El operario recibirá la tarea de vuelta con tu mensaje. La tarea queda en proceso para que la corrija.</p>
+      <div class="form-group">
+        <label class="label">Mensaje al operario *</label>
+        <textarea class="input" id="devolver-motivo" rows="4" placeholder="Ej: Jaime, la puntilla quedó un metro abajo. Por favor ponla donde es..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-devolver')">Cancelar</button>
+      <button class="btn btn-warning btn-sm" style="flex:1" onclick="confirmarDevolver()">Devolver tarea</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REACTIVAR SERVICIO -->
+<div class="modal-overlay" id="modal-reactivar">
+  <div class="modal">
+    <div class="modal-header success"><h3>Reactivar servicio</h3><button class="modal-close" onclick="cerrarModal('modal-reactivar')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;margin-bottom:12px" id="reactivar-msg"></p>
+      <div class="form-group">
+        <label class="label">Motivo / observación *</label>
+        <textarea class="input" id="reactivar-motivo" rows="3" placeholder="Ej: Se resolvió la contaminación química, se realizó el cambio de agua y los parámetros volvieron a rangos normales."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-reactivar')">Cancelar</button>
+      <button class="btn btn-success btn-sm" style="flex:1" onclick="confirmarReactivar()">Reactivar servicio</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import {
+  getFirestore, collection, query, where, orderBy, onSnapshot,
+  doc, addDoc, updateDoc, setDoc, serverTimestamp, getDocs
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek", authDomain:"registro-residentes.firebaseapp.com", projectId:"registro-residentes",
+  storageBucket:"registro-residentes.firebasestorage.app", messagingSenderId:"646123326163", appId:"1:646123326163:web:8b35b955e7b3692536a226"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ─── HELPERS ──────────────────────────────────────────────
+// FIX: zona horaria - usa fecha local de Bogotá, no UTC
+function fechaHoy() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+const fh = ts => { if(!ts) return '--'; const d = ts.toDate?ts.toDate():new Date(ts); return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); };
+const ffd = ts => { if(!ts) return '--'; const d = ts.toDate?ts.toDate():new Date(ts); return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'2-digit'}) + ' ' + d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); };
+const toast = (msg, tipo) => { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show' + (tipo==='error'?' error':''); setTimeout(()=>t.classList.remove('show'),3000); };
+const cerrarModal = id => document.getElementById(id).classList.remove('open');
+window.cerrarModal = cerrarModal;
+
+// FIX: wrapper con manejo de errores para todos los listeners.
+// Sin esto, los errores de índice faltante o permisos fallan en silencio.
+function escuchar(q, onData, etiqueta) {
+  return onSnapshot(q, onData, error => {
+    console.error(`❌ Error en listener "${etiqueta}":`, error.code, error.message);
+    if (error.code === 'failed-precondition') {
+      console.error(`🔧 Falta índice compuesto para "${etiqueta}". Revisa el URL en el mensaje de error de arriba y créalo en Firebase Console.`);
+      toast(`Falta índice: ${etiqueta} (ver consola)`, 'error');
+    } else if (error.code === 'permission-denied') {
+      console.error(`🔒 Permiso denegado en "${etiqueta}". Revisa firestore.rules.`);
+      toast(`Sin permiso: ${etiqueta}`, 'error');
+    }
+  });
+}
+
+// FIX: normalizador — los módulos viejos escriben con nombres distintos.
+// Esta función unifica todo a un formato canónico para el coordinador.
+function normalizarNovedad(d, modulo) {
+  // estado: puede venir como `estado` ('abierta'/'cerrada'/'listo_cierre') o `status` ('ABIERTO'/'CERRADO')
+  let estado = d.estado;
+  if (!estado && d.status) {
+    estado = d.status === 'ABIERTO' ? 'abierta' :
+             d.status === 'CERRADO' ? 'cerrada' :
+             d.status.toLowerCase();
+  }
+  estado = estado || 'abierta';
+
+  // nivel: puede venir como `nivel` ('crítica'/'media'/'baja') o `severidad` ('CRÍTICO'/'MEDIO'/'BAJO')
+  let nivel = d.nivel;
+  if (!nivel && d.severidad) {
+    nivel = d.severidad.toLowerCase().includes('crít') ? 'critica' :
+            d.severidad.toLowerCase().includes('medi') ? 'media' : 'baja';
+  }
+  nivel = nivel || 'baja';
+
+  // tipo / área
+  const tipo = d.tipo || d.area_afectada || '—';
+  const area = d.area || d.area_afectada || '';
+
+  // creado_en
+  const creado_en = d.creado_en || d.timestamp;
+
+  return { ...d, estado, nivel, tipo, area, creado_en, _m: modulo };
+}
+
+const nivelClass = n => { const v=(n||'').toLowerCase(); return v.includes('crit')?'critico':v.includes('medi')?'medio':'bajo'; };
+const nivelBadge = n => { const v=(n||'').toLowerCase(); return v.includes('crit')?'badge-critico':v.includes('medi')?'badge-medio':'badge-bajo'; };
+const estadoBadge = e => ({abierta:'badge-abierta',en_atencion:'badge-medio',listo_cierre:'badge-listo',cerrada:'badge-cerrada'}[e]||'badge-cerrada');
+const estadoLabel = e => ({abierta:'Abierta',en_atencion:'En atención',listo_cierre:'Listo cierre',cerrada:'Cerrada'}[e]||e);
+const colNov = m => ({pool:'pool_novedades',gym:'gym_novedades',mtto:'novedades_mantenimiento'}[m]||'seg_novedades');
+const modTag = m => ({seg:'<span class="module-tag module-seg">SEG</span>',pool:'<span class="module-tag module-pool">PISCINA</span>',gym:'<span class="module-tag module-gym">GIMNASIO</span>',mtto:'<span class="module-tag module-mtto">MTTO</span>'}[m]||'');
+
+// ─── STATE ────────────────────────────────────────────────
+const S = {
+  uid:'', nombre:'Coordinador',
+  novSeg:[], novPool:[], novGym:[], novMtto:[],
+  tareas:[],
+  tabNov:'seg', filtroNov:'todas',
+  filtroTarea:'todas',
+  novSel:null, tareaSel:null, servicioSel:null,
+  poolEstado:{}, gymEstado:{},
+  unsubs: []
+};
+
+// ─── SESSION ──────────────────────────────────────────────
+(()=>{
+  const p = new URLSearchParams(window.location.search);
+  S.uid = p.get('uid')||localStorage.getItem('pco3_uid')||'coord_demo';
+  S.nombre = p.get('nombre')||localStorage.getItem('pco3_nombre')||'Coordinador';
+  if(p.get('uid')) localStorage.setItem('pco3_uid',S.uid);
+  if(p.get('nombre')) localStorage.setItem('pco3_nombre',S.nombre);
+  document.getElementById('headerNombre').textContent = S.nombre;
+  const hoy = new Date();
+  document.getElementById('headerFecha').textContent = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+})();
+
+// ─── LISTENERS ────────────────────────────────────────────
+function iniciarListeners(){
+  const hoy = fechaHoy();
+
+  S.unsubs.push(escuchar(
+    query(collection(db,'seg_novedades'),where('fecha','==',hoy)),
+    s=>{ S.novSeg=s.docs.map(d=>normalizarNovedad({id:d.id,...d.data()},'seg')); refrescarTodo(); },
+    'seg_novedades'
+  ));
+
+  S.unsubs.push(escuchar(
+    query(collection(db,'pool_novedades'),where('fecha','==',hoy)),
+    s=>{ S.novPool=s.docs.map(d=>normalizarNovedad({id:d.id,...d.data()},'pool')); refrescarTodo(); },
+    'pool_novedades'
+  ));
+
+  S.unsubs.push(escuchar(
+    query(collection(db,'gym_novedades'),where('fecha','==',hoy)),
+    s=>{ S.novGym=s.docs.map(d=>normalizarNovedad({id:d.id,...d.data()},'gym')); refrescarTodo(); },
+    'gym_novedades'
+  ));
+
+  S.unsubs.push(escuchar(
+    query(collection(db,'novedades_mantenimiento'),where('fecha','==',hoy)),
+    s=>{ S.novMtto=s.docs.map(d=>normalizarNovedad({id:d.id,...d.data()},'mtto')); refrescarTodo(); },
+    'novedades_mantenimiento'
+  ));
+
+  S.unsubs.push(escuchar(
+    query(collection(db,'tareas_mantenimiento'),where('fecha','==',hoy),orderBy('creado_en','desc')),
+    s=>{ S.tareas=s.docs.map(d=>({id:d.id,...d.data()})); refrescarTodo(); },
+    'tareas_mantenimiento'
+  ));
+
+  S.unsubs.push(escuchar(
+    doc(db,'pool_estado',hoy),
+    s=>{ S.poolEstado=s.data()||{}; refrescarServicios(); },
+    'pool_estado'
+  ));
+
+  S.unsubs.push(escuchar(
+    doc(db,'gym_estado',hoy),
+    s=>{ S.gymEstado=s.data()||{}; refrescarServicios(); },
+    'gym_estado'
+  ));
+}
+
+function refrescarTodo() {
+  actualizarStats();
+  renderNovedades();
+  renderAlertasCriticas();
+  renderPendientesCierre();
+  renderTareas();
+  refrescarServicios();
+}
+
+// ─── STATS ────────────────────────────────────────────────
+function actualizarStats(){
+  const todas = [...S.novSeg,...S.novPool,...S.novGym,...S.novMtto];
+  const abiertas = todas.filter(n=>n.estado==='abierta'||n.estado==='en_atencion').length;
+  const listo = todas.filter(n=>n.estado==='listo_cierre').length;
+  const tareasPend = S.tareas.filter(t=>t.estado==='pendiente'||t.estado==='en_proceso').length;
+  const verifPend = S.tareas.filter(t=>t.estado==='completada_pendiente_revision').length;
+
+  document.getElementById('stat-nov-total').textContent = abiertas;
+  document.getElementById('stat-listo-cierre').textContent = listo;
+  document.getElementById('stat-tareas-pend').textContent = tareasPend;
+  document.getElementById('stat-verificacion').textContent = verifPend;
+  document.getElementById('box-nov').className = 'stat-box'+(abiertas>0?' alerta':'');
+
+  // Badges en el nav
+  const badgeNov = document.getElementById('badge-nov');
+  if (listo > 0) { badgeNov.textContent = listo; badgeNov.classList.add('show'); }
+  else badgeNov.classList.remove('show');
+
+  const badgeTareas = document.getElementById('badge-tareas');
+  if (verifPend > 0) { badgeTareas.textContent = verifPend; badgeTareas.classList.add('show'); }
+  else badgeTareas.classList.remove('show');
+}
+
+function refrescarServicios() {
+  // Estado piscina
+  const ps = S.poolEstado.suspendida === true;
+  const pa = S.poolEstado.abierta === true;
+  document.getElementById('stat-piscina').textContent = ps?'🔴 Susp.':(pa?'🟢 Abierta':'⚫ Cerrada');
+  document.getElementById('box-piscina').className = 'stat-box'+(ps?' alerta':pa?' ok':'');
+
+  // Estado gym
+  const gs = S.gymEstado.suspendida === true;
+  const ga = S.gymEstado.abierta === true;
+  document.getElementById('stat-gimnasio').textContent = gs?'🔴 Susp.':(ga?'🟢 Abierto':'⚫ Cerrado');
+  document.getElementById('box-gimnasio').className = 'stat-box'+(gs?' alerta':ga?' ok':'');
+
+  // Cards detalladas en sección Servicios
+  renderServicioCard('piscina', ps, pa, S.poolEstado);
+  renderServicioCard('gym', gs, ga, S.gymEstado);
+
+  // Banners de suspensión en dashboard
+  renderBannersSuspension();
+
+  // Badge en nav servicios
+  const totalSusp = (ps?1:0) + (gs?1:0);
+  const badgeServ = document.getElementById('badge-serv');
+  if (totalSusp > 0) { badgeServ.textContent = totalSusp; badgeServ.classList.add('show'); }
+  else badgeServ.classList.remove('show');
+}
+
+function renderServicioCard(servicio, suspendida, abierta, estado) {
+  const card = document.getElementById(`serv-${servicio}`);
+  const icon = document.getElementById(`serv-${servicio}-icon`);
+  const txtEstado = document.getElementById(`serv-${servicio}-estado`);
+  const acciones = document.getElementById(`serv-${servicio}-acciones`);
+
+  card.classList.toggle('suspendido', suspendida);
+
+  if (suspendida) {
+    icon.textContent = '🔴';
+    txtEstado.innerHTML = `<strong style="color:var(--danger)">SUSPENDIDA</strong><br>` +
+      `<span style="font-size:11px">Motivo: ${estado.motivo || 'No especificado'}</span><br>` +
+      `<span style="font-size:11px">Por: ${estado.suspendida_por || '—'}</span>`;
+    acciones.innerHTML = `<button class="btn-sm btn-success" onclick="abrirReactivar('${servicio}')">▶ Reactivar</button>`;
+  } else if (abierta) {
+    icon.textContent = '🟢';
+    txtEstado.innerHTML = `<strong style="color:var(--success)">Activa</strong>` +
+      (estado.hora_apertura ? `<br><span style="font-size:11px">Abierta a las ${estado.hora_apertura} por ${estado.abierta_por||'—'}</span>` : '');
+    acciones.innerHTML = '';
+  } else {
+    icon.textContent = '⚫';
+    txtEstado.innerHTML = `<span style="color:var(--muted)">Cerrada / sin operación hoy</span>`;
+    acciones.innerHTML = '';
+  }
+}
+
+function renderBannersSuspension() {
+  const cont = document.getElementById('servicios-suspendidos-cont');
+  const banners = [];
+  if (S.poolEstado.suspendida === true) {
+    banners.push(`<div class="alert-suspendido">
+      <div style="font-size:24px">🔴</div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-weight:700;color:var(--danger)">Piscina SUSPENDIDA</div>
+        <div style="font-size:12px;color:var(--muted)">${S.poolEstado.motivo||'Sin motivo registrado'}</div>
+      </div>
+      <button class="btn-sm btn-success" onclick="abrirReactivar('piscina')">▶ Reactivar</button>
+    </div>`);
+  }
+  if (S.gymEstado.suspendida === true) {
+    banners.push(`<div class="alert-suspendido">
+      <div style="font-size:24px">🔴</div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-weight:700;color:var(--danger)">Gimnasio SUSPENDIDO</div>
+        <div style="font-size:12px;color:var(--muted)">${S.gymEstado.motivo||'Sin motivo registrado'}</div>
+      </div>
+      <button class="btn-sm btn-success" onclick="abrirReactivar('gym')">▶ Reactivar</button>
+    </div>`);
+  }
+  cont.innerHTML = banners.join('');
+}
+
+// ─── REACTIVACIÓN DE SERVICIOS ────────────────────────────
+window.abrirReactivar = function(servicio) {
+  S.servicioSel = servicio;
+  const nombre = servicio === 'piscina' ? 'Piscina y Jacuzzi' : 'Gimnasio';
+  document.getElementById('reactivar-msg').textContent =
+    `Vas a reactivar el servicio de ${nombre}. La operación quedará disponible nuevamente.`;
+  document.getElementById('reactivar-motivo').value = '';
+  document.getElementById('modal-reactivar').classList.add('open');
+};
+
+window.confirmarReactivar = async function() {
+  const motivo = document.getElementById('reactivar-motivo').value.trim();
+  if (!motivo) { toast('Escribe el motivo', 'error'); return; }
+  const col = S.servicioSel === 'piscina' ? 'pool_estado' : 'gym_estado';
+  try {
+    await setDoc(doc(db, col, fechaHoy()), {
+      suspendida: false,
+      reactivado_motivo: motivo,
+      reactivado_por: S.nombre,
+      reactivado_por_id: S.uid,
+      reactivado_en: serverTimestamp()
+    }, { merge: true });
+    cerrarModal('modal-reactivar');
+    toast('✅ Servicio reactivado');
+  } catch (e) {
+    console.error(e);
+    toast('Error al reactivar', 'error');
+  }
+};
+
+// ─── ALERTAS CRÍTICAS ─────────────────────────────────────
+function renderAlertasCriticas(){
+  const criticas = [...S.novSeg,...S.novPool,...S.novGym,...S.novMtto]
+    .filter(n=>(n.nivel||'').toLowerCase().includes('crit') && (n.estado==='abierta'||n.estado==='en_atencion'));
+  const cont = document.getElementById('alertas-criticas-cont');
+  if(!criticas.length){ cont.innerHTML=''; return; }
+  cont.innerHTML = criticas.map(n=>`
+    <div class="alert-critical">
+      <div class="alert-critical-title">🚨 CRÍTICO — ${n._m==='pool'?'Piscina':n._m==='gym'?'Gimnasio':n._m==='mtto'?'Mantenimiento':'Seguridad'}</div>
+      <div style="font-size:13px;font-weight:600">${n.tipo} ${n.area?'· '+n.area:''}</div>
+      <div style="font-size:12px;color:#b91c1c;margin-top:2px">${n.descripcion||''}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${ffd(n.creado_en)}</div>
+    </div>`).join('');
+}
+
+// ─── PENDIENTES CIERRE ────────────────────────────────────
+function renderPendientesCierre(){
+  const lista = [...S.novSeg,...S.novPool,...S.novGym,...S.novMtto].filter(n=>n.estado==='listo_cierre');
+  const cont = document.getElementById('pendientes-cierre-lista');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin pendientes</p></div>'; return; }
+  cont.innerHTML = lista.map(n=>`
+    <div class="list-item" style="border-left:4px solid var(--purple)">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+        ${modTag(n._m)}<span class="badge-estado ${nivelBadge(n.nivel)}">${n.nivel}</span>
+        <span class="badge-estado badge-listo">Listo cierre</span>
+      </div>
+      <div class="list-item-title">${n.tipo} ${n.area?'· '+n.area:''}</div>
+      <div class="list-item-sub">${n.descripcion||''}</div>
+      <div style="margin-top:8px">
+        <button class="btn-sm btn-success" onclick="abrirCierreNov('${n.id}','${n._m}')">Cerrar definitivamente</button>
+      </div>
+    </div>`).join('');
+}
+
+// ─── NOVEDADES ────────────────────────────────────────────
+window.setTabNov = function(mod,el){
+  S.tabNov=mod;
+  document.querySelectorAll('#tabs-modulo-nov .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  renderNovedades();
+};
+window.setFiltroNov = function(el){
+  S.filtroNov=el.dataset.val;
+  document.querySelectorAll('#filtro-nov-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderNovedades();
+};
+
+function renderNovedades(){
+  let lista = S.tabNov==='pool'?S.novPool:S.tabNov==='gym'?S.novGym:S.tabNov==='mtto'?S.novMtto:S.novSeg;
+  const f=S.filtroNov;
+  if(f==='abiertas') lista=lista.filter(n=>n.estado==='abierta'||n.estado==='en_atencion');
+  else if(f==='criticas') lista=lista.filter(n=>(n.nivel||'').toLowerCase().includes('crit'));
+  else if(f==='listo') lista=lista.filter(n=>n.estado==='listo_cierre');
+  else if(f==='cerradas') lista=lista.filter(n=>n.estado==='cerrada');
+
+  const cont = document.getElementById('lista-novedades');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">✅</div><p>Sin novedades</p></div>'; return; }
+  cont.innerHTML = lista.map(n=>{
+    const esActiva = n.estado==='abierta'||n.estado==='en_atencion';
+    const esListo = n.estado==='listo_cierre';
+    return `<div class="list-item ${nivelClass(n.nivel)}">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        ${modTag(n._m)}<span class="badge-estado ${nivelBadge(n.nivel)}">${n.nivel}</span>
+        <span class="badge-estado ${estadoBadge(n.estado)}">${estadoLabel(n.estado)}</span>
+      </div>
+      <div class="list-item-title">${n.tipo} ${n.area?'· '+n.area:''}</div>
+      <div class="list-item-sub">${n.descripcion||''}</div>
+      <div class="list-item-sub" style="margin-top:2px">${ffd(n.creado_en)}</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn-sm btn-secondary" onclick="verDetNov('${n.id}','${n._m}')">Ver detalle</button>
+        ${esActiva?`<button class="btn-sm btn-warning" onclick="marcarListoCierre('${n.id}','${n._m}')">📤 Marcar listo cierre</button>`:''}
+        ${esListo?`<button class="btn-sm btn-success" onclick="abrirCierreNov('${n.id}','${n._m}')">🔒 Cerrar</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.marcarListoCierre = async function(id, mod) {
+  try {
+    // FIX: escribe AMBOS estado y status para compatibilidad con páginas viejas
+    await updateDoc(doc(db, colNov(mod), id), {
+      estado: 'listo_cierre',
+      status: 'EN_ATENCION',
+      marcado_listo_por: S.uid,
+      marcado_listo_nombre: S.nombre,
+      marcado_listo_en: serverTimestamp()
+    });
+    toast('✅ Marcada lista para cierre');
+  } catch (e) { console.error(e); toast('Error', 'error'); }
+};
+
+window.abrirCierreNov = function(id, mod){
+  const lista = mod==='pool'?S.novPool:mod==='gym'?S.novGym:mod==='mtto'?S.novMtto:S.novSeg;
+  const n = lista.find(x=>x.id===id); if(!n) return;
+  S.novSel={...n,_m:mod};
+  document.getElementById('cerrar-nov-titulo').textContent = `${n.nivel} · ${n.tipo} ${n.area?'· '+n.area:''}`;
+  document.getElementById('cerrar-nov-comentario').value='';
+
+  // FIX: si la novedad suspendió un servicio, mostrar aviso de reactivación
+  const reactivarHint = document.getElementById('cerrar-nov-reactivar');
+  const haySuspension = (mod === 'pool' && S.poolEstado.suspendida === true) ||
+                        (mod === 'gym' && S.gymEstado.suspendida === true);
+  reactivarHint.style.display = haySuspension && (n.nivel||'').includes('crit') ? 'block' : 'none';
+
+  document.getElementById('modal-cerrar-nov').classList.add('open');
+};
+
+window.confirmarCierreFinal = async function(){
+  const comentario = document.getElementById('cerrar-nov-comentario').value.trim();
+  if(!comentario){ toast('Escribe un comentario de cierre', 'error'); return; }
+  if(!S.novSel) return;
+  try{
+    // FIX: escribe AMBOS estado y status
+    await updateDoc(doc(db,colNov(S.novSel._m),S.novSel.id),{
+      estado:'cerrada',
+      status:'CERRADO',
+      comentario_cierre:comentario,
+      cerrado_por:S.uid,
+      cerrado_por_nombre:S.nombre,
+      cerrado_en:serverTimestamp()
+    });
+
+    // FIX: si era una novedad crítica que suspendió el servicio, reactivar automáticamente
+    const esCritica = (S.novSel.nivel||'').includes('crit');
+    if (esCritica && S.novSel._m === 'pool' && S.poolEstado.suspendida === true) {
+      await setDoc(doc(db,'pool_estado',fechaHoy()),{
+        suspendida: false,
+        reactivado_motivo: 'Cierre de novedad crítica: '+comentario.substring(0,100),
+        reactivado_por: S.nombre,
+        reactivado_en: serverTimestamp()
+      },{ merge: true });
+    }
+    if (esCritica && S.novSel._m === 'gym' && S.gymEstado.suspendida === true) {
+      await setDoc(doc(db,'gym_estado',fechaHoy()),{
+        suspendida: false,
+        reactivado_motivo: 'Cierre de novedad crítica: '+comentario.substring(0,100),
+        reactivado_por: S.nombre,
+        reactivado_en: serverTimestamp()
+      },{ merge: true });
+    }
+
+    cerrarModal('modal-cerrar-nov');
+    toast('✅ Novedad cerrada');
+  }catch(e){ console.error(e); toast('Error al cerrar', 'error'); }
+};
+
+window.verDetNov = function(id, mod){
+  const lista = mod==='pool'?S.novPool:mod==='gym'?S.novGym:mod==='mtto'?S.novMtto:S.novSeg;
+  const n = lista.find(x=>x.id===id); if(!n) return;
+  S.novSel={...n,_m:mod};
+  const esActiva = n.estado==='abierta'||n.estado==='en_atencion';
+  const esListo = n.estado==='listo_cierre';
+  document.getElementById('modal-nov-body').innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      ${modTag(mod)}<span class="badge-estado ${nivelBadge(n.nivel)}">${n.nivel}</span>
+      <span class="badge-estado ${estadoBadge(n.estado)}">${estadoLabel(n.estado)}</span>
+    </div>
+    <div class="form-group"><span class="label">Tipo / Área</span><div style="font-weight:600">${n.tipo} ${n.area?'· '+n.area:''}</div></div>
+    <div class="form-group"><span class="label">Descripción</span><div style="font-size:13px">${n.descripcion||'Sin descripción'}</div></div>
+    <div class="form-group"><span class="label">Registrado por</span><div style="font-size:13px">${n.creado_por||n.vig_nombre||n.piscinero_nombre||n.operador_nombre||n.reportado_por_nombre||'—'} · ${ffd(n.creado_en)}</div></div>
+    ${n.foto_url||n.foto_evidencia?`<img src="${n.foto_url||n.foto_evidencia}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;margin-top:8px;cursor:pointer" onclick="window.open('${n.foto_url||n.foto_evidencia}','_blank')">`:''}`;
+  document.getElementById('modal-nov-footer').innerHTML =
+    `<button class="btn btn-secondary btn-sm" style="flex:1" onclick="cerrarModal('modal-nov-detalle')">Cerrar</button>
+    ${esActiva?`<button class="btn btn-warning btn-sm" style="flex:1" onclick="cerrarModal('modal-nov-detalle');marcarListoCierre('${n.id}','${mod}')">Marcar listo</button>`:''}
+    ${esListo?`<button class="btn btn-success btn-sm" style="flex:1" onclick="cerrarModal('modal-nov-detalle');abrirCierreNov('${n.id}','${mod}')">Cerrar definitivamente</button>`:''}`;
+  document.getElementById('modal-nov-detalle').classList.add('open');
+};
+
+// ─── TAREAS ───────────────────────────────────────────────
+window.setFiltroTarea = function(el){
+  S.filtroTarea=el.dataset.val;
+  document.querySelectorAll('#sec-tareas .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  renderTareas();
+};
+
+window.abrirModalTarea = function(){
+  document.getElementById('tarea-titulo').value='';
+  document.getElementById('tarea-desc').value='';
+  document.getElementById('tarea-asignado').value='';
+  document.getElementById('tarea-fecha-limite').value='';
+  document.getElementById('modal-tarea').classList.add('open');
+};
+
+window.guardarTarea = async function(){
+  const titulo = document.getElementById('tarea-titulo').value.trim();
+  const asignado = document.getElementById('tarea-asignado').value;
+  if(!titulo){ toast('Escribe un título', 'error'); return; }
+  if(!asignado){ toast('Selecciona a quién asignar', 'error'); return; }
+  try{
+    await addDoc(collection(db,'tareas_mantenimiento'),{
+      titulo,
+      descripcion:document.getElementById('tarea-desc').value.trim(),
+      area:document.getElementById('tarea-area').value,
+      prioridad:document.getElementById('tarea-prioridad').value,
+      asignado_a:asignado,
+      estado:'pendiente',
+      fecha:fechaHoy(),
+      fecha_limite:document.getElementById('tarea-fecha-limite').value||null,
+      creado_por:S.uid,
+      creado_por_nombre:S.nombre,
+      creado_en:serverTimestamp()
+    });
+    cerrarModal('modal-tarea');
+    toast('✅ Tarea creada');
+  }catch(e){ console.error(e); toast('Error al guardar', 'error'); }
+};
+
+function renderTareas(){
+  let lista = [...S.tareas];
+  if(S.filtroTarea!=='todas') lista=lista.filter(t=>t.estado===S.filtroTarea);
+  const cont = document.getElementById('lista-tareas');
+  if(!lista.length){ cont.innerHTML='<div class="empty"><div class="icon">🔧</div><p>Sin tareas</p></div>'; return; }
+  const asigColor = {todero:'#2563eb',aseo:'#059669',seguridad:'#b45309'};
+  const asigLabel = {todero:'🔧 Todero',aseo:'🧹 Aseo',seguridad:'👮 Seguridad'};
+  const estColor = {pendiente:'#94a3b8',en_proceso:'#f59e0b',completada_pendiente_revision:'#7c3aed',aprobada:'#10b981',rechazada:'#ef4444',cerrada:'#475569'};
+  const estLabel = {pendiente:'⏳ Pendiente',en_proceso:'🔄 En proceso',completada_pendiente_revision:'🔍 Para verificar',aprobada:'✅ Aprobada',rechazada:'↩️ Devuelta',cerrada:'🔒 Cerrada'};
+  cont.innerHTML = lista.map(t=>`
+    <div class="list-item" style="border-left:4px solid ${estColor[t.estado]||'#94a3b8'}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+            <span class="badge-estado badge-${t.prioridad==='alta'?'critico':t.prioridad==='media'?'medio':'bajo'}">${t.prioridad}</span>
+            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:#eff6ff;color:${asigColor[t.asignado_a]||'#374151'}">${asigLabel[t.asignado_a]||t.asignado_a}</span>
+          </div>
+          <div class="list-item-title">${t.titulo}</div>
+          <div class="list-item-sub">${t.area||'—'} ${t.descripcion?'· '+t.descripcion.substring(0,60):''}</div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:${estColor[t.estado]};white-space:nowrap">${estLabel[t.estado]||t.estado}</div>
+      </div>
+      ${t.estado==='completada_pendiente_revision'?`
+      <div style="margin-top:8px">
+        <div style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:8px;padding:8px;font-size:12px;margin-bottom:8px">
+          <div style="font-weight:600;color:var(--purple)">📋 Completada por ${t.completado_por_nombre||'—'}</div>
+          ${t.completado_notas?`<div style="margin-top:2px">${t.completado_notas}</div>`:''}
+          ${t.foto_evidencia?`<img src="${t.foto_evidencia}" style="margin-top:6px;width:100%;max-height:120px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${t.foto_evidencia}','_blank')">`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn-sm btn-success" onclick="aprobarTarea('${t.id}')">✅ Aprobar</button>
+          <button class="btn-sm btn-warning" onclick="abrirDevolverTarea('${t.id}')">↩️ Devolver con diagnóstico</button>
+        </div>
+      </div>`:''}
+      ${t.estado==='rechazada'?`
+        <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:8px;font-size:12px;margin-top:8px;color:#b91c1c">
+          <strong>Devuelta:</strong> ${t.rechazo_motivo||'—'}
+        </div>`:''}
+    </div>`).join('');
+}
+
+window.aprobarTarea = async function(id){
+  try{
+    await updateDoc(doc(db,'tareas_mantenimiento',id),{
+      estado:'aprobada',
+      aprobado_por:S.uid,
+      aprobado_por_nombre:S.nombre,
+      aprobado_en:serverTimestamp()
+    });
+    toast('✅ Tarea aprobada');
+  }catch(e){ console.error(e); toast('Error', 'error'); }
+};
+
+window.abrirDevolverTarea = function(id) {
+  S.tareaSel = id;
+  document.getElementById('devolver-motivo').value = '';
+  document.getElementById('modal-devolver').classList.add('open');
+};
+
+window.confirmarDevolver = async function() {
+  const motivo = document.getElementById('devolver-motivo').value.trim();
+  if (!motivo) { toast('Escribe el mensaje al operario', 'error'); return; }
+  try {
+    await updateDoc(doc(db,'tareas_mantenimiento',S.tareaSel),{
+      estado: 'rechazada',
+      rechazo_motivo: motivo,
+      rechazado_por: S.uid,
+      rechazado_por_nombre: S.nombre,
+      rechazado_en: serverTimestamp()
+    });
+    cerrarModal('modal-devolver');
+    toast('↩️ Tarea devuelta al operario');
+  } catch (e) { console.error(e); toast('Error', 'error'); }
+};
+
+// ─── NAV ──────────────────────────────────────────────────
+window.navTo = function(sec,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active');
+  btn.classList.add('active');
+};
+
+// ─── START ────────────────────────────────────────────────
+iniciarListeners();
+</script>
+</body>
+</html>

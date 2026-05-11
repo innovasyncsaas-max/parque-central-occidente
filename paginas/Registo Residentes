@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Registro de Residentes</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --white: #ffffff;
+  --text: #1a1a2e;
+  --text2: #5a5a72;
+  --border: #e0ddd6;
+  --accent: #2d6a4f;
+  --accent2: #40916c;
+  --accent-light: #d8f3dc;
+  --red: #e63946;
+  --red-light: #ffe8ea;
+  --blue: #1d4ed8;
+  --blue-light: #dbeafe;
+  --font: 'DM Sans', sans-serif;
+  --font-display: 'DM Serif Display', serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:var(--bg); font-family:var(--font); color:var(--text); min-height:100vh; }
+.progress-wrap { position:sticky; top:0; z-index:100; background:var(--white); border-bottom:1px solid var(--border); padding:12px 20px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.progress-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.progress-title { font-size:13px; font-weight:600; color:var(--accent); }
+.progress-count { font-size:12px; color:var(--text2); }
+.progress-bar { height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width 0.4s ease; }
+.container { max-width:520px; margin:0 auto; padding:24px 16px 40px; }
+.step { display:none; }
+.step.active { display:block; animation:fadeIn 0.3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.step-header { margin-bottom:24px; }
+.step-icon { width:48px; height:48px; background:var(--accent-light); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:12px; }
+.step-title { font-family:var(--font-display); font-size:26px; color:var(--text); margin-bottom:4px; }
+.step-sub { font-size:14px; color:var(--text2); line-height:1.5; }
+.card { background:var(--white); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:16px; }
+.card-title { font-size:13px; font-weight:700; color:var(--accent); letter-spacing:1px; text-transform:uppercase; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+.field { margin-bottom:16px; }
+.field:last-child { margin-bottom:0; }
+.field-label { display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px; }
+.field-label span { color:var(--red); margin-left:2px; }
+.field-input { width:100%; padding:12px 14px; background:var(--bg); border:1.5px solid var(--border); border-radius:10px; font-family:var(--font); font-size:15px; color:var(--text); outline:none; transition:border-color 0.2s; appearance:none; -webkit-appearance:none; }
+.field-input:focus { border-color:var(--accent); background:var(--white); }
+select.field-input { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5a72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; }
+
+/* HABEAS DATA mejorado */
+.habeas-box { background:var(--blue-light); border:1.5px solid var(--blue); border-radius:12px; padding:16px; margin-bottom:16px; }
+.habeas-title { font-size:12px; font-weight:700; color:var(--blue); letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.habeas-text { font-size:12px; color:#1e3a5f; line-height:1.7; margin-bottom:14px; }
+.habeas-text strong { color:#1d4ed8; }
+.habeas-rights { background:rgba(29,78,216,0.06); border-radius:8px; padding:10px 12px; margin-bottom:12px; }
+.habeas-rights-title { font-size:11px; font-weight:700; color:var(--blue); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+.habeas-rights ul { list-style:none; padding:0; }
+.habeas-rights ul li { font-size:11px; color:#1e3a5f; padding:2px 0; padding-left:14px; position:relative; line-height:1.5; }
+.habeas-rights ul li::before { content:'→'; position:absolute; left:0; color:var(--blue); font-size:10px; }
+
+.terms-box { background:var(--accent-light); border:1.5px solid var(--accent); border-radius:12px; padding:16px; margin-bottom:16px; }
+.terms-text { font-size:12px; color:var(--text); line-height:1.6; margin-bottom:14px; }
+.checkbox-row { display:flex; align-items:flex-start; gap:10px; cursor:pointer; margin-bottom:10px; }
+.checkbox-row:last-child { margin-bottom:0; }
+.checkbox-row input[type="checkbox"] { width:20px; height:20px; flex-shrink:0; accent-color:var(--accent); margin-top:1px; }
+.checkbox-label { font-size:13px; font-weight:600; color:var(--text); line-height:1.4; }
+.checkbox-row-blue input[type="checkbox"] { accent-color:var(--blue); }
+.checkbox-label-blue { font-size:13px; font-weight:600; color:#1d4ed8; line-height:1.4; }
+
+.conditional { display:none; }
+.conditional.show { display:block; }
+.section-divider { display:flex; align-items:center; gap:10px; margin:20px 0 16px; }
+.section-divider-line { flex:1; height:1px; background:var(--border); }
+.section-divider-text { font-size:11px; font-weight:700; color:var(--text2); letter-spacing:1.5px; text-transform:uppercase; white-space:nowrap; }
+.radio-group { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.radio-btn { padding:12px; border:1.5px solid var(--border); border-radius:10px; text-align:center; cursor:pointer; font-size:14px; font-weight:600; color:var(--text2); background:var(--bg); transition:all 0.2s; user-select:none; }
+.radio-btn.selected { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
+.btn-row { display:flex; gap:10px; margin-top:24px; }
+.btn-next { flex:1; padding:15px; background:var(--accent); border:none; border-radius:12px; color:white; font-family:var(--font); font-size:15px; font-weight:700; cursor:pointer; transition:all 0.2s; letter-spacing:0.5px; }
+.btn-next:hover { background:var(--accent2); transform:translateY(-1px); }
+.btn-back { padding:15px 20px; background:var(--white); border:1.5px solid var(--border); border-radius:12px; color:var(--text2); font-family:var(--font); font-size:15px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+.btn-back:hover { border-color:var(--accent); color:var(--accent); }
+.success-screen { text-align:center; padding:40px 20px; }
+.success-icon { width:80px; height:80px; background:var(--accent-light); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:36px; margin:0 auto 20px; animation:popIn 0.4s ease; }
+@keyframes popIn { 0%{transform:scale(0.5);opacity:0} 80%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+.success-title { font-family:var(--font-display); font-size:28px; color:var(--accent); margin-bottom:12px; }
+.success-text { font-size:15px; color:var(--text2); line-height:1.6; }
+.loading-overlay { position:fixed; inset:0; background:rgba(247,245,240,0.9); display:none; align-items:center; justify-content:center; flex-direction:column; gap:16px; z-index:1000; }
+.loading-overlay.show { display:flex; }
+.spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.loading-text { font-size:14px; color:var(--text2); font-weight:500; }
+.error-msg { background:var(--red-light); border:1px solid var(--red); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--red); margin-top:6px; display:none; }
+.error-msg.show { display:block; }
+.vehicle-card { background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; }
+.vehicle-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+
+/* Persona cards para menores y adultos mayores */
+.persona-card { background:var(--bg); border:1.5px solid var(--border); border-radius:12px; padding:16px; margin-top:12px; }
+.persona-card-title { font-size:12px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.persona-selector { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.persona-selector label { font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; }
+.persona-selector select { flex:1; padding:8px 12px; background:var(--white); border:1.5px solid var(--border); border-radius:8px; font-family:var(--font); font-size:14px; color:var(--text); outline:none; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5a72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+.personas-container { margin-top:4px; }
+.note-text { font-size:11px; color:var(--text2); font-style:italic; margin-top:4px; }
+</style>
+</head>
+<body>
+
+<div class="progress-wrap">
+  <div class="progress-top">
+    <span class="progress-title" id="progress-title">Bienvenido</span>
+    <span class="progress-count" id="progress-count">1 de 10</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill" style="width:10%"></div>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Registrando información...</div>
+</div>
+
+<div class="container">
+
+  <!-- PASO 1: TÉRMINOS + HABEAS DATA -->
+  <div class="step active" id="step-1">
+    <div class="step-header">
+      <div class="step-icon">📋</div>
+      <div class="step-title">Bienvenido</div>
+      <div class="step-sub">Antes de comenzar, lee y acepta los términos y la política de privacidad.</div>
+    </div>
+
+    <!-- HABEAS DATA COMPLETO -->
+    <div class="habeas-box">
+      <div class="habeas-title">🔒 Política de Privacidad y Habeas Data</div>
+      <div class="habeas-text">
+        En cumplimiento de la <strong>Ley 1581 de 2012</strong> (Ley de Habeas Data), el <strong>Decreto 1377 de 2013</strong> y demás normas concordantes, la Administración del conjunto residencial informa:<br><br>
+        <strong>Responsable del tratamiento:</strong> Administración del Conjunto Residencial (en adelante "el Responsable").<br><br>
+        <strong>Finalidad del tratamiento:</strong> Los datos personales recolectados mediante este formulario serán utilizados exclusivamente para: (i) actualización y gestión de la base de datos de residentes y propietarios; (ii) prestación de servicios administrativos y operativos de la copropiedad; (iii) comunicaciones relacionadas con la administración del conjunto; (iv) cumplimiento de obligaciones legales y reglamentarias de la propiedad horizontal.<br><br>
+        <strong>Datos recolectados:</strong> Nombre completo, número de documento de identidad, teléfono, correo electrónico, información vehicular y composición familiar.<br><br>
+        <strong>Confidencialidad:</strong> Sus datos serán tratados con absoluta reserva y no serán transferidos ni cedidos a terceros sin su consentimiento previo, salvo obligación legal.<br><br>
+        <strong>Datos de menores de edad:</strong> La recolección de datos de menores se realiza bajo la responsabilidad del padre, madre o tutor legal que diligencia este formulario, quien declara tener autorización para ello conforme al artículo 12 de la Ley 1581 de 2012.
+      </div>
+      <div class="habeas-rights">
+        <div class="habeas-rights-title">Sus derechos como titular de los datos:</div>
+        <ul>
+          <li>Conocer, actualizar y rectificar sus datos personales en cualquier momento.</li>
+          <li>Solicitar prueba de la autorización otorgada para el tratamiento de sus datos.</li>
+          <li>Ser informado sobre el uso que se ha dado a sus datos personales.</li>
+          <li>Revocar la autorización y/o solicitar la supresión de sus datos cuando proceda.</li>
+          <li>Presentar quejas ante la Superintendencia de Industria y Comercio (SIC).</li>
+        </ul>
+      </div>
+      <div class="habeas-text" style="margin-bottom:10px;">
+        Para ejercer sus derechos, puede comunicarse directamente con la Administración del conjunto en las instalaciones o a través de los canales oficiales de comunicación.
+      </div>
+      <label class="checkbox-row checkbox-row-blue">
+        <input type="checkbox" id="acepta-habeas">
+        <span class="checkbox-label-blue">He leído y autorizo el tratamiento de mis datos personales y los de mi grupo familiar, conforme a la Ley 1581 de 2012 y la política de privacidad descrita.</span>
+      </label>
+    </div>
+
+    <!-- TÉRMINOS DEL CONJUNTO -->
+    <div class="terms-box">
+      <div class="terms-text">
+        La Administración informa a propietarios y residentes que se ha dispuesto la actualización de la base de datos del conjunto, la cual constituye el mecanismo oficial para la prestación de los servicios y la gestión operativa de la copropiedad.<br><br>
+        El diligenciamiento es <strong>obligatorio</strong> y deberá realizarse con información <strong>completa, veraz y actualizada</strong>. El suministro de información falsa podrá acarrear las consecuencias previstas en el reglamento de propiedad horizontal.
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="acepta-terminos">
+        <span class="checkbox-label">Acepto el reglamento del conjunto y confirmo que la información que suministraré es verídica y completa.</span>
+      </label>
+    </div>
+
+    <div class="error-msg" id="err-terminos">Debes aceptar tanto la política de privacidad como los términos del conjunto para continuar.</div>
+    <div class="btn-row">
+      <button class="btn-next" onclick="nextStep('1')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 2: DATOS INMUEBLE -->
+  <div class="step" id="step-2">
+    <div class="step-header">
+      <div class="step-icon">🏢</div>
+      <div class="step-title">Datos del Inmueble</div>
+      <div class="step-sub">Información del apartamento o casa que vas a registrar.</div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label class="field-label">Torre <span>*</span></label>
+        <select class="field-input" id="torre">
+          <option value="">-- Seleccionar --</option>
+          <option value="1">Torre 1</option>
+          <option value="2">Torre 2</option>
+          <option value="3">Torre 3</option>
+          <option value="4">Torre 4</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Número de Apartamento <span>*</span></label>
+        <input type="number" class="field-input" id="apto" placeholder="Ej: 301" min="1" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label class="field-label">¿Tiene depósito? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('tiene-deposito','Sí',this);showConditional('cond-deposito')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('tiene-deposito','No',this);hideConditional('cond-deposito')">❌ No</div>
+        </div>
+        <input type="hidden" id="tiene-deposito">
+      </div>
+      <div class="conditional" id="cond-deposito">
+        <div class="field">
+          <label class="field-label">Número de depósito <span>*</span></label>
+          <input type="text" class="field-input" id="num-deposito" placeholder="Ej: D-101, DEP5" style="text-transform:uppercase;">
+        </div>
+      </div>
+    </div>
+    <div class="error-msg" id="err-inmueble">Por favor completa todos los campos obligatorios.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('2')">← Atrás</button>
+      <button class="btn-next" onclick="nextStep('2')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 3: DATOS PROPIETARIO -->
+  <div class="step" id="step-3">
+    <div class="step-header">
+      <div class="step-icon">👤</div>
+      <div class="step-title">Datos del Propietario</div>
+      <div class="step-sub">Información del propietario y de quien diligencia el formulario.</div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label class="field-label">Nombre completo del propietario <span>*</span></label>
+        <input type="text" class="field-input" id="nombre-propietario" placeholder="Nombre y apellidos completos">
+      </div>
+      <div class="field">
+        <label class="field-label">Teléfono del propietario <span>*</span></label>
+        <input type="tel" class="field-input" id="tel-propietario" placeholder="Ej: 3001234567">
+      </div>
+      <div class="field">
+        <label class="field-label">Correo electrónico del propietario <span>*</span></label>
+        <input type="email" class="field-input" id="email-propietario" placeholder="correo@ejemplo.com">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quien diligencia este formulario</div>
+      <div class="field">
+        <label class="field-label">Tu nombre completo <span>*</span></label>
+        <input type="text" class="field-input" id="nombre-residente" placeholder="Nombre y apellidos">
+      </div>
+      <div class="field">
+        <label class="field-label">Tu teléfono <span>*</span></label>
+        <input type="tel" class="field-input" id="tel-residente" placeholder="Ej: 3001234567">
+      </div>
+      <div class="field">
+        <label class="field-label">Tu correo electrónico</label>
+        <input type="email" class="field-input" id="email-residente" placeholder="correo@ejemplo.com">
+      </div>
+      <div class="field">
+        <label class="field-label">Tipo de documento <span>*</span></label>
+        <select class="field-input" id="tipo-doc">
+          <option value="">-- Seleccionar --</option>
+          <option>Cédula de Ciudadanía</option>
+          <option>Cédula de Extranjería</option>
+          <option>Pasaporte</option>
+          <option>Tarjeta de Identidad</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Número de documento <span>*</span></label>
+        <input type="text" class="field-input" id="num-doc" placeholder="Número de documento">
+      </div>
+    </div>
+    <div class="error-msg" id="err-propietario">Por favor completa todos los campos obligatorios.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('3')">← Atrás</button>
+      <button class="btn-next" onclick="nextStep('3')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 4: ¿HABITA EL PROPIETARIO? -->
+  <div class="step" id="step-4">
+    <div class="step-header">
+      <div class="step-icon">🏠</div>
+      <div class="step-title">Residentes</div>
+      <div class="step-sub">Información sobre quién habita el inmueble.</div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label class="field-label">¿El propietario habita el inmueble? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('habita','Sí',this)">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('habita','No',this)">❌ No</div>
+        </div>
+        <input type="hidden" id="habita">
+      </div>
+    </div>
+    <div class="error-msg" id="err-habita">Por favor selecciona una opción.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('4')">← Atrás</button>
+      <button class="btn-next" onclick="nextStep('4')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 5A: COMPOSICIÓN FAMILIAR (propietario habita) -->
+  <div class="step" id="step-5a">
+    <div class="step-header">
+      <div class="step-icon">👨‍👩‍👧‍👦</div>
+      <div class="step-title">Composición Familiar</div>
+      <div class="step-sub">Personas que habitan el inmueble junto al propietario.</div>
+    </div>
+
+    <!-- ADULTOS -->
+    <div class="card">
+      <div class="card-title">👥 Adultos (18 a 59 años)</div>
+      <div class="field">
+        <label class="field-label">¿Hay adultos adicionales? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('adultos-5a','Sí',this);showConditional('cond-adultos-5a')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('adultos-5a','No',this);hideConditional('cond-adultos-5a')">❌ No</div>
+        </div>
+        <input type="hidden" id="adultos-5a">
+      </div>
+      <div class="conditional" id="cond-adultos-5a">
+        <div class="persona-selector">
+          <label>¿Cuántos?</label>
+          <select onchange="generarPersonas('adultos', '5a', this.value)">
+            <option value="0">-- Seleccionar --</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          </select>
+        </div>
+        <input type="hidden" id="cant-adultos-5a">
+        <div class="personas-container" id="personas-adultos-5a"></div>
+      </div>
+    </div>
+
+    <!-- MENORES -->
+    <div class="card">
+      <div class="card-title">👶 Menores de 18 años</div>
+      <div class="field">
+        <label class="field-label">¿Hay menores de 18 años? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('menores-5a','Sí',this);showConditional('cond-menores-5a')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('menores-5a','No',this);hideConditional('cond-menores-5a')">❌ No</div>
+        </div>
+        <input type="hidden" id="menores-5a">
+      </div>
+      <div class="conditional" id="cond-menores-5a">
+        <div class="persona-selector">
+          <label>¿Cuántos?</label>
+          <select onchange="generarPersonas('menores', '5a', this.value)">
+            <option value="0">-- Seleccionar --</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          </select>
+        </div>
+        <input type="hidden" id="cant-menores-5a">
+        <p class="note-text">* Los datos de menores son registrados bajo responsabilidad del padre, madre o tutor legal (Ley 1581/2012 art. 12).</p>
+        <div class="personas-container" id="personas-menores-5a"></div>
+      </div>
+    </div>
+
+    <!-- ADULTOS MAYORES -->
+    <div class="card">
+      <div class="card-title">👴 Adultos Mayores (60+ años)</div>
+      <div class="field">
+        <label class="field-label">¿Hay adultos mayores? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('adultos-m-5a','Sí',this);showConditional('cond-adultos-m-5a')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('adultos-m-5a','No',this);hideConditional('cond-adultos-m-5a')">❌ No</div>
+        </div>
+        <input type="hidden" id="adultos-m-5a">
+      </div>
+      <div class="conditional" id="cond-adultos-m-5a">
+        <div class="persona-selector">
+          <label>¿Cuántos?</label>
+          <select onchange="generarPersonas('adultos-m', '5a', this.value)">
+            <option value="0">-- Seleccionar --</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          </select>
+        </div>
+        <input type="hidden" id="cant-adultos-m-5a">
+        <div class="personas-container" id="personas-adultos-m-5a"></div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="err-5a">Por favor responde todas las preguntas obligatorias.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('5a')">← Atrás</button>
+      <button class="btn-next" onclick="nextStep('5a')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 5B: ARRENDATARIOS -->
+  <div class="step" id="step-5b">
+    <div class="step-header">
+      <div class="step-icon">👨‍👩‍👧‍👦</div>
+      <div class="step-title">Residentes del Inmueble</div>
+      <div class="step-sub">Personas que habitan el inmueble actualmente.</div>
+    </div>
+
+    <!-- ADULTOS -->
+    <div class="card">
+      <div class="card-title">👥 Adultos (18 a 59 años)</div>
+      <div class="field">
+        <label class="field-label">¿Hay adultos? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('adultos-5b','Sí',this);showConditional('cond-adultos-5b')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('adultos-5b','No',this);hideConditional('cond-adultos-5b')">❌ No</div>
+        </div>
+        <input type="hidden" id="adultos-5b">
+      </div>
+      <div class="conditional" id="cond-adultos-5b">
+        <div class="persona-selector">
+          <label>¿Cuántos?</label>
+          <select onchange="generarPersonas('adultos', '5b', this.value)">
+            <option value="0">-- Seleccionar --</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          </select>
+        </div>
+        <input type="hidden" id="cant-adultos-5b">
+        <div class="personas-container" id="personas-adultos-5b"></div>
+      </div>
+    </div>
+
+    <!-- MENORES -->
+    <div class="card">
+      <div class="card-title">👶 Menores de 18 años</div>
+      <div class="field">
+        <label class="field-label">¿Hay menores de 18 años? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('menores-5b','Sí',this);showConditional('cond-menores-5b')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('menores-5b','No',this);hideConditional('cond-menores-5b')">❌ No</div>
+        </div>
+        <input type="hidden" id="menores-5b">
+      </div>
+      <div class="conditional" id="cond-menores-5b">
+        <div class="persona-selector">
+          <label>¿Cuántos?</label>
+          <select onchange="generarPersonas('menores', '5b', this.value)">
+            <option value="0">-- Seleccionar --</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          </select>
+        </div>
+        <input type="hidden" id="cant-menores-5b">
+        <p class="note-text">* Los datos de menores son registrados bajo responsabilidad del padre, madre o tutor legal (Ley 1581/2012 art. 12).</p>
+        <div class="personas-container" id="personas-menores-5b"></div>
+      </div>
+    </div>
+
+    <!-- ADULTOS MAYORES -->
+    <div class="card">
+      <div class="card-title">👴 Adultos Mayores (60+ años)</div>
+      <div class="field">
+        <label class="field-label">¿Hay adultos mayores? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('adultos-m-5b','Sí',this);showConditional('cond-adultos-m-5b')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('adultos-m-5b','No',this);hideConditional('cond-adultos-m-5b')">❌ No</div>
+        </div>
+        <input type="hidden" id="adultos-m-5b">
+      </div>
+      <div class="conditional" id="cond-adultos-m-5b">
+        <div class="persona-selector">
+          <label>¿Cuántos?</label>
+          <select onchange="generarPersonas('adultos-m', '5b', this.value)">
+            <option value="0">-- Seleccionar --</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          </select>
+        </div>
+        <input type="hidden" id="cant-adultos-m-5b">
+        <div class="personas-container" id="personas-adultos-m-5b"></div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="err-5b">Por favor responde todas las preguntas obligatorias.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('5b')">← Atrás</button>
+      <button class="btn-next" onclick="nextStep('5b')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 6: MASCOTAS -->
+  <div class="step" id="step-6">
+    <div class="step-header">
+      <div class="step-icon">🐾</div>
+      <div class="step-title">Mascotas</div>
+      <div class="step-sub">Registro de mascotas en el inmueble.</div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label class="field-label">¿Tiene mascotas? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('tiene-mascotas','Sí',this);showConditional('cond-mascotas')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('tiene-mascotas','No',this);hideConditional('cond-mascotas')">❌ No</div>
+        </div>
+        <input type="hidden" id="tiene-mascotas">
+      </div>
+      <div class="conditional" id="cond-mascotas">
+        <div class="field">
+          <label class="field-label">¿Cuántas mascotas?</label>
+          <select class="field-input" id="cant-mascotas" onchange="toggleMascotas()">
+            <option value="">-- Seleccionar --</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          </select>
+        </div>
+        <div class="vehicle-card" id="bloque-mascota-1" style="display:none">
+          <div class="vehicle-title">🐾 Mascota 1</div>
+          <div class="field"><label class="field-label">Tipo</label><select class="field-input" id="m1-tipo"><option value="">--</option><option>Perro</option><option>Gato</option><option>Ave</option><option>Otro</option></select></div>
+          <div class="field"><label class="field-label">Nombre</label><input type="text" class="field-input" id="m1-nombre" placeholder="Nombre"></div>
+          <div class="field"><label class="field-label">Raza</label><input type="text" class="field-input" id="m1-raza" placeholder="Raza"></div>
+          <div class="field"><label class="field-label">Tamaño</label><select class="field-input" id="m1-tamano"><option value="">--</option><option>Pequeño</option><option>Mediano</option><option>Grande</option></select></div>
+        </div>
+        <div class="vehicle-card" id="bloque-mascota-2" style="display:none">
+          <div class="vehicle-title">🐾 Mascota 2</div>
+          <div class="field"><label class="field-label">Tipo</label><select class="field-input" id="m2-tipo"><option value="">--</option><option>Perro</option><option>Gato</option><option>Ave</option><option>Otro</option></select></div>
+          <div class="field"><label class="field-label">Nombre</label><input type="text" class="field-input" id="m2-nombre" placeholder="Nombre"></div>
+          <div class="field"><label class="field-label">Raza</label><input type="text" class="field-input" id="m2-raza" placeholder="Raza"></div>
+          <div class="field"><label class="field-label">Tamaño</label><select class="field-input" id="m2-tamano"><option value="">--</option><option>Pequeño</option><option>Mediano</option><option>Grande</option></select></div>
+        </div>
+        <div class="vehicle-card" id="bloque-mascota-3" style="display:none">
+          <div class="vehicle-title">🐾 Mascota 3</div>
+          <div class="field"><label class="field-label">Tipo</label><select class="field-input" id="m3-tipo"><option value="">--</option><option>Perro</option><option>Gato</option><option>Ave</option><option>Otro</option></select></div>
+          <div class="field"><label class="field-label">Nombre</label><input type="text" class="field-input" id="m3-nombre" placeholder="Nombre"></div>
+          <div class="field"><label class="field-label">Raza</label><input type="text" class="field-input" id="m3-raza" placeholder="Raza"></div>
+          <div class="field"><label class="field-label">Tamaño</label><select class="field-input" id="m3-tamano"><option value="">--</option><option>Pequeño</option><option>Mediano</option><option>Grande</option></select></div>
+        </div>
+      </div>
+    </div>
+    <div class="error-msg" id="err-mascotas">Por favor indica si tiene mascotas.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('6')">← Atrás</button>
+      <button class="btn-next" onclick="nextStep('6')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 7: CARROS -->
+  <div class="step" id="step-7">
+    <div class="step-header">
+      <div class="step-icon">🚗</div>
+      <div class="step-title">Carros</div>
+      <div class="step-sub">Registro de carros del inmueble.</div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label class="field-label">¿Tiene Carro 1? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('tiene-c1','Sí',this);showConditional('cond-c1')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('tiene-c1','No',this);hideConditional('cond-c1')">❌ No</div>
+        </div>
+        <input type="hidden" id="tiene-c1">
+      </div>
+      <div class="conditional" id="cond-c1">
+        <div class="vehicle-card">
+          <div class="vehicle-title">🚗 Carro 1</div>
+          <div class="field"><label class="field-label">Placa</label><input type="text" class="field-input" id="c1-placa" placeholder="Ej: ABC123"></div>
+          <div class="field"><label class="field-label">Marca</label><input type="text" class="field-input" id="c1-marca" placeholder="Ej: Toyota"></div>
+          <div class="field"><label class="field-label">Modelo</label><input type="text" class="field-input" id="c1-modelo" placeholder="Ej: Corolla 2020"></div>
+          <div class="field"><label class="field-label">Color</label><input type="text" class="field-input" id="c1-color" placeholder="Ej: Blanco"></div>
+          <div class="field">
+            <label class="field-label">¿Parqueadero asignado?</label>
+            <div class="radio-group">
+              <div class="radio-btn" onclick="selectRadio('c1-parq','Sí',this);showConditional('cond-c1-parq')">✅ Sí</div>
+              <div class="radio-btn" onclick="selectRadio('c1-parq','No',this);hideConditional('cond-c1-parq')">❌ No</div>
+            </div>
+            <input type="hidden" id="c1-parq">
+          </div>
+          <div class="conditional" id="cond-c1-parq">
+            <div class="field"><label class="field-label">Número parqueadero</label><input type="text" class="field-input" id="c1-num-parq" placeholder="Ej: P-101"></div>
+          </div>
+        </div>
+      </div>
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-text">Carro 2</div><div class="section-divider-line"></div></div>
+      <div class="field">
+        <label class="field-label">¿Tiene Carro 2?</label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('tiene-c2','Sí',this);showConditional('cond-c2')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('tiene-c2','No',this);hideConditional('cond-c2')">❌ No</div>
+        </div>
+        <input type="hidden" id="tiene-c2">
+      </div>
+      <div class="conditional" id="cond-c2">
+        <div class="vehicle-card">
+          <div class="vehicle-title">🚗 Carro 2</div>
+          <div class="field"><label class="field-label">Placa</label><input type="text" class="field-input" id="c2-placa" placeholder="Ej: ABC123"></div>
+          <div class="field"><label class="field-label">Marca</label><input type="text" class="field-input" id="c2-marca" placeholder="Ej: Mazda"></div>
+          <div class="field"><label class="field-label">Modelo</label><input type="text" class="field-input" id="c2-modelo" placeholder="Ej: CX5 2021"></div>
+          <div class="field"><label class="field-label">Color</label><input type="text" class="field-input" id="c2-color" placeholder="Ej: Gris"></div>
+          <div class="field">
+            <label class="field-label">¿Parqueadero asignado?</label>
+            <div class="radio-group">
+              <div class="radio-btn" onclick="selectRadio('c2-parq','Sí',this);showConditional('cond-c2-parq')">✅ Sí</div>
+              <div class="radio-btn" onclick="selectRadio('c2-parq','No',this);hideConditional('cond-c2-parq')">❌ No</div>
+            </div>
+            <input type="hidden" id="c2-parq">
+          </div>
+          <div class="conditional" id="cond-c2-parq">
+            <div class="field"><label class="field-label">Número parqueadero</label><input type="text" class="field-input" id="c2-num-parq" placeholder="Ej: P-102"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="error-msg" id="err-carros">Por favor indica si tiene Carro 1.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('7')">← Atrás</button>
+      <button class="btn-next" onclick="nextStep('7')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 8: MOTOS -->
+  <div class="step" id="step-8">
+    <div class="step-header">
+      <div class="step-icon">🏍️</div>
+      <div class="step-title">Motos</div>
+      <div class="step-sub">Registro de motos del inmueble.</div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label class="field-label">¿Tiene Moto 1? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('tiene-mo1','Sí',this);showConditional('cond-mo1')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('tiene-mo1','No',this);hideConditional('cond-mo1')">❌ No</div>
+        </div>
+        <input type="hidden" id="tiene-mo1">
+      </div>
+      <div class="conditional" id="cond-mo1">
+        <div class="vehicle-card">
+          <div class="vehicle-title">🏍️ Moto 1</div>
+          <div class="field"><label class="field-label">Tipo</label><select class="field-input" id="mo1-tipo"><option value="">--</option><option>Eléctrica</option><option>Combustión</option></select></div>
+          <div class="field"><label class="field-label">Placa</label><input type="text" class="field-input" id="mo1-placa" placeholder="Ej: ABC12D"></div>
+          <div class="field"><label class="field-label">Marca</label><input type="text" class="field-input" id="mo1-marca" placeholder="Ej: Honda"></div>
+          <div class="field"><label class="field-label">Modelo</label><input type="text" class="field-input" id="mo1-modelo" placeholder="Ej: CB125 2022"></div>
+          <div class="field"><label class="field-label">Color</label><input type="text" class="field-input" id="mo1-color" placeholder="Ej: Negro"></div>
+          <div class="field">
+            <label class="field-label">¿Parqueadero asignado?</label>
+            <div class="radio-group">
+              <div class="radio-btn" onclick="selectRadio('mo1-parq','Sí',this);showConditional('cond-mo1-parq')">✅ Sí</div>
+              <div class="radio-btn" onclick="selectRadio('mo1-parq','No',this);hideConditional('cond-mo1-parq')">❌ No</div>
+            </div>
+            <input type="hidden" id="mo1-parq">
+          </div>
+          <div class="conditional" id="cond-mo1-parq">
+            <div class="field"><label class="field-label">Número parqueadero</label><input type="text" class="field-input" id="mo1-num-parq" placeholder="Ej: M-05"></div>
+          </div>
+        </div>
+      </div>
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-text">Moto 2</div><div class="section-divider-line"></div></div>
+      <div class="field">
+        <label class="field-label">¿Tiene Moto 2?</label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('tiene-mo2','Sí',this);showConditional('cond-mo2')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('tiene-mo2','No',this);hideConditional('cond-mo2')">❌ No</div>
+        </div>
+        <input type="hidden" id="tiene-mo2">
+      </div>
+      <div class="conditional" id="cond-mo2">
+        <div class="vehicle-card">
+          <div class="vehicle-title">🏍️ Moto 2</div>
+          <div class="field"><label class="field-label">Tipo</label><select class="field-input" id="mo2-tipo"><option value="">--</option><option>Eléctrica</option><option>Combustión</option></select></div>
+          <div class="field"><label class="field-label">Placa</label><input type="text" class="field-input" id="mo2-placa" placeholder="Ej: XYZ34E"></div>
+          <div class="field"><label class="field-label">Marca</label><input type="text" class="field-input" id="mo2-marca" placeholder="Ej: Yamaha"></div>
+          <div class="field"><label class="field-label">Modelo</label><input type="text" class="field-input" id="mo2-modelo" placeholder="Ej: FZ 2021"></div>
+          <div class="field"><label class="field-label">Color</label><input type="text" class="field-input" id="mo2-color" placeholder="Ej: Rojo"></div>
+          <div class="field">
+            <label class="field-label">¿Parqueadero asignado?</label>
+            <div class="radio-group">
+              <div class="radio-btn" onclick="selectRadio('mo2-parq','Sí',this);showConditional('cond-mo2-parq')">✅ Sí</div>
+              <div class="radio-btn" onclick="selectRadio('mo2-parq','No',this);hideConditional('cond-mo2-parq')">❌ No</div>
+            </div>
+            <input type="hidden" id="mo2-parq">
+          </div>
+          <div class="conditional" id="cond-mo2-parq">
+            <div class="field"><label class="field-label">Número parqueadero</label><input type="text" class="field-input" id="mo2-num-parq" placeholder="Ej: M-06"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="error-msg" id="err-motos">Por favor indica si tiene Moto 1.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('8')">← Atrás</button>
+      <button class="btn-next" onclick="nextStep('8')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 9: BICICLETAS -->
+  <div class="step" id="step-9">
+    <div class="step-header">
+      <div class="step-icon">🚲</div>
+      <div class="step-title">Bicicletas</div>
+      <div class="step-sub">Registro de bicicletas del inmueble.</div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label class="field-label">¿Tiene bicicleta(s)? <span>*</span></label>
+        <div class="radio-group">
+          <div class="radio-btn" onclick="selectRadio('tiene-bici','Sí',this);showConditional('cond-bici')">✅ Sí</div>
+          <div class="radio-btn" onclick="selectRadio('tiene-bici','No',this);hideConditional('cond-bici')">❌ No</div>
+        </div>
+        <input type="hidden" id="tiene-bici">
+      </div>
+      <div class="conditional" id="cond-bici">
+        <div class="vehicle-card">
+          <div class="field"><label class="field-label">Cantidad</label><input type="number" class="field-input" id="bici-cantidad" placeholder="Ej: 2" min="1"></div>
+          <div class="field"><label class="field-label">Marca</label><input type="text" class="field-input" id="bici-marca" placeholder="Ej: Trek"></div>
+          <div class="field"><label class="field-label">Color</label><input type="text" class="field-input" id="bici-color" placeholder="Ej: Azul"></div>
+          <div class="field">
+            <label class="field-label">¿Bicicletero asignado?</label>
+            <div class="radio-group">
+              <div class="radio-btn" onclick="selectRadio('bici-parq','Sí',this);showConditional('cond-bici-parq')">✅ Sí</div>
+              <div class="radio-btn" onclick="selectRadio('bici-parq','No',this);hideConditional('cond-bici-parq')">❌ No</div>
+            </div>
+            <input type="hidden" id="bici-parq">
+          </div>
+          <div class="conditional" id="cond-bici-parq">
+            <div class="field"><label class="field-label">Número bicicletero</label><input type="text" class="field-input" id="bici-num-parq" placeholder="Ej: B-03"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="error-msg" id="err-bici">Por favor indica si tiene bicicleta.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('9')">← Atrás</button>
+      <button class="btn-next" onclick="nextStep('9')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 10: CONFIRMACIÓN -->
+  <div class="step" id="step-10">
+    <div class="step-header">
+      <div class="step-icon">✅</div>
+      <div class="step-title">Confirmar Registro</div>
+      <div class="step-sub">Revisa que todo esté correcto antes de enviar.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Resumen</div>
+      <div id="resumen-contenido" style="font-size:13px;line-height:2;color:var(--text2);"></div>
+    </div>
+    <div class="error-msg" id="err-envio">Hubo un error al enviar. Por favor intenta de nuevo.</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="prevStep('10')">← Atrás</button>
+      <button class="btn-next" onclick="submitForm()">📤 Enviar Registro</button>
+    </div>
+  </div>
+
+  <!-- ÉXITO -->
+  <div class="step" id="step-success">
+    <div class="success-screen">
+      <div class="success-icon">🏠</div>
+      <div class="success-title">¡Gracias por tu actualización!</div>
+      <div class="success-text">
+        Ahora estás registrado en nuestra base de datos.<br><br>
+        Recuerda que el <strong>número de teléfono que registraste</strong> será el contacto de notificación y el canal principal de comunicación entre la administración y quienes habitan el apartamento.<br><br>
+        En caso de <strong>cambio de propietario, mudanza o cambio de teléfono</strong>, por favor solicita actualizar tus datos directamente en administración.<br><br>
+        ¡Bienvenido a tu comunidad! 🌟
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+  authDomain: "registro-residentes.firebaseapp.com",
+  projectId: "registro-residentes",
+  storageBucket: "registro-residentes.firebasestorage.app",
+  messagingSenderId: "646123326163",
+  appId: "1:646123326163:web:8b35b955e7b3692536a226"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.saveToFirestore = async function(data) {
+  try {
+    const docRef = await addDoc(collection(db, "residentes"), {
+      ...data,
+      fechaRegistro: serverTimestamp()
+    });
+    return docRef.id;
+  } catch(e) {
+    console.error("Error guardando:", e);
+    throw e;
+  }
+};
+</script>
+
+<script>
+const STEP_TITLES = {
+  '1':'Términos','2':'Inmueble','3':'Propietario','4':'Residentes',
+  '5a':'Composición','5b':'Residentes','6':'Mascotas',
+  '7':'Carros','8':'Motos','9':'Bicicletas','10':'Confirmación'
+};
+let habitaPropietario = '';
+
+// ── Generador dinámico de fichas por persona ──────────────────────────────
+const TIPO_DOC_MENOR = ['Tarjeta de Identidad','Registro Civil','Pasaporte'];
+const TIPO_DOC_ADULTO = ['Cédula de Ciudadanía','Cédula de Extranjería','Pasaporte'];
+
+function tipoDocOptions(tipos) {
+  return tipos.map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+
+function personaCardHTML(tipo, step, idx) {
+  const esMenor = tipo === 'menores';
+  const esAdultoM = tipo === 'adultos-m';
+  const prefix = `${tipo}-${step}-p${idx}`;
+  const tiposDoc = esMenor ? tipoDocOptions(TIPO_DOC_MENOR) : tipoDocOptions(TIPO_DOC_ADULTO);
+
+  const emojis = { menores:'👶', adultos:'🧑', 'adultos-m':'👴' };
+  const labels = { menores:'Menor', adultos:'Adulto', 'adultos-m':'Adulto Mayor' };
+
+  // Rango de fecha de nacimiento según categoría
+  const hoy = new Date().toISOString().split('T')[0];
+  const maxFechaMenor = hoy; // hasta hoy (validación de <18 se hace por lógica)
+  const minFechaMenor = (() => { const d = new Date(); d.setFullYear(d.getFullYear()-17); return d.toISOString().split('T')[0]; })();
+  const maxFechaAdultoM = (() => { const d = new Date(); d.setFullYear(d.getFullYear()-60); return d.toISOString().split('T')[0]; })();
+
+  return `
+    <div class="persona-card" id="card-${prefix}">
+      <div class="persona-card-title">${emojis[tipo]} ${labels[tipo]} ${idx}</div>
+      <div class="field">
+        <label class="field-label">Nombre completo</label>
+        <input type="text" class="field-input" id="${prefix}-nombre" placeholder="Nombre y apellidos">
+      </div>
+      <div class="field">
+        <label class="field-label">Tipo de documento</label>
+        <select class="field-input" id="${prefix}-tipodoc">
+          <option value="">-- Seleccionar --</option>
+          ${tiposDoc}
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Número de documento</label>
+        <input type="text" class="field-input" id="${prefix}-numdoc" placeholder="Número">
+      </div>
+      <div class="field">
+        <label class="field-label">Fecha de nacimiento</label>
+        <input type="date" class="field-input" id="${prefix}-fechanac"
+          ${esMenor ? `min="${minFechaMenor}" max="${hoy}"` : ''}
+          ${esAdultoM ? `max="${maxFechaAdultoM}"` : ''}
+        >
+      </div>
+    </div>`;
+}
+
+window.generarPersonas = function(tipo, step, cantStr) {
+  const cant = parseInt(cantStr) || 0;
+  const container = document.getElementById(`personas-${tipo}-${step}`);
+  const cantInput = document.getElementById(`cant-${tipo}-${step}`);
+  if (!container) return;
+  container.innerHTML = '';
+  cantInput.value = cant;
+  for (let i = 1; i <= cant; i++) {
+    container.innerHTML += personaCardHTML(tipo, step, i);
+  }
+};
+
+// ── Recolectar datos de personas por tipo ────────────────────────────────
+function recolectarPersonas(tipo, step) {
+  const cant = parseInt(document.getElementById(`cant-${tipo}-${step}`)?.value || '0');
+  const arr = [];
+  for (let i = 1; i <= cant; i++) {
+    const prefix = `${tipo}-${step}-p${i}`;
+    arr.push({
+      nombre: v(`${prefix}-nombre`),
+      tipoDoc: v(`${prefix}-tipodoc`),
+      numDoc: v(`${prefix}-numdoc`),
+      fechaNacimiento: v(`${prefix}-fechanac`)
+    });
+  }
+  return arr;
+}
+
+// ── Navegación ───────────────────────────────────────────────────────────
+function updateProgress(step) {
+  const visible = ['1','2','3','4', habitaPropietario==='Sí'?'5a':'5b','6','7','8','9','10'];
+  const idx = visible.indexOf(step);
+  const total = visible.length;
+  const pct = idx >= 0 ? Math.round(((idx+1)/total)*100) : 100;
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('progress-title').textContent = STEP_TITLES[step]||'';
+  document.getElementById('progress-count').textContent = idx>=0?`${idx+1} de ${total}`:'';
+}
+
+function showStep(step) {
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step-'+step).classList.add('active');
+  updateProgress(step);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function nextStep(from) {
+  hideAllErrors();
+  if(from==='1') {
+    const habeas = document.getElementById('acepta-habeas').checked;
+    const terminos = document.getElementById('acepta-terminos').checked;
+    if(!habeas || !terminos){showError('err-terminos');return;}
+    showStep('2');
+  } else if(from==='2') {
+    if(!v('torre')||!v('apto')||!v('tiene-deposito')){showError('err-inmueble');return;}
+    // Si tiene depósito, el número de depósito es obligatorio
+    if(v('tiene-deposito')==='Sí' && !v('num-deposito')){showError('err-inmueble');return;}
+    showStep('3');
+  } else if(from==='3') {
+    if(!v('nombre-propietario')||!v('tel-propietario')||!v('email-propietario')||!v('nombre-residente')||!v('tel-residente')||!v('tipo-doc')||!v('num-doc')){showError('err-propietario');return;}
+    showStep('4');
+  } else if(from==='4') {
+    habitaPropietario=v('habita');
+    if(!habitaPropietario){showError('err-habita');return;}
+    showStep(habitaPropietario==='Sí'?'5a':'5b');
+  } else if(from==='5a') {
+    if(!v('menores-5a')||!v('adultos-5a')||!v('adultos-m-5a')){showError('err-5a');return;}
+    showStep('6');
+  } else if(from==='5b') {
+    if(!v('menores-5b')||!v('adultos-5b')||!v('adultos-m-5b')){showError('err-5b');return;}
+    showStep('6');
+  } else if(from==='6') {
+    if(!v('tiene-mascotas')){showError('err-mascotas');return;}
+    showStep('7');
+  } else if(from==='7') {
+    if(!v('tiene-c1')){showError('err-carros');return;}
+    showStep('8');
+  } else if(from==='8') {
+    if(!v('tiene-mo1')){showError('err-motos');return;}
+    showStep('9');
+  } else if(from==='9') {
+    if(!v('tiene-bici')){showError('err-bici');return;}
+    buildResumen();
+    showStep('10');
+  }
+}
+
+function prevStep(from) {
+  if(from==='2') showStep('1');
+  else if(from==='3') showStep('2');
+  else if(from==='4') showStep('3');
+  else if(from==='5a'||from==='5b') showStep('4');
+  else if(from==='6') showStep(habitaPropietario==='Sí'?'5a':'5b');
+  else if(from==='7') showStep('6');
+  else if(from==='8') showStep('7');
+  else if(from==='9') showStep('8');
+  else if(from==='10') showStep('9');
+}
+
+function v(id) { const el=document.getElementById(id); return el?el.value.trim():''; }
+function showError(id) { const el=document.getElementById(id); if(el){el.classList.add('show');setTimeout(()=>el.classList.remove('show'),5000);} }
+function hideAllErrors() { document.querySelectorAll('.error-msg').forEach(e=>e.classList.remove('show')); }
+function showConditional(id) { const el=document.getElementById(id); if(el) el.classList.add('show'); }
+function hideConditional(id) { const el=document.getElementById(id); if(el) el.classList.remove('show'); }
+
+function selectRadio(fieldId, value, btn) {
+  document.getElementById(fieldId).value=value;
+  btn.closest('.radio-group').querySelectorAll('.radio-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function toggleMascotas() {
+  const cant=parseInt(v('cant-mascotas'))||0;
+  document.getElementById('bloque-mascota-1').style.display=cant>=1?'block':'none';
+  document.getElementById('bloque-mascota-2').style.display=cant>=2?'block':'none';
+  document.getElementById('bloque-mascota-3').style.display=cant>=3?'block':'none';
+}
+
+// ── Resumen ──────────────────────────────────────────────────────────────
+function personasResumenHTML(label, arr) {
+  if (!arr || arr.length === 0) return '';
+  return arr.map((p,i) => {
+    if (!p.nombre && !p.numDoc) return '';
+    return `<strong>${label} ${i+1}:</strong> ${p.nombre||'—'} · ${p.tipoDoc||'—'} ${p.numDoc||'—'}${p.fechaNacimiento ? ' · Nac: '+p.fechaNacimiento:''}<br>`;
+  }).join('');
+}
+
+function buildResumen() {
+  const sfx=habitaPropietario==='Sí'?'-5a':'-5b';
+  const tipoSfx=habitaPropietario==='Sí'?'5a':'5b';
+
+  const menores = recolectarPersonas('menores', tipoSfx);
+  const adultos = recolectarPersonas('adultos', tipoSfx);
+  const adultosMayores = recolectarPersonas('adultos-m', tipoSfx);
+
+  document.getElementById('resumen-contenido').innerHTML=`
+    <strong>🏢 Torre:</strong> ${v('torre')} — Apto ${v('apto')}<br>
+    <strong>🗄️ Depósito:</strong> ${v('tiene-deposito')} ${v('num-deposito') ? '— '+v('num-deposito') : ''}<br>
+    <strong>👤 Propietario:</strong> ${v('nombre-propietario')}<br>
+    <strong>📱 Tel. Propietario:</strong> ${v('tel-propietario')}<br>
+    ${v('email-propietario') ? `<strong>📧 Email Propietario:</strong> ${v('email-propietario')}<br>` : ''}
+    <strong>👤 Residente:</strong> ${v('nombre-residente')}<br>
+    <strong>📱 Teléfono:</strong> ${v('tel-residente')}<br>
+    <strong>🏠 Propietario habita:</strong> ${v('habita')}<br>
+    <br>
+    ${adultos.length ? personasResumenHTML('🧑 Adulto', adultos) : ''}
+    ${menores.length ? personasResumenHTML('👶 Menor', menores) : ''}
+    ${adultosMayores.length ? personasResumenHTML('👴 Adulto Mayor', adultosMayores) : ''}
+    <strong>🐾 Mascotas:</strong> ${v('tiene-mascotas')} ${v('cant-mascotas')?'('+v('cant-mascotas')+')':''}<br>
+    <strong>🚗 Carro 1:</strong> ${v('tiene-c1')} ${v('c1-placa')?'— '+v('c1-placa'):''}<br>
+    <strong>🚗 Carro 2:</strong> ${v('tiene-c2')||'No'} ${v('c2-placa')?'— '+v('c2-placa'):''}<br>
+    <strong>🏍️ Moto 1:</strong> ${v('tiene-mo1')} ${v('mo1-placa')?'— '+v('mo1-placa'):''}<br>
+    <strong>🏍️ Moto 2:</strong> ${v('tiene-mo2')||'No'} ${v('mo2-placa')?'— '+v('mo2-placa'):''}<br>
+    <strong>🚲 Bicicleta:</strong> ${v('tiene-bici')} ${v('bici-cantidad')?'('+v('bici-cantidad')+')':''}<br>
+  `;
+}
+
+// ── Envío ────────────────────────────────────────────────────────────────
+async function submitForm() {
+  const loading=document.getElementById('loading');
+  loading.classList.add('show');
+  const sfx=habitaPropietario==='Sí'?'-5a':'-5b';
+  const tipoSfx=habitaPropietario==='Sí'?'5a':'5b';
+
+  const data = {
+    torre:v('torre'), apto:v('apto'),
+    tieneDeposito:v('tiene-deposito'), numDeposito:v('num-deposito'),
+    nombrePropietario:v('nombre-propietario'), telPropietario:v('tel-propietario'),
+    emailPropietario:v('email-propietario'),
+    nombreResidente:v('nombre-residente'), telResidente:v('tel-residente'),
+    emailResidente:v('email-residente'), tipoDoc:v('tipo-doc'), numDoc:v('num-doc'),
+    habitaPropietario:v('habita'),
+    // Adultos
+    tieneAdultos:v('adultos'+sfx),
+    adultos: recolectarPersonas('adultos', tipoSfx),
+    // Menores
+    tieneMenores:v('menores'+sfx),
+    menores: recolectarPersonas('menores', tipoSfx),
+    // Adultos mayores
+    tieneAdultosMayores:v('adultos-m'+sfx),
+    adultosMayores: recolectarPersonas('adultos-m', tipoSfx),
+    // Mascotas
+    tieneMascotas:v('tiene-mascotas'), cantMascotas:v('cant-mascotas'),
+    m1Tipo:v('m1-tipo'), m1Nombre:v('m1-nombre'), m1Raza:v('m1-raza'), m1Tamano:v('m1-tamano'),
+    m2Tipo:v('m2-tipo'), m2Nombre:v('m2-nombre'), m2Raza:v('m2-raza'), m2Tamano:v('m2-tamano'),
+    m3Tipo:v('m3-tipo'), m3Nombre:v('m3-nombre'), m3Raza:v('m3-raza'), m3Tamano:v('m3-tamano'),
+    // Carros
+    tieneCarro1:v('tiene-c1'), c1Placa:v('c1-placa'), c1Marca:v('c1-marca'), c1Modelo:v('c1-modelo'), c1Color:v('c1-color'), c1Parq:v('c1-parq'), c1NumParq:v('c1-num-parq'),
+    tieneCarro2:v('tiene-c2'), c2Placa:v('c2-placa'), c2Marca:v('c2-marca'), c2Modelo:v('c2-modelo'), c2Color:v('c2-color'), c2Parq:v('c2-parq'), c2NumParq:v('c2-num-parq'),
+    // Motos
+    tieneMoto1:v('tiene-mo1'), mo1Tipo:v('mo1-tipo'), mo1Placa:v('mo1-placa'), mo1Marca:v('mo1-marca'), mo1Modelo:v('mo1-modelo'), mo1Color:v('mo1-color'), mo1Parq:v('mo1-parq'), mo1NumParq:v('mo1-num-parq'),
+    tieneMoto2:v('tiene-mo2'), mo2Tipo:v('mo2-tipo'), mo2Placa:v('mo2-placa'), mo2Marca:v('mo2-marca'), mo2Modelo:v('mo2-modelo'), mo2Color:v('mo2-color'), mo2Parq:v('mo2-parq'), mo2NumParq:v('mo2-num-parq'),
+    // Bicicletas
+    tieneBici:v('tiene-bici'), biciCantidad:v('bici-cantidad'), biciMarca:v('bici-marca'), biciColor:v('bici-color'), biciParq:v('bici-parq'), biciNumParq:v('bici-num-parq'),
+    // Consentimientos
+    aceptaHabeasData: true,
+    aceptaTerminos: true
+  };
+  try {
+    await window.saveToFirestore(data);
+    loading.classList.remove('show');
+    showStep('success');
+  } catch(e) {
+    loading.classList.remove('show');
+    showError('err-envio');
+  }
+}
+
+updateProgress('1');
+</script>
+</body>
+</html>

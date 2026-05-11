@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Módulo A — Piscinero | PCO3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1e3a5f;
+  --primary-light: #2a4f82;
+  --blue: #2563eb;
+  --sky: #0ea5e9;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-bg: #fef2f2;
+  --bg: #f0f4f8;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(30,58,95,.10);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 80px;
+  -webkit-tap-highlight-color: transparent;
+}
+.header {
+  background: var(--primary);
+  color: #fff;
+  padding: 16px 20px 14px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.header-top { display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 17px; font-weight: 600; }
+.header-sub { font-size: 12px; opacity: .75; margin-top: 2px; }
+.badge-op {
+  font-size: 11px; font-weight: 600; padding: 4px 10px;
+  border-radius: 20px; letter-spacing: .5px;
+}
+.badge-op.activa { background: #d1fae5; color: #065f46; }
+.badge-op.suspendida { background: #fee2e2; color: #991b1b; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.banner-critico {
+  display: none; background: var(--danger); color: #fff;
+  padding: 12px 20px; text-align: center;
+  font-weight: 600; font-size: 14px;
+}
+.banner-critico.show { display: block; }
+.nav-bottom {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--card); border-top: 1px solid var(--border);
+  display: flex; box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 8px 2px 6px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 10px;
+  color: var(--muted); transition: color .2s;
+  position: relative;
+}
+.nav-btn.active { color: var(--primary); }
+.nav-btn svg { width: 22px; height: 22px; margin-bottom: 3px; stroke-width: 1.8; }
+.nav-badge {
+  position: absolute; top: 6px; right: calc(50% - 16px);
+  background: var(--danger); color: #fff;
+  font-size: 9px; font-weight: 700; width: 16px; height: 16px;
+  border-radius: 50%; display: none; align-items: center; justify-content: center;
+}
+.nav-badge.show { display: flex; }
+.section { display: none; padding: 16px; }
+.section.active { display: block; }
+.card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden;
+}
+.card-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.card-header h2 { font-size: 14px; font-weight: 600; }
+.card-body { padding: 14px 16px; }
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 14px; text-align: center; box-shadow: var(--shadow);
+}
+.stat-num { font-size: 28px; font-weight: 700; color: var(--primary); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.aforo-bar-wrap { margin: 12px 0 6px; }
+.aforo-bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+.aforo-bar-track {
+  height: 10px; background: var(--border); border-radius: 10px; overflow: hidden;
+}
+.aforo-bar-fill {
+  height: 100%; border-radius: 10px; transition: width .4s, background .4s;
+  background: var(--success);
+}
+.aforo-bar-fill.warn { background: var(--warning); }
+.aforo-bar-fill.danger { background: var(--danger); }
+.reserva-card {
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 10px;
+  background: #f8fafc;
+}
+.reserva-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.reserva-nombre { font-weight: 600; font-size: 14px; }
+.reserva-hora {
+  background: var(--primary); color: #fff;
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+}
+.reserva-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; margin-bottom: 6px; }
+.reserva-personas { font-size: 12px; font-weight: 500; color: var(--blue); }
+.acompañantes-list { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+.acomp-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.acomp-item { font-size: 12px; color: var(--text); padding: 2px 0; }
+.hora-grupo { margin-bottom: 16px; }
+.hora-grupo-label {
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.cupos-chip { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.cupos-ok { background: #d1fae5; color: #065f46; }
+.cupos-warn { background: #fef3c7; color: #92400e; }
+.cupos-full { background: #fee2e2; color: #991b1b; }
+.check-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.check-item:last-child { border-bottom: none; }
+.check-box {
+  width: 22px; height: 22px; border-radius: 6px;
+  border: 2px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; background: var(--card);
+}
+.check-item.checked .check-box { background: var(--success); border-color: var(--success); }
+.check-item.checked .check-box::after { content: '✓'; color: #fff; font-size: 13px; font-weight: 700; }
+.check-item.checked .check-text { color: var(--muted); text-decoration: line-through; }
+.check-text { font-size: 13px; line-height: 1.4; }
+.check-progress {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--primary); color: #fff;
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;
+}
+.check-progress-num { font-size: 20px; font-weight: 700; }
+.check-progress-label { font-size: 12px; opacity: .85; }
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-family: 'DM Sans', sans-serif;
+  font-size: 15px; color: var(--text); background: var(--card);
+  transition: border-color .2s; outline: none; -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
+.form-input.out-of-range { border-color: var(--warning); background: #fffbeb; }
+.form-input.danger-range { border-color: var(--danger); background: #fef2f2; }
+.range-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.form-textarea { min-height: 80px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.section-title {
+  font-size: 13px; font-weight: 700; color: var(--primary);
+  text-transform: uppercase; letter-spacing: .6px;
+  padding: 10px 0 8px; border-bottom: 2px solid var(--primary);
+  margin: 16px 0 12px;
+}
+.fotos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.foto-slot {
+  aspect-ratio: 1; border-radius: 10px; overflow: hidden;
+  border: 2px dashed var(--border); display: flex;
+  align-items: center; justify-content: center;
+  background: #f8fafc; cursor: pointer; position: relative;
+}
+.foto-slot.filled { border-style: solid; border-color: var(--success); }
+.foto-slot img { width: 100%; height: 100%; object-fit: cover; }
+.foto-slot-icon { color: var(--muted); text-align: center; font-size: 11px; }
+.foto-counter {
+  text-align: center; font-size: 13px; font-weight: 600;
+  padding: 8px; border-radius: 8px; margin-bottom: 12px;
+}
+.foto-counter.ok { background: #d1fae5; color: #065f46; }
+.foto-counter.pending { background: #fee2e2; color: #991b1b; }
+.quimico-item {
+  border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 12px; margin-bottom: 10px; background: #fafcff;
+}
+.quimico-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.quimico-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  font-size: 11px; font-weight: 700; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+.quimico-nombre { font-weight: 600; font-size: 14px; flex: 1; }
+.toggle-si-no {
+  display: flex; border-radius: 8px; overflow: hidden;
+  border: 1.5px solid var(--border); margin-bottom: 10px;
+}
+.toggle-si-no button {
+  flex: 1; padding: 8px; border: none; background: none;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.toggle-si-no button.si.active { background: var(--success); color: #fff; }
+.toggle-si-no button.no.active { background: #e2e8f0; color: var(--muted); }
+.quimico-extra { display: none; }
+.quimico-extra.show { display: block; }
+.foto-mini {
+  width: 100%; height: 80px; border-radius: 8px; overflow: hidden;
+  border: 2px dashed var(--border); display: flex;
+  align-items: center; justify-content: center;
+  background: #f8fafc; cursor: pointer; margin-top: 8px;
+}
+.foto-mini.filled { border-style: solid; border-color: var(--sky); }
+.foto-mini img { width: 100%; height: 100%; object-fit: cover; }
+.sev-selector { display: flex; gap: 8px; margin-bottom: 10px; }
+.sev-btn {
+  flex: 1; padding: 10px 6px; border-radius: 8px; border: 2px solid var(--border);
+  background: none; font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.sev-btn.bajo.active { background: #d1fae5; border-color: #10b981; color: #065f46; }
+.sev-btn.medio.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+.sev-btn.critico.active { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+.novedad-item {
+  border-left: 4px solid var(--border); padding: 10px 12px;
+  margin-bottom: 8px; background: #fafcff; border-radius: 0 8px 8px 0;
+}
+.novedad-item.bajo { border-left-color: var(--success); }
+.novedad-item.medio { border-left-color: var(--warning); }
+.novedad-item.critico { border-left-color: var(--danger); }
+.novedad-sev { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+.novedad-sev.bajo { color: var(--success); }
+.novedad-sev.medio { color: var(--warning); }
+.novedad-sev.critico { color: var(--danger); }
+.novedad-desc { font-size: 13px; line-height: 1.5; }
+.novedad-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 20px; border-radius: 12px; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+  cursor: pointer; width: 100%; transition: all .2s;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-secondary { background: #f1f5f9; color: var(--text); border: 1.5px solid var(--border); }
+.btn-sm { padding: 9px 14px; font-size: 13px; border-radius: 8px; }
+.btn-foto {
+  background: var(--sky); color: #fff;
+  padding: 12px; border-radius: 10px; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; width: 100%; display: flex; align-items: center;
+  justify-content: center; gap: 8px; margin-bottom: 12px;
+}
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.empty-state { text-align: center; padding: 32px 16px; color: var(--muted); }
+.empty-state svg { margin-bottom: 10px; opacity: .4; }
+.empty-state p { font-size: 14px; }
+.loader { text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+.toast {
+  position: fixed; bottom: 90px; left: 16px; right: 16px; z-index: 999;
+  padding: 14px 16px; border-radius: 12px; font-size: 14px; font-weight: 500;
+  text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.2);
+  transform: translateY(20px); opacity: 0;
+  transition: all .3s; pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: #065f46; color: #fff; }
+.toast.error { background: #991b1b; color: #fff; }
+.toast.warning { background: #92400e; color: #fff; }
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.6); align-items: flex-end;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card); border-radius: 20px 20px 0 0;
+  padding: 20px 20px 32px; width: 100%;
+  max-height: 80vh; overflow-y: auto;
+}
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.text-muted { color: var(--muted); font-size: 13px; }
+.text-danger { color: var(--danger); }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>🏊 Módulo Piscinero</h1>
+      <div class="header-sub" id="fechaHora">Cargando...</div>
+    </div>
+    <span class="badge-op activa" id="badgeOp">● ACTIVA</span>
+  </div>
+</div>
+
+<div class="banner-critico" id="bannerCritico">
+  ⛔ OPERACIÓN SUSPENDIDA — Novedad crítica activa
+</div>
+
+<div class="section active" id="sec-dashboard">
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="statReservas">—</div>
+      <div class="stat-label">Reservas hoy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statPersonas">—</div>
+      <div class="stat-label">Personas totales</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="aforo-bar-wrap">
+        <div class="aforo-bar-label">
+          <span style="font-weight:600">Aforo del día</span>
+          <span id="aforoTexto">0 / 25</span>
+        </div>
+        <div class="aforo-bar-track">
+          <div class="aforo-bar-fill" id="aforoBar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <h2>Estado del turno</h2>
+    </div>
+    <div class="card-body">
+      <div id="estadoChecklist" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span id="iconChecklist">⬜</span>
+        <span style="font-size:13px">Checklist de inicio</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:600" id="txtChecklist">Pendiente</span>
+      </div>
+      <div id="estadoControl" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span id="iconControl">⬜</span>
+        <span style="font-size:13px">Control químico</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:600" id="txtControl">Pendiente</span>
+      </div>
+      <div id="estadoNovedades" style="display:flex;align-items:center;gap:8px;padding:8px 0">
+        <span>📋</span>
+        <span style="font-size:13px">Novedades abiertas</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:600" id="txtNovedades">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <h2>Última actualización</h2>
+    </div>
+    <div class="card-body">
+      <div style="font-size:13px;color:var(--muted)" id="ultimaActualizacion">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-reservas">
+  <div class="card">
+    <div class="card-header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <h2>Reservas de hoy</h2>
+    </div>
+    <div class="card-body">
+      <div class="aforo-bar-wrap" style="margin-top:0">
+        <div class="aforo-bar-label">
+          <span style="font-size:13px;font-weight:600">Aforo acumulado del día</span>
+          <span id="aforoTexto2" style="font-weight:700;color:var(--primary)">0 / 25</span>
+        </div>
+        <div class="aforo-bar-track">
+          <div class="aforo-bar-fill" id="aforoBar2" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="listaReservas">
+    <div class="loader">Cargando reservas...</div>
+  </div>
+</div>
+
+<div class="section" id="sec-checklist">
+  <div class="check-progress">
+    <div>
+      <div class="check-progress-num" id="checkNum">0/12</div>
+      <div class="check-progress-label">ítems completados</div>
+    </div>
+    <div style="margin-left:auto;font-size:12px;opacity:.85" id="checkStatus">Incompleto</div>
+  </div>
+
+  <div id="alertaChecklistYa" style="display:none" class="card">
+    <div class="card-body" style="display:flex;align-items:center;gap:10px;color:var(--success)">
+      <span style="font-size:20px">✅</span>
+      <div>
+        <div style="font-weight:600;font-size:14px">Checklist completado hoy</div>
+        <div style="font-size:12px;color:var(--muted)" id="checkHora"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="checklistForm">
+    <div class="card-body" id="checklistItems"></div>
+    <div style="padding:0 16px 16px">
+      <button class="btn btn-primary" id="btnGuardarChecklist" onclick="guardarChecklist()" disabled>
+        Guardar checklist
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-control">
+  <div id="alertaChecklistReq" style="display:none" class="card">
+    <div class="card-body" style="display:flex;align-items:center;gap:10px;color:var(--warning)">
+      <span style="font-size:20px">⚠️</span>
+      <div>
+        <div style="font-weight:600;font-size:14px">Completa el checklist primero</div>
+        <div style="font-size:12px;color:var(--muted)">Ve a la pestaña Checklist y completa todos los ítems.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="controlFormWrap">
+    <div class="card">
+      <div class="card-header">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <h2>Fotos del turno</h2>
+      </div>
+      <div class="card-body">
+        <div class="foto-counter pending" id="fotoCounter">📷 0 de 4 fotos requeridas</div>
+        <div class="fotos-grid" id="fotosGrid">
+          <div class="foto-slot" onclick="tomarFotoControl(0)" id="fotoSlot0">
+            <div class="foto-slot-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <div>Foto 1</div>
+            </div>
+          </div>
+          <div class="foto-slot" onclick="tomarFotoControl(1)" id="fotoSlot1">
+            <div class="foto-slot-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <div>Foto 2</div>
+            </div>
+          </div>
+          <div class="foto-slot" onclick="tomarFotoControl(2)" id="fotoSlot2">
+            <div class="foto-slot-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <div>Foto 3</div>
+            </div>
+          </div>
+          <div class="foto-slot" onclick="tomarFotoControl(3)" id="fotoSlot3">
+            <div class="foto-slot-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <div>Foto 4</div>
+            </div>
+          </div>
+        </div>
+        <button class="btn-foto" onclick="tomarFotoAdicional()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          + Foto adicional (<span id="fotoAdicionalCount">0</span>)
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span style="font-size:18px">🏊</span>
+        <h2>Parámetros Piscina</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cloro Total (ppm)</label>
+            <input type="number" step="0.1" min="0" max="10" class="form-input" id="p_cloro_total" placeholder="0.0" oninput="validarRango(this,0.5,3.0)">
+            <div class="range-hint">Normal: 0.5 – 3.0</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cloro Residual (ppm)</label>
+            <input type="number" step="0.1" min="0" max="10" class="form-input" id="p_cloro_residual" placeholder="0.0" oninput="validarRango(this,0.2,1.0)">
+            <div class="range-hint">Normal: 0.2 – 1.0</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Alcalinidad (ppm)</label>
+            <input type="number" step="1" class="form-input" id="p_alcalinidad" placeholder="0" oninput="validarRango(this,80,120)">
+            <div class="range-hint">Normal: 80 – 120</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dureza (ppm)</label>
+            <input type="number" step="1" class="form-input" id="p_dureza" placeholder="0" oninput="validarRango(this,200,400)">
+            <div class="range-hint">Normal: 200 – 400</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Color</label>
+            <select class="form-select" id="p_color">
+              <option value="">Seleccionar</option>
+              <option value="transparente">Transparente</option>
+              <option value="ligeramente_verde">Ligeramente verde</option>
+              <option value="verde">Verde</option>
+              <option value="turbio">Turbio</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Transparencia</label>
+            <select class="form-select" id="p_transparencia">
+              <option value="">Seleccionar</option>
+              <option value="excelente">Excelente</option>
+              <option value="buena">Buena</option>
+              <option value="regular">Regular</option>
+              <option value="mala">Mala</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temperatura (°C)</label>
+          <input type="number" step="0.5" class="form-input" id="p_temperatura" placeholder="0.0" oninput="validarRango(this,26,32)" style="max-width:140px">
+          <div class="range-hint">Normal: 26 – 32°C</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span style="font-size:18px">♨️</span>
+        <h2>Parámetros Jacuzzi</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cloro Total (ppm)</label>
+            <input type="number" step="0.1" min="0" max="10" class="form-input" id="j_cloro_total" placeholder="0.0" oninput="validarRango(this,1.0,3.0)">
+            <div class="range-hint">Normal: 1.0 – 3.0</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cloro Residual (ppm)</label>
+            <input type="number" step="0.1" min="0" max="10" class="form-input" id="j_cloro_residual" placeholder="0.0" oninput="validarRango(this,0.5,1.5)">
+            <div class="range-hint">Normal: 0.5 – 1.5</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Alcalinidad (ppm)</label>
+            <input type="number" step="1" class="form-input" id="j_alcalinidad" placeholder="0" oninput="validarRango(this,80,120)">
+            <div class="range-hint">Normal: 80 – 120</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Temperatura (°C)</label>
+            <input type="number" step="0.5" class="form-input" id="j_temperatura" placeholder="0.0" oninput="validarRango(this,36,40)">
+            <div class="range-hint">Normal: 36 – 40°C</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span style="font-size:18px">🧪</span>
+        <h2>Químicos aplicados</h2>
+      </div>
+      <div class="card-body" id="quimicosContainer"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Observaciones generales</label>
+          <textarea class="form-textarea" id="observacionesControl" placeholder="Condiciones del agua, equipo, ambiente..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnGuardarControl" onclick="guardarControl()">
+      💾 Guardar control químico
+    </button>
+    <div style="height:12px"></div>
+  </div>
+</div>
+
+<div class="section" id="sec-novedades">
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:18px">➕</span>
+      <h2>Registrar novedad</h2>
+    </div>
+    <div class="card-body">
+      <div class="form-group">
+        <label class="form-label">Severidad</label>
+        <div class="sev-selector">
+          <button class="sev-btn bajo" onclick="selSeveridad('BAJO',this)">🟢 BAJO</button>
+          <button class="sev-btn medio" onclick="selSeveridad('MEDIO',this)">🟡 MEDIO</button>
+          <button class="sev-btn critico" onclick="selSeveridad('CRÍTICO',this)">🔴 CRÍTICO</button>
+        </div>
+        <div id="alertaCriticoInfo" style="display:none;background:#fee2e2;border-radius:8px;padding:10px;font-size:12px;color:#991b1b;margin-top:8px">
+          ⛔ Una novedad CRÍTICO <strong>suspende la operación</strong> y notifica inmediatamente al administrador y supervisor.
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <textarea class="form-textarea" id="novedadDesc" placeholder="Describe la novedad con el mayor detalle posible..."></textarea>
+      </div>
+      <button class="btn btn-primary" id="btnGuardarNovedad" onclick="guardarNovedad()">
+        Registrar novedad
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:18px">📋</span>
+      <h2>Novedades de hoy</h2>
+    </div>
+    <div class="card-body" id="listaNov">
+      <div class="loader">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<nav class="nav-bottom">
+  <button class="nav-btn active" onclick="irA('dashboard',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Inicio
+  </button>
+  <button class="nav-btn" onclick="irA('reservas',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Reservas
+  </button>
+  <button class="nav-btn" onclick="irA('checklist',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Checklist
+  </button>
+  <button class="nav-btn" onclick="irA('control',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+    Químicos
+  </button>
+  <button class="nav-btn" onclick="irA('novedades',this)">
+    <div class="nav-badge" id="badgeNov">0</div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Novedades
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modalCritico">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:48px">⛔</div>
+      <div class="modal-title">¿Confirmar novedad CRÍTICO?</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6">
+        Esta acción <strong>suspende la operación de la piscina</strong> y envía notificación inmediata al administrador y supervisor.<br><br>
+        Solo el supervisor o administrador podrán reactivar la operación.
+      </p>
+    </div>
+    <button class="btn btn-danger" style="margin-bottom:10px" onclick="confirmarCritico()">
+      Sí, registrar y suspender operación
+    </button>
+    <button class="btn btn-secondary" onclick="cerrarModalCritico()">
+      Cancelar
+    </button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp, Timestamp }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+const firebaseConfig = {
+  apiKey: "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+  authDomain: "registro-residentes.firebaseapp.com",
+  projectId: "registro-residentes",
+  storageBucket: "registro-residentes.firebasestorage.app",
+  messagingSenderId: "646123326163",
+  appId: "1:646123326163:web:8b35b955e7b3692536a226"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const params = new URLSearchParams(window.location.search);
+const SESSION = {
+  uid: params.get('uid') || localStorage.getItem('pco3_uid') || 'piscinero_test',
+  nombre: params.get('nombre') || localStorage.getItem('pco3_nombre') || 'Piscinero',
+  rol: params.get('rol') || 'piscinero'
+};
+if (params.get('uid')) {
+  localStorage.setItem('pco3_uid', SESSION.uid);
+  localStorage.setItem('pco3_nombre', SESSION.nombre);
+}
+
+const STATE = {
+  checklistOk: false,
+  fotosControl: [null, null, null, null],
+  fotosAdicionales: [],
+  quimicos: [
+    { nombre: 'Cloro granulado', aplicado: null, cantidad: '', unidad: 'kg', fotoUrl: null },
+    { nombre: 'Reductor de pH', aplicado: null, cantidad: '', unidad: 'L', fotoUrl: null },
+    { nombre: 'Incrementador de pH', aplicado: null, cantidad: '', unidad: 'kg', fotoUrl: null },
+    { nombre: 'Algicida', aplicado: null, cantidad: '', unidad: 'L', fotoUrl: null },
+    { nombre: 'Estabilizador', aplicado: null, cantidad: '', unidad: 'kg', fotoUrl: null }
+  ],
+  severidadNovedad: null,
+  operacionSuspendida: false,
+  novedadesAbiertas: 0
+};
+
+// FIX zona horaria: usa fecha local de Bogotá, no UTC.
+// Sin esto, registros creados en la noche quedan etiquetados con la fecha del día siguiente.
+function fechaHoy() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+function formatHora(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+}
+
+function showToast(msg, tipo = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// FIX: wrapper para listeners con manejo de errores. Sin esto, queries sin índice fallan en silencio.
+function escuchar(q, onData, etiqueta) {
+  return onSnapshot(q, onData, error => {
+    console.error(`❌ Error en listener "${etiqueta}":`, error.code, error.message);
+    if (error.code === 'failed-precondition') {
+      console.error(`🔧 FALTA ÍNDICE COMPUESTO para "${etiqueta}". Busca en este mismo log el URL "create_composite=..." y créalo en Firebase Console.`);
+    }
+  });
+}
+
+window.irA = function(sec, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`sec-${sec}`).classList.add('active');
+  btn.classList.add('active');
+  if (sec === 'reservas') cargarReservas();
+  if (sec === 'novedades') cargarNovedades();
+  if (sec === 'control') verificarChecklistParaControl();
+};
+
+function actualizarReloj() {
+  const ahora = new Date();
+  const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+  const fecha = ahora.toLocaleDateString('es-CO', opts);
+  const hora = ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('fechaHora').textContent = `${fecha} · ${hora}`;
+}
+setInterval(actualizarReloj, 1000);
+actualizarReloj();
+
+async function escucharEstadoOperacion() {
+  const docRef = doc(db, 'pool_estado', fechaHoy());
+  escuchar(docRef, (snap) => {
+    const data = snap.data() || {};
+    // FIX: comparación explícita con true. Si data.suspendida es false (después de reactivación), debe evaluar a false correctamente.
+    STATE.operacionSuspendida = data.suspendida === true;
+    const badge = document.getElementById('badgeOp');
+    const banner = document.getElementById('bannerCritico');
+    if (STATE.operacionSuspendida) {
+      badge.textContent = '⛔ SUSPENDIDA';
+      badge.className = 'badge-op suspendida';
+      banner.classList.add('show');
+    } else {
+      badge.textContent = '● ACTIVA';
+      badge.className = 'badge-op activa';
+      banner.classList.remove('show');
+    }
+  }, 'pool_estado');
+}
+
+async function cargarDashboard() {
+  const hoy = fechaHoy();
+
+  const ckSnap = await getDoc(doc(db, 'pool_checklists', `${hoy}_${SESSION.uid}`));
+  if (ckSnap.exists()) {
+    STATE.checklistOk = true;
+    document.getElementById('iconChecklist').textContent = '✅';
+    document.getElementById('txtChecklist').textContent = 'Completado';
+    document.getElementById('txtChecklist').style.color = 'var(--success)';
+  }
+
+  const ctrlQ = query(collection(db, 'pool_controls'),
+    where('piscinero_id', '==', SESSION.uid),
+    where('fecha', '==', hoy));
+  const ctrlSnap = await getDocs(ctrlQ);
+  if (!ctrlSnap.empty) {
+    document.getElementById('iconControl').textContent = '✅';
+    document.getElementById('txtControl').textContent = 'Registrado';
+    document.getElementById('txtControl').style.color = 'var(--success)';
+    const d = ctrlSnap.docs[0].data();
+    const hora = formatHora(d.timestamp);
+    document.getElementById('ultimaActualizacion').textContent =
+      `Control químico guardado a las ${hora} por ${SESSION.nombre}`;
+  }
+
+  await actualizarAforoDashboard();
+
+  // FIX: lee tanto status:'ABIERTO' como estado:'abierta' para retrocompatibilidad
+  const novQ = query(collection(db, 'pool_novedades'),
+    where('fecha', '==', hoy));
+  const novSnap = await getDocs(novQ);
+  let abiertas = 0;
+  novSnap.forEach(d => {
+    const n = d.data();
+    if (n.status === 'ABIERTO' || n.estado === 'abierta' || n.estado === 'en_atencion') abiertas++;
+  });
+  STATE.novedadesAbiertas = abiertas;
+  document.getElementById('txtNovedades').textContent = abiertas;
+  if (abiertas > 0) {
+    document.getElementById('txtNovedades').style.color = 'var(--danger)';
+    const badge = document.getElementById('badgeNov');
+    badge.textContent = abiertas;
+    badge.classList.add('show');
+  }
+}
+
+async function actualizarAforoDashboard() {
+  const hoy = fechaHoy();
+  const q = query(collection(db, 'reservas'),
+    where('fecha', '==', hoy),
+    where('espacio', '==', 'Piscina & Jacuzzi'),
+    where('estado', 'in', ['activa', 'confirmada', 'pagada'])
+  );
+  const snap = await getDocs(q);
+
+  let totalPersonas = 0;
+  let totalReservas = 0;
+  snap.forEach(d => {
+    const r = d.data();
+    const np = parseInt(r.numPersonas || r.num_personas || 1);
+    totalPersonas += np;
+    totalReservas++;
+  });
+
+  document.getElementById('statReservas').textContent = totalReservas;
+  document.getElementById('statPersonas').textContent = totalPersonas;
+  actualizarBarraAforo(totalPersonas, 'aforoBar', 'aforoTexto');
+}
+
+function actualizarBarraAforo(total, barId, textoId) {
+  const pct = Math.min((total / 25) * 100, 100);
+  const bar = document.getElementById(barId);
+  const txt = document.getElementById(textoId);
+  bar.style.width = pct + '%';
+  bar.className = 'aforo-bar-fill';
+  if (total >= 25) bar.classList.add('danger');
+  else if (total >= 20) bar.classList.add('warn');
+  if (txt) txt.textContent = `${total} / 25`;
+}
+
+async function cargarReservas() {
+  const lista = document.getElementById('listaReservas');
+  lista.innerHTML = '<div class="loader">Cargando reservas...</div>';
+
+  const hoy = fechaHoy();
+  const q = query(
+    collection(db, 'reservas'),
+    where('fecha', '==', hoy),
+    where('espacio', '==', 'Piscina & Jacuzzi'),
+    where('estado', 'in', ['activa', 'confirmada', 'pagada'])
+  );
+
+  try {
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      lista.innerHTML = `<div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <p>No hay reservas de piscina para hoy</p>
+      </div>`;
+      actualizarBarraAforo(0, 'aforoBar2', 'aforoTexto2');
+      return;
+    }
+
+    const grupos = {};
+    let totalPersonas = 0;
+    snap.forEach(d => {
+      const r = { id: d.id, ...d.data() };
+      const hora = r.hora || 'Sin hora';
+      if (!grupos[hora]) grupos[hora] = { reservas: [], personas: 0 };
+      const np = parseInt(r.numPersonas || r.num_personas || 1);
+      grupos[hora].reservas.push(r);
+      grupos[hora].personas += np;
+      totalPersonas += np;
+    });
+
+    actualizarBarraAforo(totalPersonas, 'aforoBar2', 'aforoTexto2');
+
+    let html = '';
+    Object.keys(grupos).sort().forEach(hora => {
+      const g = grupos[hora];
+      const cuposLibres = 25 - g.personas;
+      let chipClass = 'cupos-ok';
+      let chipTxt = `${cuposLibres} cupos libres`;
+      if (cuposLibres <= 0) { chipClass = 'cupos-full'; chipTxt = 'Sin cupos'; }
+      else if (cuposLibres <= 5) { chipClass = 'cupos-warn'; }
+
+      html += `<div class="hora-grupo">
+        <div class="hora-grupo-label">
+          🕐 ${hora}
+          <span class="cupos-chip ${chipClass}">${chipTxt}</span>
+          <span style="margin-left:auto;font-size:11px">${g.personas} personas</span>
+        </div>`;
+
+      g.reservas.forEach(r => {
+        const np = parseInt(r.numPersonas || r.num_personas || 1);
+        const acomps = r.acompanantes || r.acompañantes || [];
+
+        html += `<div class="reserva-card">
+          <div class="reserva-header">
+            <div class="reserva-nombre">${r.nombre || r.nombreResidente || '—'}</div>
+            <div class="reserva-hora">${hora}</div>
+          </div>
+          <div class="reserva-meta">
+            <span>🏢 ${r.torre || '—'} · Apto ${r.apartamento || r.apto || '—'}</span>
+          </div>
+          <div class="reserva-personas">
+            👥 ${np} persona${np > 1 ? 's' : ''} en total
+            (${np === 1 ? 'solo residente' : `1 residente + ${np - 1} acompañante${np - 1 > 1 ? 's' : ''}`})
+          </div>`;
+
+        if (acomps.length > 0) {
+          html += `<div class="acompañantes-list">
+            <div class="acomp-label">Acompañantes registrados:</div>`;
+          acomps.forEach((a, i) => {
+            const nombre = typeof a === 'string' ? a : (a.nombre || a.name || `Acompañante ${i + 1}`);
+            html += `<div class="acomp-item">· ${nombre}</div>`;
+          });
+          html += '</div>';
+        } else if (np > 1) {
+          html += `<div class="acompañantes-list">
+            <div class="acomp-label" style="color:var(--warning)">
+              ⚠️ ${np - 1} acompañante${np - 1 > 1 ? 's' : ''} sin nombres registrados
+            </div>
+          </div>`;
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+
+    lista.innerHTML = html;
+  } catch (e) {
+    console.error(e);
+    lista.innerHTML = `<div class="empty-state"><p>Error al cargar reservas.<br>Verifica conexión.</p></div>`;
+  }
+}
+
+const CHECKLIST_ITEMS = [
+  'Revisión visual del agua',
+  'Estado de la piscina (grietas, suciedad visible)',
+  'Estado del jacuzzi',
+  'Equipos de bombeo encendidos',
+  'Skimmers despejados',
+  'Duchas operativas',
+  'Señalización en su lugar',
+  'Área perimetral limpia',
+  'Kit de emergencias disponible',
+  'Maletín de químicos completo',
+  'Estado de iluminación',
+  'Registro de turno anterior revisado'
+];
+
+const checkState = new Array(12).fill(false);
+
+async function initChecklist() {
+  const hoy = fechaHoy();
+  const snap = await getDoc(doc(db, 'pool_checklists', `${hoy}_${SESSION.uid}`));
+
+  if (snap.exists()) {
+    STATE.checklistOk = true;
+    document.getElementById('alertaChecklistYa').style.display = 'block';
+    document.getElementById('checklistForm').style.display = 'none';
+    const d = snap.data();
+    document.getElementById('checkHora').textContent =
+      `Completado a las ${formatHora(d.timestamp)} por ${SESSION.nombre}`;
+    return;
+  }
+
+  renderChecklist();
+}
+
+function renderChecklist() {
+  const cont = document.getElementById('checklistItems');
+  cont.innerHTML = CHECKLIST_ITEMS.map((item, i) => `
+    <div class="check-item" id="chk${i}" onclick="toggleCheck(${i})">
+      <div class="check-box"></div>
+      <div class="check-text">${item}</div>
+    </div>
+  `).join('');
+  actualizarProgresoChecklist();
+}
+
+window.toggleCheck = function(i) {
+  checkState[i] = !checkState[i];
+  const el = document.getElementById(`chk${i}`);
+  el.classList.toggle('checked', checkState[i]);
+  actualizarProgresoChecklist();
+};
+
+function actualizarProgresoChecklist() {
+  const completados = checkState.filter(Boolean).length;
+  document.getElementById('checkNum').textContent = `${completados}/12`;
+  document.getElementById('checkStatus').textContent =
+    completados === 12 ? '✅ Listo' : 'Incompleto';
+  document.getElementById('btnGuardarChecklist').disabled = completados < 12;
+}
+
+window.guardarChecklist = async function() {
+  const btn = document.getElementById('btnGuardarChecklist');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  try {
+    const items = {};
+    CHECKLIST_ITEMS.forEach((it, i) => { items[`item_${i}`] = checkState[i]; });
+    await setDoc(doc(db, 'pool_checklists', `${fechaHoy()}_${SESSION.uid}`), {
+      piscinero_id: SESSION.uid,
+      piscinero_nombre: SESSION.nombre,
+      fecha: fechaHoy(),
+      items,
+      completado: true,
+      timestamp: serverTimestamp()
+    });
+    STATE.checklistOk = true;
+    document.getElementById('alertaChecklistYa').style.display = 'block';
+    document.getElementById('checklistForm').style.display = 'none';
+    document.getElementById('checkHora').textContent = `Completado ahora por ${SESSION.nombre}`;
+    document.getElementById('iconChecklist').textContent = '✅';
+    document.getElementById('txtChecklist').textContent = 'Completado';
+    document.getElementById('txtChecklist').style.color = 'var(--success)';
+    showToast('✅ Checklist guardado correctamente');
+  } catch(e) {
+    console.error(e);
+    showToast('Error al guardar checklist', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Guardar checklist';
+  }
+};
+
+function verificarChecklistParaControl() {
+  const req = document.getElementById('alertaChecklistReq');
+  const wrap = document.getElementById('controlFormWrap');
+  if (!STATE.checklistOk) {
+    req.style.display = 'block';
+    wrap.style.display = 'none';
+  } else {
+    req.style.display = 'none';
+    wrap.style.display = 'block';
+  }
+}
+
+window.validarRango = function(input, min, max) {
+  const v = parseFloat(input.value);
+  input.classList.remove('out-of-range', 'danger-range');
+  if (isNaN(v)) return;
+  const rango = max - min;
+  if (v < min - rango * 0.3 || v > max + rango * 0.3) input.classList.add('danger-range');
+  else if (v < min || v > max) input.classList.add('out-of-range');
+};
+
+const fotoBlobs = [null, null, null, null];
+const fotoAdicionalBlobs = [];
+
+window.tomarFotoControl = async function(idx) {
+  const blob = await capturarFotoConSello();
+  if (!blob) return;
+  fotoBlobs[idx] = blob;
+  const slot = document.getElementById(`fotoSlot${idx}`);
+  slot.innerHTML = `<img src="${blob}" alt="Foto ${idx+1}">`;
+  slot.classList.add('filled');
+  actualizarContadorFotos();
+};
+
+window.tomarFotoAdicional = async function() {
+  const blob = await capturarFotoConSello();
+  if (!blob) return;
+  fotoAdicionalBlobs.push(blob);
+  document.getElementById('fotoAdicionalCount').textContent = fotoAdicionalBlobs.length;
+  actualizarContadorFotos();
+};
+
+function actualizarContadorFotos() {
+  const ok = fotoBlobs.filter(Boolean).length;
+  const counter = document.getElementById('fotoCounter');
+  if (ok >= 4) {
+    counter.textContent = `✅ ${ok + fotoAdicionalBlobs.length} fotos tomadas`;
+    counter.className = 'foto-counter ok';
+  } else {
+    counter.textContent = `📷 ${ok} de 4 fotos requeridas`;
+    counter.className = 'foto-counter pending';
+  }
+}
+
+function renderQuimicos() {
+  const cont = document.getElementById('quimicosContainer');
+  cont.innerHTML = STATE.quimicos.map((q, i) => `
+    <div class="quimico-item" id="quimico_${i}">
+      <div class="quimico-header">
+        <div class="quimico-num">${i + 1}</div>
+        <div class="quimico-nombre">${q.nombre}</div>
+      </div>
+      <div class="toggle-si-no">
+        <button class="si" onclick="toggleQuimico(${i}, true)">✓ SÍ aplicado</button>
+        <button class="no active" onclick="toggleQuimico(${i}, false)">✗ NO aplicado</button>
+      </div>
+      <div class="quimico-extra" id="qextra_${i}">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cantidad</label>
+            <input type="number" step="0.1" min="0" class="form-input" id="qcant_${i}" placeholder="0.0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Unidad</label>
+            <select class="form-select" id="qunit_${i}">
+              <option value="kg">kg</option>
+              <option value="L">L</option>
+              <option value="g">g</option>
+              <option value="mL">mL</option>
+            </select>
+          </div>
+        </div>
+        <div class="foto-mini" onclick="tomarFotoQuimico(${i})" id="qfoto_${i}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span style="font-size:11px;margin-left:6px;color:var(--muted)">Foto evidencia</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+const quimicoFotoBlobs = [null, null, null, null, null];
+
+window.toggleQuimico = function(i, aplico) {
+  STATE.quimicos[i].aplicado = aplico;
+  const item = document.getElementById(`quimico_${i}`);
+  const extra = document.getElementById(`qextra_${i}`);
+  const btns = item.querySelectorAll('.toggle-si-no button');
+  btns[0].className = aplico ? 'si active' : 'si';
+  btns[1].className = aplico ? 'no' : 'no active';
+  extra.classList.toggle('show', aplico);
+};
+
+window.tomarFotoQuimico = async function(i) {
+  const blob = await capturarFotoConSello();
+  if (!blob) return;
+  quimicoFotoBlobs[i] = blob;
+  const slot = document.getElementById(`qfoto_${i}`);
+  slot.innerHTML = `<img src="${blob}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
+  slot.classList.add('filled');
+};
+
+window.guardarControl = async function() {
+  if (!STATE.checklistOk) {
+    showToast('Completa el checklist primero', 'warning'); return;
+  }
+  const fotasOk = fotoBlobs.filter(Boolean).length;
+  if (fotasOk < 4) {
+    showToast('Se requieren mínimo 4 fotos', 'error'); return;
+  }
+  const campos = ['p_cloro_total','p_cloro_residual','p_alcalinidad','p_dureza','p_color','p_transparencia','p_temperatura'];
+  for (const c of campos) {
+    if (!document.getElementById(c).value) {
+      showToast('Completa todos los campos de piscina', 'warning'); return;
+    }
+  }
+
+  const btn = document.getElementById('btnGuardarControl');
+  btn.disabled = true; btn.textContent = '⏳ Guardando...';
+
+  try {
+    const fotaUrls = await Promise.all(
+      fotoBlobs.map((b, i) => b ? subirFoto(b, `controles/${fechaHoy()}_${SESSION.uid}_foto${i}`) : null)
+    );
+    const fotaAdicUrls = await Promise.all(
+      fotoAdicionalBlobs.map((b, i) => subirFoto(b, `controles/${fechaHoy()}_${SESSION.uid}_adic${i}`))
+    );
+
+    const quimicosData = await Promise.all(STATE.quimicos.map(async (q, i) => {
+      let evidenciaUrl = null;
+      if (quimicoFotoBlobs[i]) {
+        evidenciaUrl = await subirFoto(quimicoFotoBlobs[i], `quimicos/${fechaHoy()}_${SESSION.uid}_q${i}`);
+      }
+      return {
+        nombre: q.nombre,
+        aplicado: q.aplicado === true,
+        cantidad: document.getElementById(`qcant_${i}`).value || '',
+        unidad: document.getElementById(`qunit_${i}`).value || '',
+        evidencia_url: evidenciaUrl
+      };
+    }));
+
+    await addDoc(collection(db, 'pool_controls'), {
+      tipo: 'quimico',
+      piscinero_id: SESSION.uid,
+      piscinero_nombre: SESSION.nombre,
+      fecha: fechaHoy(),
+      piscina: {
+        cloro_total: parseFloat(document.getElementById('p_cloro_total').value),
+        cloro_residual: parseFloat(document.getElementById('p_cloro_residual').value),
+        alcalinidad: parseFloat(document.getElementById('p_alcalinidad').value),
+        dureza: parseFloat(document.getElementById('p_dureza').value),
+        color: document.getElementById('p_color').value,
+        transparencia: document.getElementById('p_transparencia').value,
+        temperatura: parseFloat(document.getElementById('p_temperatura').value)
+      },
+      jacuzzi: {
+        cloro_total: parseFloat(document.getElementById('j_cloro_total').value) || null,
+        cloro_residual: parseFloat(document.getElementById('j_cloro_residual').value) || null,
+        alcalinidad: parseFloat(document.getElementById('j_alcalinidad').value) || null,
+        temperatura: parseFloat(document.getElementById('j_temperatura').value) || null
+      },
+      fotos: fotaUrls.concat(fotaAdicUrls).filter(Boolean),
+      quimicos: quimicosData,
+      observaciones: document.getElementById('observacionesControl').value,
+      timestamp: serverTimestamp()
+    });
+
+    document.getElementById('iconControl').textContent = '✅';
+    document.getElementById('txtControl').textContent = 'Registrado';
+    document.getElementById('txtControl').style.color = 'var(--success)';
+    showToast('✅ Control químico guardado');
+    btn.textContent = '✅ Control guardado';
+  } catch(e) {
+    console.error(e);
+    showToast('Error al guardar. Intenta de nuevo.', 'error');
+    btn.disabled = false;
+    btn.textContent = '💾 Guardar control químico';
+  }
+};
+
+window.selSeveridad = function(sev, btn) {
+  STATE.severidadNovedad = sev;
+  document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('alertaCriticoInfo').style.display =
+    sev === 'CRÍTICO' ? 'block' : 'none';
+};
+
+window.guardarNovedad = function() {
+  const desc = document.getElementById('novedadDesc').value.trim();
+  if (!STATE.severidadNovedad) { showToast('Selecciona la severidad', 'warning'); return; }
+  if (!desc) { showToast('Escribe la descripción', 'warning'); return; }
+  if (STATE.severidadNovedad === 'CRÍTICO') {
+    document.getElementById('modalCritico').classList.add('show');
+  } else {
+    ejecutarGuardarNovedad();
+  }
+};
+
+window.cerrarModalCritico = function() {
+  document.getElementById('modalCritico').classList.remove('show');
+};
+
+window.confirmarCritico = async function() {
+  document.getElementById('modalCritico').classList.remove('show');
+  await ejecutarGuardarNovedad(true);
+};
+
+async function ejecutarGuardarNovedad(esCritico = false) {
+  const btn = document.getElementById('btnGuardarNovedad');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  const desc = document.getElementById('novedadDesc').value.trim();
+
+  try {
+    // FIX CRÍTICO: dual-write. Escribe AMBOS formatos para que el Coordinador los vea.
+    // El Coordinador busca por `estado` y `nivel`, no por `status` y `severidad`.
+    const sevLower = STATE.severidadNovedad.toUpperCase().includes('CRÍT') ? 'critica'
+                   : STATE.severidadNovedad.toUpperCase().includes('MEDI') ? 'media' : 'baja';
+
+    await addDoc(collection(db, 'pool_novedades'), {
+      descripcion: desc,
+      // CANÓNICOS — los que lee el Coordinador
+      nivel: sevLower,
+      estado: 'abierta',
+      tipo: 'Control químico',
+      // LEGACY — los que ya escribía el módulo
+      severidad: STATE.severidadNovedad,
+      status: 'ABIERTO',
+      // Auditoría
+      creado_por_id: SESSION.uid,
+      creado_por: SESSION.nombre,
+      piscinero_nombre: SESSION.nombre,
+      fecha: fechaHoy(),
+      modulo_origen: 'A',
+      operacion_suspendida: esCritico,
+      creado_en: serverTimestamp(),
+      timestamp: serverTimestamp()
+    });
+
+    if (esCritico) {
+      await setDoc(doc(db, 'pool_estado', fechaHoy()), {
+        suspendida: true,
+        motivo: desc,
+        suspendida_por: SESSION.nombre,
+        timestamp: serverTimestamp()
+      }, { merge: true });
+    }
+
+    document.getElementById('novedadDesc').value = '';
+    STATE.severidadNovedad = null;
+    document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('alertaCriticoInfo').style.display = 'none';
+    await cargarNovedades();
+    showToast(esCritico ? '⛔ Novedad crítica registrada. Operación suspendida.' : '✅ Novedad registrada');
+  } catch(e) {
+    console.error(e);
+    showToast('Error al guardar novedad', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Registrar novedad';
+  }
+}
+
+async function cargarNovedades() {
+  const lista = document.getElementById('listaNov');
+  const q = query(
+    collection(db, 'pool_novedades'),
+    where('fecha', '==', fechaHoy()),
+    orderBy('timestamp', 'desc')
+  );
+  try {
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      lista.innerHTML = '<div class="empty-state"><p>Sin novedades registradas hoy</p></div>';
+      return;
+    }
+    let abiertas = 0;
+    lista.innerHTML = snap.docs.map(d => {
+      const n = d.data();
+      // Lee de ambos formatos
+      const sev = (n.severidad || n.nivel || '').toLowerCase().replace(/í|à|á/g,'i');
+      const sevDisp = (n.severidad || n.nivel || '').toUpperCase();
+      const sevClass = sev.includes('crit') ? 'critico' : sev.includes('medi') ? 'medio' : 'bajo';
+      const estaAbierta = (n.status === 'ABIERTO') || (n.estado === 'abierta') || (n.estado === 'en_atencion');
+      const estaCerrada = (n.status === 'CERRADO') || (n.estado === 'cerrada');
+      if (estaAbierta) abiertas++;
+      const estadoDisp = estaCerrada ? 'CERRADA' : (n.estado === 'listo_cierre' ? 'LISTO CIERRE' : 'ABIERTA');
+      return `<div class="novedad-item ${sevClass}">
+        <div class="novedad-sev ${sevClass}">${sevDisp}</div>
+        <div class="novedad-desc">${n.descripcion}</div>
+        <div class="novedad-meta">${formatHora(n.timestamp || n.creado_en)} · ${estadoDisp}
+          ${estaCerrada ? ` · Cerrado por ${n.cerrado_por_nombre || n.cerrado_por || '—'}` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    const badge = document.getElementById('badgeNov');
+    if (abiertas > 0) {
+      badge.textContent = abiertas;
+      badge.classList.add('show');
+    } else {
+      badge.classList.remove('show');
+    }
+    document.getElementById('txtNovedades').textContent = abiertas;
+    if (abiertas > 0) document.getElementById('txtNovedades').style.color = 'var(--danger)';
+  } catch(e) {
+    console.error(e);
+    lista.innerHTML = '<div class="empty-state"><p>Error al cargar novedades</p></div>';
+  }
+}
+
+function capturarFotoConSello() {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) { resolve(null); return; }
+      const img = new Image();
+      const objUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 400;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const ahora = new Date();
+        const sello = ahora.toLocaleString('es-CO', {
+          day:'2-digit', month:'2-digit', year:'numeric',
+          hour:'2-digit', minute:'2-digit', second:'2-digit'
+        });
+        const texto = `PCO3 Ciudadela • ${sello}`;
+        const fh = Math.max(10, Math.round(h * 0.06));
+        ctx.font = `bold ${fh}px Arial, sans-serif`;
+        const tw = ctx.measureText(texto).width;
+        const pad = 6;
+        ctx.fillStyle = 'rgba(30,58,95,0.78)';
+        ctx.fillRect(0, h - fh - pad * 2, tw + pad * 2, fh + pad * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(texto, pad, h - pad);
+        URL.revokeObjectURL(objUrl);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = () => { URL.revokeObjectURL(objUrl); resolve(null); };
+      img.src = objUrl;
+    };
+    input.oncancel = () => resolve(null);
+    input.click();
+  });
+}
+
+async function subirFoto(base64) { return base64; }
+
+async function init() {
+  await escucharEstadoOperacion();
+  await cargarDashboard();
+  await initChecklist();
+  renderQuimicos();
+}
+
+init().catch(console.error);
+
+setInterval(() => {
+  if (document.getElementById('sec-reservas').classList.contains('active')) {
+    cargarReservas();
+  }
+}, 60000);
+</script>
+</body>
+</html>

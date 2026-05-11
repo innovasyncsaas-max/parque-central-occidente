@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Módulo B2 — Operador Piscina | PCO3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1e3a5f;
+  --primary-light: #2a4f82;
+  --blue: #2563eb;
+  --sky: #0ea5e9;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg: #f0f4f8;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(30,58,95,.10);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 80px;
+  -webkit-tap-highlight-color: transparent;
+}
+.header {
+  background: var(--primary); color: #fff;
+  padding: 16px 20px 14px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.header-top { display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 17px; font-weight: 600; }
+.header-sub { font-size: 12px; opacity: .75; margin-top: 2px; }
+.badge-op { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; letter-spacing: .5px; }
+.badge-op.abierta  { background: #d1fae5; color: #065f46; }
+.badge-op.cerrada  { background: #fee2e2; color: #991b1b; }
+.badge-op.suspendida { background: #fee2e2; color: #991b1b; animation: pulse 1.5s infinite; }
+.badge-op.pendiente { background: #fef3c7; color: #92400e; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.banner-critico {
+  display: none; background: var(--danger); color: #fff;
+  padding: 12px 20px; text-align: center;
+  font-weight: 600; font-size: 14px;
+}
+.banner-critico.show { display: block; }
+.nav-bottom {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--card); border-top: 1px solid var(--border);
+  display: flex; box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 8px 2px 6px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 10px;
+  color: var(--muted); transition: color .2s; position: relative;
+}
+.nav-btn.active { color: var(--primary); }
+.nav-btn svg { width: 22px; height: 22px; margin-bottom: 3px; stroke-width: 1.8; }
+.nav-badge {
+  position: absolute; top: 6px; right: calc(50% - 16px);
+  background: var(--danger); color: #fff;
+  font-size: 9px; font-weight: 700; width: 16px; height: 16px;
+  border-radius: 50%; display: none; align-items: center; justify-content: center;
+}
+.nav-badge.show { display: flex; }
+.section { display: none; padding: 16px; }
+.section.active { display: block; }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden; }
+.card-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.card-header h2 { font-size: 14px; font-weight: 600; }
+.card-body { padding: 14px 16px; }
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card { background: var(--card); border-radius: var(--radius); padding: 14px; text-align: center; box-shadow: var(--shadow); }
+.stat-num { font-size: 28px; font-weight: 700; color: var(--primary); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.aforo-display { background: var(--primary); border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 14px; box-shadow: var(--shadow); }
+.aforo-num { font-size: 56px; font-weight: 700; color: #fff; line-height: 1; }
+.aforo-den { font-size: 24px; color: rgba(255,255,255,.6); font-weight: 400; }
+.aforo-label { font-size: 13px; color: rgba(255,255,255,.8); margin-top: 6px; }
+.aforo-bar-track { height: 12px; background: rgba(255,255,255,.2); border-radius: 10px; overflow: hidden; margin-top: 12px; }
+.aforo-bar-fill { height: 100%; border-radius: 10px; transition: width .4s, background .4s; background: var(--success); }
+.aforo-bar-fill.warn { background: var(--warning); }
+.aforo-bar-fill.danger { background: var(--danger); }
+.aforo-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.btn-aforo { padding: 16px; border-radius: 12px; border: none; font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 700; cursor: pointer; transition: all .15s; display: flex; flex-direction: column; align-items: center; }
+.btn-aforo:active { transform: scale(0.95); }
+.btn-entrada { background: #d1fae5; color: #065f46; }
+.btn-salida  { background: #fee2e2; color: #991b1b; }
+.btn-aforo span { font-size: 11px; font-weight: 500; margin-top: 4px; }
+.check-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.check-item:last-child { border-bottom: none; }
+.check-box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--card); transition: all .2s; }
+.check-item.checked .check-box { background: var(--success); border-color: var(--success); }
+.check-item.checked .check-box::after { content: '✓'; color: #fff; font-size: 13px; font-weight: 700; }
+.check-item.checked .check-text { color: var(--muted); text-decoration: line-through; }
+.check-text { font-size: 13px; line-height: 1.4; }
+.check-progress { display: flex; align-items: center; gap: 8px; background: var(--primary); color: #fff; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
+.check-progress-num { font-size: 20px; font-weight: 700; }
+.check-progress-label { font-size: 12px; opacity: .85; }
+.rondas-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.ronda-dot { flex: 1; border-radius: 10px; padding: 12px 8px; text-align: center; border: 2px solid var(--border); background: var(--card); }
+.ronda-dot.completada { border-color: var(--success); background: #d1fae5; }
+.ronda-dot.activa { border-color: var(--blue); background: #eff6ff; }
+.ronda-dot .rd-num { font-size: 20px; font-weight: 700; color: var(--primary); }
+.ronda-dot.completada .rd-num { color: var(--success); }
+.ronda-dot .rd-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); background: var(--card); transition: border-color .2s; outline: none; -webkit-appearance: none; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
+.form-input.out-of-range { border-color: var(--warning); background: #fffbeb; }
+.form-input.danger-range { border-color: var(--danger); background: #fef2f2; }
+.range-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.form-textarea { min-height: 80px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.foto-req { width: 100%; aspect-ratio: 16/9; border-radius: 10px; overflow: hidden; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; background: #f8fafc; cursor: pointer; margin-bottom: 12px; }
+.foto-req.filled { border-style: solid; border-color: var(--success); }
+.foto-req img { width: 100%; height: 100%; object-fit: cover; }
+.foto-req-inner { text-align: center; color: var(--muted); }
+.foto-req-inner svg { margin-bottom: 6px; opacity: .5; }
+.foto-req-inner p { font-size: 12px; }
+.asistencia-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.asistencia-item:last-child { border-bottom: none; }
+.asistencia-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.asistencia-info { flex: 1; min-width: 0; }
+.asistencia-nombre { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asistencia-meta { font-size: 11px; color: var(--muted); }
+.asistencia-personas { font-size: 12px; font-weight: 600; color: var(--blue); white-space: nowrap; }
+.quimico-cierre-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.quimico-cierre-item:last-child { border-bottom: none; }
+.qc-nombre { flex: 1; font-size: 13px; font-weight: 500; }
+.qc-inputs { display: flex; gap: 6px; align-items: center; }
+.qc-input { width: 70px; padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; text-align: center; outline: none; }
+.qc-input:focus { border-color: var(--blue); }
+.qc-unit { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 20px; border-radius: 12px; border: none; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; transition: all .2s; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.btn-danger  { background: var(--danger); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-secondary { background: #f1f5f9; color: var(--text); border: 1.5px solid var(--border); }
+.sev-selector { display: flex; gap: 8px; margin-bottom: 10px; }
+.sev-btn { flex: 1; padding: 10px 6px; border-radius: 8px; border: 2px solid var(--border); background: none; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
+.sev-btn.bajo.active  { background: #d1fae5; border-color: #10b981; color: #065f46; }
+.sev-btn.medio.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+.sev-btn.critico.active { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+.novedad-item { border-left: 4px solid var(--border); padding: 10px 12px; margin-bottom: 8px; background: #fafcff; border-radius: 0 8px 8px 0; }
+.novedad-item.bajo { border-left-color: var(--success); }
+.novedad-item.medio { border-left-color: var(--warning); }
+.novedad-item.critico { border-left-color: var(--danger); }
+.novedad-sev { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+.novedad-sev.bajo { color: var(--success); }
+.novedad-sev.medio { color: var(--warning); }
+.novedad-sev.critico { color: var(--danger); }
+.novedad-desc { font-size: 13px; line-height: 1.5; }
+.novedad-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.alert { border-radius: 10px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+.alert-warning { background: #fef3c7; color: #92400e; }
+.alert-success { background: #d1fae5; color: #065f46; }
+.alert-info    { background: #eff6ff; color: #1e40af; }
+.alert-danger  { background: #fee2e2; color: #991b1b; }
+.alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.alert-body { font-size: 13px; line-height: 1.5; }
+.alert-title { font-weight: 600; margin-bottom: 2px; }
+.empty-state { text-align: center; padding: 28px 16px; color: var(--muted); }
+.empty-state p { font-size: 14px; }
+.loader { text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+.toast { position: fixed; bottom: 90px; left: 16px; right: 16px; z-index: 999; padding: 14px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.2); transform: translateY(20px); opacity: 0; transition: all .3s; pointer-events: none; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: #065f46; color: #fff; }
+.toast.error   { background: #991b1b; color: #fff; }
+.toast.warning { background: #92400e; color: #fff; }
+.modal-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.6); align-items: flex-end; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--card); border-radius: 20px 20px 0 0; padding: 20px 20px 32px; width: 100%; max-height: 85vh; overflow-y: auto; }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.search-input { width: 100%; padding: 11px 14px 11px 40px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 15px; background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 12px center; outline: none; }
+.search-input:focus { border-color: var(--blue); }
+.lista-counter { background: var(--primary); color: #fff; font-size: 13px; font-weight: 600; padding: 5px 14px; border-radius: 20px; white-space: nowrap; }
+.reserva-grupo { background: #f8fafc; border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+.reserva-grupo-header { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: .3px; }
+.persona-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.persona-row:last-child { border-bottom: none; }
+.persona-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.persona-avatar.residente { background: var(--primary); color: #fff; }
+.persona-avatar.invitado  { background: var(--sky); color: #fff; }
+.persona-info { flex: 1; min-width: 0; }
+.persona-nombre { font-size: 13px; font-weight: 600; }
+.persona-meta   { font-size: 11px; color: var(--muted); }
+.persona-btns   { display: flex; gap: 5px; flex-shrink: 0; }
+.btn-asiste, .btn-no-asiste { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 15px; cursor: pointer; background: var(--card); display: flex; align-items: center; justify-content: center; transition: all .15s; opacity: .45; }
+.btn-asiste.active    { background: #d1fae5; border-color: #10b981; opacity: 1; }
+.btn-no-asiste.active { background: #fee2e2; border-color: #ef4444; opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>🏊 Operador de Piscina</h1>
+      <div class="header-sub" id="fechaHora">Cargando...</div>
+    </div>
+    <span class="badge-op pendiente" id="badgeOp">● CERRADA</span>
+  </div>
+</div>
+
+<div class="banner-critico" id="bannerCritico">⛔ OPERACIÓN SUSPENDIDA — Novedad crítica activa</div>
+
+<div class="section active" id="sec-dashboard">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="statAforo">0</div><div class="stat-label">Personas ahora</div></div>
+    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total del día</div></div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span id="iconApertura">⬜</span><span style="font-size:13px">Apertura de piscina</span>
+          <span style="margin-left:auto;font-size:12px;font-weight:600;color:var(--muted)" id="txtApertura">Pendiente</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span>🔄</span><span style="font-size:13px">Rondas de control</span>
+          <span style="margin-left:auto;font-size:12px;font-weight:600;color:var(--muted)" id="txtRondas">0 / 3</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
+          <span id="iconCierre">⬜</span><span style="font-size:13px">Cierre de piscina</span>
+          <span style="margin-left:auto;font-size:12px;font-weight:600;color:var(--muted)" id="txtCierre">Pendiente</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <h2>Estado del turno</h2>
+    </div>
+    <div class="card-body"><div style="font-size:13px;color:var(--muted)" id="ultimaAct">—</div></div>
+  </div>
+</div>
+
+<div class="section" id="sec-apertura">
+  <div id="aperturaYaHecha" style="display:none">
+    <div class="alert alert-success"><div class="alert-icon">✅</div><div class="alert-body"><div class="alert-title">Apertura registrada</div><div id="aperturaHoraText"></div></div></div>
+  </div>
+  <div id="aperturaSuspendidaAlert" style="display:none">
+    <div class="alert alert-danger"><div class="alert-icon">⛔</div><div class="alert-body"><div class="alert-title">Operación suspendida</div>No puedes abrir la piscina mientras haya una novedad crítica activa.</div></div>
+  </div>
+  <div id="aperturaForm">
+    <div class="card">
+      <div class="card-header"><span style="font-size:18px">📷</span><h2>Foto de apertura <span style="color:var(--danger)">*</span></h2></div>
+      <div class="card-body">
+        <div class="foto-req" onclick="tomarFotoApertura()" id="fotoAperturaSlot">
+          <div class="foto-req-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>Toca para tomar foto de apertura</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span style="font-size:18px">🧪</span><h2>Parámetros iniciales <span style="color:var(--danger)">*</span></h2></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">pH</label><input type="number" step="0.1" class="form-input" id="ap_ph" placeholder="0.0" oninput="validarRango(this,7.2,7.8)"><div class="range-hint">Normal: 7.2 – 7.8</div></div>
+          <div class="form-group"><label class="form-label">Cloro libre (ppm)</label><input type="number" step="0.1" class="form-input" id="ap_cloro" placeholder="0.0" oninput="validarRango(this,1.0,3.0)"><div class="range-hint">Normal: 1.0 – 3.0</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <h2>Checklist de apertura (12 ítems)</h2>
+      </div>
+      <div class="card-body">
+        <div class="check-progress">
+          <div><div class="check-progress-num" id="apCheckNum">0/12</div><div class="check-progress-label">ítems completados</div></div>
+          <div style="margin-left:auto;font-size:12px;opacity:.85" id="apCheckStatus">Incompleto</div>
+        </div>
+        <div id="apChecklistItems"></div>
+      </div>
+    </div>
+    <button class="btn btn-success" id="btnAbrir" onclick="abrirPiscina()" disabled>🏊 Abrir piscina</button>
+    <div style="height:12px"></div>
+  </div>
+</div>
+
+<div class="section" id="sec-aforo">
+  <div id="aforoLocked" style="display:none">
+    <div class="alert alert-warning"><div class="alert-icon">⚠️</div><div class="alert-body"><div class="alert-title">Piscina no abierta</div>Primero debes registrar la apertura.</div></div>
+  </div>
+  <div id="aforoContent">
+    <div class="aforo-display">
+      <div><span class="aforo-num" id="aforoActual">0</span><span class="aforo-den"> / 25</span></div>
+      <div class="aforo-label">personas en piscina ahora</div>
+      <div class="aforo-bar-track"><div class="aforo-bar-fill" id="aforoBarGrande" style="width:0%"></div></div>
+    </div>
+    <div id="alertaAforoMaximo" style="display:none">
+      <div class="alert alert-danger" style="margin-bottom:14px"><div class="alert-icon">🚫</div><div class="alert-body"><div class="alert-title">Aforo máximo alcanzado</div>No se permiten más entradas.</div></div>
+    </div>
+    <div id="alertaAforoWarn" style="display:none">
+      <div class="alert alert-warning" style="margin-bottom:14px"><div class="alert-icon">⚠️</div><div class="alert-body">Aforo cercano al límite.</div></div>
+    </div>
+    <div class="aforo-btns">
+      <button class="btn-aforo btn-entrada" onclick="registrarMovimiento('entrada')">➕<span>Entrada</span></button>
+      <button class="btn-aforo btn-salida" onclick="registrarMovimiento('salida')">➖<span>Salida</span></button>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-header">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <h2>Reservas activas</h2>
+      </div>
+      <div class="card-body">
+        <div style="margin-bottom:10px"><input type="text" class="search-input" placeholder="Buscar por nombre o apto..." oninput="filtrarAsistencia(this.value)"></div>
+        <div id="listaAsistencia"><div class="loader">Cargando...</div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-header">
+        <span style="font-size:18px">📋</span><h2>Llamar lista</h2>
+        <button onclick="cargarListaLlamada()" style="margin-left:auto;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">🔄 Actualizar</button>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:13px;color:var(--muted)">Personas que asisten hoy</span>
+          <span class="lista-counter" id="listaCounter">— / —</span>
+        </div>
+        <div id="listaLlamada"><div class="empty-state"><p>Toca "Actualizar" para cargar la lista</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-rondas">
+  <div id="rondasLocked" style="display:none">
+    <div class="alert alert-warning"><div class="alert-icon">⚠️</div><div class="alert-body"><div class="alert-title">Piscina no abierta</div>Primero debes registrar la apertura para hacer rondas.</div></div>
+  </div>
+  <div id="rondasContent">
+    <div class="rondas-row" id="rondasDots"></div>
+    <div class="card" id="rondaFormCard">
+      <div class="card-header"><span style="font-size:18px">🔄</span><h2 id="rondaFormTitle">Ronda 1</h2></div>
+      <div class="card-body">
+        <div id="rondaVentanaAlert" style="display:none" class="alert alert-info"><div class="alert-icon">ℹ️</div><div class="alert-body" id="rondaVentanaMsg"></div></div>
+        <div class="foto-req" onclick="tomarFotoRonda()" id="fotoRondaSlot">
+          <div class="foto-req-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>Foto obligatoria de la ronda</p>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Aforo al momento de la ronda</label><input type="number" class="form-input" id="rondaAforo" placeholder="0" min="0" max="25" style="max-width:120px"></div>
+        <div class="form-group"><label class="form-label">Observaciones</label><textarea class="form-textarea" id="rondaObs" placeholder="Estado del agua, condiciones del área, incidentes..."></textarea></div>
+        <button class="btn btn-primary" id="btnGuardarRonda" onclick="guardarRonda()">Guardar ronda</button>
+      </div>
+    </div>
+    <div id="rondaCompletadaMsg" style="display:none">
+      <div class="alert alert-success"><div class="alert-icon">✅</div><div class="alert-body"><div class="alert-title">Todas las rondas completadas</div>Puedes registrar el cierre cuando termines el turno.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span>📋</span><h2>Historial de rondas del día</h2></div>
+      <div class="card-body" id="historialRondas"><div class="loader">Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-cierre">
+  <div id="cierreLocked" style="display:none">
+    <div class="alert alert-warning"><div class="alert-icon">⚠️</div><div class="alert-body"><div class="alert-title">Piscina no abierta</div>Debes abrir primero para poder registrar el cierre.</div></div>
+  </div>
+  <div id="cierreYaHecho" style="display:none">
+    <div class="alert alert-success"><div class="alert-icon">✅</div><div class="alert-body"><div class="alert-title">Cierre registrado</div><div id="cierreHoraText"></div></div></div>
+  </div>
+  <div id="cierreForm">
+    <div class="card">
+      <div class="card-header"><span style="font-size:18px">📷</span><h2>Foto de cierre <span style="color:var(--danger)">*</span></h2></div>
+      <div class="card-body">
+        <div class="foto-req" onclick="tomarFotoCierre()" id="fotoCierreSlot">
+          <div class="foto-req-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>Toca para tomar foto de cierre</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span style="font-size:18px">🧪</span><h2>Parámetros de cierre <span style="color:var(--danger)">*</span></h2></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">pH cierre</label><input type="number" step="0.1" class="form-input" id="ci_ph" placeholder="0.0" oninput="validarRango(this,7.2,7.8)"><div class="range-hint">Normal: 7.2 – 7.8</div></div>
+          <div class="form-group"><label class="form-label">Cloro libre (ppm)</label><input type="number" step="0.1" class="form-input" id="ci_cloro" placeholder="0.0" oninput="validarRango(this,1.0,3.0)"><div class="range-hint">Normal: 1.0 – 3.0</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span style="font-size:18px">🧴</span><h2>Químicos agregados en el turno</h2></div>
+      <div class="card-body" id="quimicosCierreContainer"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span style="font-size:18px">📊</span><h2>Resumen del turno</h2></div>
+      <div class="card-body">
+        <div class="form-group"><label class="form-label">Total personas atendidas</label><input type="number" class="form-input" id="ci_totalPersonas" placeholder="0" min="0" style="max-width:120px" readonly></div>
+        <div class="form-group"><label class="form-label">Observaciones generales del turno</label><textarea class="form-textarea" id="ci_obs" placeholder="Estado general, incidencias del día, recomendaciones..."></textarea></div>
+      </div>
+    </div>
+    <button class="btn btn-danger" id="btnCerrar" onclick="cerrarPiscina()">🔒 Cerrar piscina</button>
+    <div style="height:12px"></div>
+  </div>
+</div>
+
+<div class="section" id="sec-novedades">
+  <div class="card">
+    <div class="card-header"><span style="font-size:18px">➕</span><h2>Registrar novedad</h2></div>
+    <div class="card-body">
+      <div class="form-group">
+        <label class="form-label">Área afectada</label>
+        <select class="form-select" id="novArea">
+          <option value="">Seleccionar área</option>
+          <option value="Piscina">Piscina</option>
+          <option value="Jacuzzi">Jacuzzi</option>
+          <option value="Duchas">Duchas</option>
+          <option value="Baños">Baños</option>
+          <option value="Acceso">Acceso / rejas</option>
+          <option value="General">General</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Severidad</label>
+        <div class="sev-selector">
+          <button class="sev-btn bajo"    onclick="selSeveridad('BAJO',this)">🟢 BAJO</button>
+          <button class="sev-btn medio"   onclick="selSeveridad('MEDIO',this)">🟡 MEDIO</button>
+          <button class="sev-btn critico" onclick="selSeveridad('CRÍTICO',this)">🔴 CRÍTICO</button>
+        </div>
+        <div id="alertaCriticoInfo" style="display:none;background:#fee2e2;border-radius:8px;padding:10px;font-size:12px;color:#991b1b;margin-top:8px">
+          ⛔ Una novedad CRÍTICO <strong>suspende la operación</strong> y notifica inmediatamente.
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Descripción</label><textarea class="form-textarea" id="novedadDesc" placeholder="Describe la novedad con detalle..."></textarea></div>
+      <button class="btn btn-primary" id="btnGuardarNovedad" onclick="guardarNovedad()">Registrar novedad</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span style="font-size:18px">📋</span><h2>Novedades de hoy</h2></div>
+    <div class="card-body" id="listaNov"><div class="loader">Cargando...</div></div>
+  </div>
+</div>
+
+<nav class="nav-bottom">
+  <button class="nav-btn active" onclick="irA('dashboard',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Inicio
+  </button>
+  <button class="nav-btn" onclick="irA('apertura',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>Apertura
+  </button>
+  <button class="nav-btn" onclick="irA('aforo',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Aforo
+  </button>
+  <button class="nav-btn" onclick="irA('rondas',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Rondas
+  </button>
+  <button class="nav-btn" onclick="irA('cierre',this)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Cierre
+  </button>
+  <button class="nav-btn" onclick="irA('novedades',this)">
+    <div class="nav-badge" id="badgeNov">0</div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Nov.
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modalCritico">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:48px">⛔</div>
+      <div class="modal-title">¿Confirmar novedad CRÍTICO?</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6">Esta acción <strong>suspende la operación</strong> y notifica al administrador y supervisor de inmediato.</p>
+    </div>
+    <button class="btn btn-danger" style="margin-bottom:10px" onclick="confirmarCritico()">Sí, registrar y suspender</button>
+    <button class="btn btn-secondary" onclick="cerrarModalCritico()">Cancelar</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs,
+         query, where, orderBy, onSnapshot, serverTimestamp, increment }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek",
+  authDomain: "registro-residentes.firebaseapp.com",
+  projectId: "registro-residentes",
+  storageBucket: "registro-residentes.firebasestorage.app",
+  messagingSenderId: "646123326163",
+  appId: "1:646123326163:web:8b35b955e7b3692536a226"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const params = new URLSearchParams(window.location.search);
+const SESSION = {
+  uid:    params.get('uid')    || localStorage.getItem('pco3_op_uid')    || 'operador_test',
+  nombre: params.get('nombre') || localStorage.getItem('pco3_op_nombre') || 'Operador',
+  rol:    params.get('rol')    || 'operador_piscina'
+};
+if (params.get('uid')) {
+  localStorage.setItem('pco3_op_uid',    SESSION.uid);
+  localStorage.setItem('pco3_op_nombre', SESSION.nombre);
+}
+
+const STATE = {
+  piscinaAbierta: false, piscina_cerrada: false,
+  operacionSuspendida: false, aforoActual: 0, totalPersonasDia: 0,
+  rondas: [false, false, false],
+  apFotoBlob: null, rondaFotoBlob: null, cierreFotoBlob: null,
+  reservasHoy: [], severidadNovedad: null
+};
+
+const RONDA_VENTANAS = [
+  { label: 'Ronda 1', inicio: 9,  fin: 11 },
+  { label: 'Ronda 2', inicio: 12, fin: 14 },
+  { label: 'Ronda 3', inicio: 15, fin: 17 }
+];
+
+const QUIMICOS_CIERRE = [
+  { nombre: 'Cloro granulado', unidad: 'kg' },
+  { nombre: 'Reductor de pH',  unidad: 'L'  },
+  { nombre: 'Incrementador de pH', unidad: 'kg' },
+  { nombre: 'Algicida',        unidad: 'L'  },
+  { nombre: 'Estabilizador',   unidad: 'kg' }
+];
+
+// ── FIX 1: zona horaria Bogotá ──────────────────────────────
+function fechaHoy() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+function horaActual() { return new Date().getHours(); }
+
+function formatHora(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+}
+
+function showToast(msg, tipo = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── FIX 3: wrapper con manejo de errores para onSnapshot ────
+function escuchar(ref, onData, etiqueta) {
+  return onSnapshot(ref, onData, error => {
+    console.error(`❌ Error en listener "${etiqueta}":`, error.code, error.message);
+    if (error.code === 'failed-precondition') {
+      console.error(`🔧 Falta índice compuesto para "${etiqueta}". Revisa Firebase Console.`);
+    }
+  });
+}
+
+window.irA = function(sec, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`sec-${sec}`).classList.add('active');
+  btn.classList.add('active');
+  if (sec === 'aforo')    { verificarLockAforo(); cargarReservasAforo(); cargarListaLlamada(); }
+  if (sec === 'rondas')   { verificarLockRondas(); cargarHistorialRondas(); }
+  if (sec === 'cierre')   { verificarLockCierre(); }
+  if (sec === 'novedades'){ cargarNovedades(); }
+  if (sec === 'apertura') { actualizarUIApertura(); }
+};
+
+window.validarRango = function(input, min, max) {
+  const v = parseFloat(input.value);
+  input.classList.remove('out-of-range', 'danger-range');
+  if (isNaN(v)) return;
+  const rango = max - min;
+  if (v < min - rango * 0.3 || v > max + rango * 0.3) input.classList.add('danger-range');
+  else if (v < min || v > max) input.classList.add('out-of-range');
+};
+
+function actualizarReloj() {
+  const ahora = new Date();
+  const f = ahora.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  const h = ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('fechaHora').textContent = `${f} · ${h}`;
+}
+setInterval(actualizarReloj, 1000);
+actualizarReloj();
+
+function escucharEstadoOperacion() {
+  // FIX 3: usando el wrapper con error handler
+  escuchar(doc(db, 'pool_estado', fechaHoy()), (snap) => {
+    const data = snap.data() || {};
+    // FIX: comparación explícita con true
+    STATE.operacionSuspendida = data.suspendida === true;
+    STATE.piscinaAbierta      = data.abierta === true;
+    STATE.piscina_cerrada     = data.cerrada === true;
+    STATE.aforoActual         = data.aforo_actual || 0;
+    STATE.totalPersonasDia    = data.total_dia || 0;
+
+    const badge  = document.getElementById('badgeOp');
+    const banner = document.getElementById('bannerCritico');
+
+    if (STATE.operacionSuspendida) {
+      badge.textContent = '⛔ SUSPENDIDA'; badge.className = 'badge-op suspendida';
+      banner.classList.add('show');
+    } else if (STATE.piscina_cerrada) {
+      badge.textContent = '🔒 CERRADA'; badge.className = 'badge-op cerrada';
+      banner.classList.remove('show');
+    } else if (STATE.piscinaAbierta) {
+      badge.textContent = '🟢 ABIERTA'; badge.className = 'badge-op abierta';
+      banner.classList.remove('show');
+    } else {
+      badge.textContent = '● PENDIENTE'; badge.className = 'badge-op pendiente';
+      banner.classList.remove('show');
+    }
+
+    actualizarNumeroAforo(STATE.aforoActual);
+    document.getElementById('statAforo').textContent = STATE.aforoActual;
+    document.getElementById('statTotal').textContent = STATE.totalPersonasDia;
+
+    if (STATE.piscinaAbierta) {
+      document.getElementById('iconApertura').textContent = '✅';
+      document.getElementById('txtApertura').textContent  = `Abierta · ${data.hora_apertura || ''}`;
+      document.getElementById('txtApertura').style.color  = 'var(--success)';
+    }
+    if (STATE.piscina_cerrada) {
+      document.getElementById('iconCierre').textContent = '✅';
+      document.getElementById('txtCierre').textContent  = `Cerrada · ${data.hora_cierre || ''}`;
+      document.getElementById('txtCierre').style.color  = 'var(--success)';
+    }
+  }, 'pool_estado');
+}
+
+// APERTURA
+const APERTURA_CHECKLIST = [
+  'Revisión visual: agua limpia y transparente','pH y cloro dentro de parámetros normales',
+  'Señalización de aforo visible','Sillas y sombrillas en orden',
+  'Duchas funcionando correctamente','Baños limpios y con insumos',
+  'Flotadores de emergencia disponibles','Borde de piscina limpio y seco',
+  'Sistema de filtración activo','Iluminación operativa (si aplica)',
+  'Acceso controlado (rejas operativas)','Botiquín de primeros auxilios completo'
+];
+const apCheckState = new Array(12).fill(false);
+
+function initAperturaChecklist() {
+  const cont = document.getElementById('apChecklistItems');
+  cont.innerHTML = APERTURA_CHECKLIST.map((item, i) => `
+    <div class="check-item" id="apChk${i}" onclick="toggleApCheck(${i})">
+      <div class="check-box"></div><div class="check-text">${item}</div>
+    </div>`).join('');
+}
+
+window.toggleApCheck = function(i) {
+  apCheckState[i] = !apCheckState[i];
+  document.getElementById(`apChk${i}`).classList.toggle('checked', apCheckState[i]);
+  const c = apCheckState.filter(Boolean).length;
+  document.getElementById('apCheckNum').textContent    = `${c}/12`;
+  document.getElementById('apCheckStatus').textContent = c === 12 ? '✅ Listo' : 'Incompleto';
+  validarBtnAbrir();
+};
+
+function validarBtnAbrir() {
+  const ok = apCheckState.every(Boolean) && STATE.apFotoBlob !== null &&
+             !!document.getElementById('ap_ph').value && !!document.getElementById('ap_cloro').value;
+  document.getElementById('btnAbrir').disabled = !ok;
+}
+
+window.tomarFotoApertura = async function() {
+  const blob = await capturarFotoConSello();
+  if (!blob) return;
+  STATE.apFotoBlob = blob;
+  const slot = document.getElementById('fotoAperturaSlot');
+  slot.innerHTML = `<img src="${blob}" alt="Apertura">`;
+  slot.classList.add('filled');
+  validarBtnAbrir();
+};
+
+function actualizarUIApertura() {
+  if (STATE.piscinaAbierta) {
+    document.getElementById('aperturaYaHecha').style.display  = 'block';
+    document.getElementById('aperturaHoraText').textContent   = `Registrada por ${SESSION.nombre}`;
+    document.getElementById('aperturaForm').style.display     = 'none';
+    document.getElementById('aperturaSuspendidaAlert').style.display = 'none';
+  } else if (STATE.operacionSuspendida) {
+    document.getElementById('aperturaSuspendidaAlert').style.display = 'block';
+    document.getElementById('aperturaForm').style.display     = 'none';
+    document.getElementById('aperturaYaHecha').style.display  = 'none';
+  } else {
+    document.getElementById('aperturaForm').style.display     = 'block';
+    document.getElementById('aperturaYaHecha').style.display  = 'none';
+    document.getElementById('aperturaSuspendidaAlert').style.display = 'none';
+  }
+  ['ap_ph','ap_cloro'].forEach(id => document.getElementById(id).addEventListener('input', validarBtnAbrir));
+}
+
+window.abrirPiscina = async function() {
+  const btn = document.getElementById('btnAbrir');
+  btn.disabled = true; btn.textContent = '⏳ Abriendo...';
+  try {
+    const fotoUrl = await subirFoto(STATE.apFotoBlob);
+    const items = {};
+    APERTURA_CHECKLIST.forEach((it, i) => { items[`item_${i}`] = apCheckState[i]; });
+    await addDoc(collection(db, 'pool_operaciones'), {
+      tipo: 'apertura', operador_id: SESSION.uid, operador_nombre: SESSION.nombre,
+      fecha: fechaHoy(), hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      ph: parseFloat(document.getElementById('ap_ph').value),
+      cloro_libre: parseFloat(document.getElementById('ap_cloro').value),
+      foto_url: fotoUrl, checklist: items, timestamp: serverTimestamp()
+    });
+    await setDoc(doc(db, 'pool_estado', fechaHoy()), {
+      abierta: true, cerrada: false,
+      hora_apertura: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      abierta_por: SESSION.nombre, aforo_actual: 0, total_dia: 0,
+      timestamp_apertura: serverTimestamp()
+    }, { merge: true });
+    showToast('🏊 Piscina abierta correctamente');
+  } catch(e) {
+    console.error(e); showToast('Error al abrir piscina', 'error');
+    btn.disabled = false; btn.textContent = '🏊 Abrir piscina';
+  }
+};
+
+// AFORO
+function verificarLockAforo() {
+  document.getElementById('aforoLocked').style.display  = STATE.piscinaAbierta ? 'none'  : 'block';
+  document.getElementById('aforoContent').style.display = STATE.piscinaAbierta ? 'block' : 'none';
+}
+
+function actualizarNumeroAforo(total) {
+  const n = Math.max(0, total);
+  document.getElementById('aforoActual').textContent = n;
+  const pct = Math.min((n / 25) * 100, 100);
+  const bar = document.getElementById('aforoBarGrande');
+  if (bar) {
+    bar.style.width = pct + '%'; bar.className = 'aforo-bar-fill';
+    if (n >= 25) bar.classList.add('danger');
+    else if (n >= 20) bar.classList.add('warn');
+  }
+  document.getElementById('alertaAforoMaximo').style.display = n >= 25 ? 'block' : 'none';
+  document.getElementById('alertaAforoWarn').style.display   = (n >= 20 && n < 25) ? 'block' : 'none';
+}
+
+window.registrarMovimiento = async function(tipo) {
+  if (!STATE.piscinaAbierta) { showToast('La piscina no está abierta', 'warning'); return; }
+  if (tipo === 'entrada' && STATE.aforoActual >= 25) { showToast('⛔ Aforo máximo.', 'error'); return; }
+  if (tipo === 'salida' && STATE.aforoActual <= 0) { showToast('No hay personas para salida', 'warning'); return; }
+  const nuevoAforo = STATE.aforoActual + (tipo === 'entrada' ? 1 : -1);
+  try {
+    await setDoc(doc(db, 'pool_estado', fechaHoy()), {
+      aforo_actual: nuevoAforo, ...(tipo === 'entrada' ? { total_dia: increment(1) } : {})
+    }, { merge: true });
+    await addDoc(collection(db, 'pool_movimientos'), {
+      tipo, operador_id: SESSION.uid, fecha: fechaHoy(),
+      aforo_resultante: nuevoAforo, timestamp: serverTimestamp()
+    });
+  } catch(e) { console.error(e); showToast('Error al registrar', 'error'); }
+};
+
+async function cargarReservasAforo() {
+  const hoy = fechaHoy();
+  const q = query(collection(db,'reservas'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi'), where('estado','in',['activa','confirmada','pagada']));
+  try {
+    const snap = await getDocs(q);
+    STATE.reservasHoy = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const total = STATE.reservasHoy.reduce((s, r) => s + parseInt(r.numPersonas || r.num_personas || 1), 0);
+    const inp = document.getElementById('ci_totalPersonas');
+    if (inp) inp.value = total;
+    renderListaAsistencia(STATE.reservasHoy);
+  } catch(e) {
+    console.error(e);
+    document.getElementById('listaAsistencia').innerHTML = '<div class="empty-state"><p>Error al cargar reservas</p></div>';
+  }
+}
+
+function renderListaAsistencia(reservas) {
+  const lista = document.getElementById('listaAsistencia');
+  if (!reservas.length) { lista.innerHTML = '<div class="empty-state"><p>No hay reservas para hoy</p></div>'; return; }
+  lista.innerHTML = reservas.map(r => {
+    const np = parseInt(r.numPersonas || r.num_personas || 1);
+    const ini = (r.nombre || r.nombreResidente || '?').charAt(0).toUpperCase();
+    return `<div class="asistencia-item">
+      <div class="asistencia-avatar">${ini}</div>
+      <div class="asistencia-info">
+        <div class="asistencia-nombre">${r.nombre || r.nombreResidente || '—'}</div>
+        <div class="asistencia-meta">🏢 ${r.torre||'—'} · Apto ${r.apartamento||r.apto||'—'} · ${r.hora||'—'}</div>
+      </div>
+      <div class="asistencia-personas">👥 ${np}</div>
+    </div>`;
+  }).join('');
+}
+
+window.filtrarAsistencia = function(term) {
+  const t = term.toLowerCase();
+  renderListaAsistencia(t ? STATE.reservasHoy.filter(r =>
+    (r.nombre||r.nombreResidente||'').toLowerCase().includes(t) ||
+    (r.apartamento||r.apto||'').toLowerCase().includes(t) ||
+    (r.torre||'').toLowerCase().includes(t)
+  ) : STATE.reservasHoy);
+};
+
+// LLAMAR LISTA
+const _asistState = {};
+window.cargarListaLlamada = async function() {
+  const cont = document.getElementById('listaLlamada');
+  const counter = document.getElementById('listaCounter');
+  cont.innerHTML = '<div class="loader">Cargando...</div>';
+  const hoy = fechaHoy();
+  try {
+    const aSnap = await getDocs(query(collection(db,'asistencias'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi')));
+    aSnap.forEach(d => { const a = d.data(); if (a.key && a.asiste != null) _asistState[a.key] = a.asiste ? 'asiste' : 'no_asiste'; });
+    const rSnap = await getDocs(query(collection(db,'reservas'), where('fecha','==',hoy), where('espacio','==','Piscina & Jacuzzi'), where('estado','in',['activa','confirmada','pagada'])));
+    if (rSnap.empty) { cont.innerHTML = '<div class="empty-state"><p>Sin reservas para hoy</p></div>'; counter.textContent = '0 / 0'; return; }
+    let html = '';
+    rSnap.forEach(d => {
+      const r = d.data(); const rid = d.id;
+      const inv = Array.isArray(r.invitados) ? r.invitados : [];
+      html += `<div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+          🏢 Torre ${r.torre||'—'} · Apto ${r.apto||r.apartamento||'—'}<span style="float:right;font-weight:400;color:var(--muted)">${1+inv.length} persona${1+inv.length!==1?'s':''}</span>
+        </div>`;
+      const k0 = `${rid}_0`;
+      html += _renderPersonaRow(k0, r.nombre||'Residente', 'Titular de reserva', 'residente', _asistState[k0]||null);
+      inv.forEach((iv, i) => {
+        const ki = `${rid}_${i+1}`;
+        html += _renderPersonaRow(ki, `${iv.nombre||''} ${iv.apellido||''}`.trim(), `Doc: ${iv.documento||'—'}`, 'invitado', _asistState[ki]||null);
+      });
+      html += '</div>';
+    });
+    cont.innerHTML = html;
+    _actualizarContador();
+  } catch(e) { console.error(e); cont.innerHTML = '<div class="empty-state"><p>Error al cargar lista</p></div>'; }
+};
+
+function _renderPersonaRow(key, nombre, meta, tipo, estado) {
+  const ini = (nombre||'?').charAt(0).toUpperCase();
+  return `<div class="persona-row" id="prow_${key}">
+    <div class="persona-avatar ${tipo}">${ini}</div>
+    <div class="persona-info"><div class="persona-nombre">${nombre||'—'}</div><div class="persona-meta">${meta}</div></div>
+    <div class="persona-btns">
+      <button class="btn-asiste ${estado==='asiste'?'active':''}" onclick="toggleAsist('${key}','asiste')" title="Asiste">✅</button>
+      <button class="btn-no-asiste ${estado==='no_asiste'?'active':''}" onclick="toggleAsist('${key}','no_asiste')" title="No asiste">❌</button>
+    </div>
+  </div>`;
+}
+
+function _actualizarContador() {
+  const filas = document.querySelectorAll('#listaLlamada .persona-row');
+  const asisten = document.querySelectorAll('#listaLlamada .btn-asiste.active').length;
+  document.getElementById('listaCounter').textContent = `${asisten} / ${filas.length}`;
+}
+
+window.toggleAsist = async function(key, valor) {
+  const previo = _asistState[key];
+  const nuevo  = previo === valor ? null : valor;
+  _asistState[key] = nuevo;
+  const row = document.getElementById(`prow_${key}`);
+  if (row) {
+    row.querySelector('.btn-asiste').classList.toggle('active', nuevo === 'asiste');
+    row.querySelector('.btn-no-asiste').classList.toggle('active', nuevo === 'no_asiste');
+  }
+  _actualizarContador();
+  try {
+    await setDoc(doc(db,'asistencias',`${fechaHoy()}_piscina_${key.replace(/[^a-z0-9_]/gi,'_')}`), {
+      key, fecha: fechaHoy(), espacio: 'Piscina & Jacuzzi',
+      asiste: nuevo === 'asiste', registrado_por: SESSION.nombre, timestamp: serverTimestamp()
+    });
+  } catch(e) { console.error(e); showToast('Error al guardar asistencia', 'error'); }
+};
+
+// RONDAS
+function verificarLockRondas() {
+  document.getElementById('rondasLocked').style.display  = STATE.piscinaAbierta ? 'none'  : 'block';
+  document.getElementById('rondasContent').style.display = STATE.piscinaAbierta ? 'block' : 'none';
+  if (STATE.piscinaAbierta) renderRondasDots();
+}
+
+function renderRondasDots() {
+  document.getElementById('rondasDots').innerHTML = STATE.rondas.map((ok, i) => `
+    <div class="ronda-dot ${ok?'completada':(rondasActiva(i)?'activa':'')}">
+      <div class="rd-num">${ok?'✓':i+1}</div>
+      <div class="rd-label">${RONDA_VENTANAS[i].label}</div>
+      <div class="rd-label">${RONDA_VENTANAS[i].inicio}:00–${RONDA_VENTANAS[i].fin}:00</div>
+    </div>`).join('');
+  actualizarFormRonda();
+}
+
+function rondasActiva(i) { const h = horaActual(); return h >= RONDA_VENTANAS[i].inicio && h < RONDA_VENTANAS[i].fin; }
+function proximaRondaPendiente() { return STATE.rondas.findIndex(r => !r); }
+
+function actualizarFormRonda() {
+  const idx = proximaRondaPendiente();
+  const card = document.getElementById('rondaFormCard');
+  const done = document.getElementById('rondaCompletadaMsg');
+  if (idx === -1) {
+    card.style.display = 'none'; done.style.display = 'block';
+    document.getElementById('txtRondas').textContent = '3 / 3 ✅';
+    document.getElementById('txtRondas').style.color = 'var(--success)';
+    return;
+  }
+  card.style.display = 'block'; done.style.display = 'none';
+  document.getElementById('rondaFormTitle').textContent = `${RONDA_VENTANAS[idx].label} (${RONDA_VENTANAS[idx].inicio}:00–${RONDA_VENTANAS[idx].fin}:00)`;
+  document.getElementById('txtRondas').textContent = `${STATE.rondas.filter(Boolean).length} / 3`;
+  const h = horaActual(); const vent = RONDA_VENTANAS[idx];
+  const vAlert = document.getElementById('rondaVentanaAlert');
+  const vMsg   = document.getElementById('rondaVentanaMsg');
+  if (h < vent.inicio) {
+    vAlert.style.display = 'flex'; vAlert.className = 'alert alert-info';
+    vMsg.textContent = `Esta ronda se puede registrar a partir de las ${vent.inicio}:00.`;
+  } else if (h >= vent.fin) {
+    vAlert.style.display = 'flex'; vAlert.className = 'alert alert-warning';
+    vMsg.textContent = `La ventana para esta ronda ya cerró. Puedes registrarla de todas formas.`;
+  } else { vAlert.style.display = 'none'; }
+  STATE.rondaFotoBlob = null;
+  const slot = document.getElementById('fotoRondaSlot');
+  slot.innerHTML = `<div class="foto-req-inner"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p>Foto obligatoria de la ronda</p></div>`;
+  slot.classList.remove('filled');
+  document.getElementById('rondaObs').value = '';
+  document.getElementById('rondaAforo').value = STATE.aforoActual;
+}
+
+window.tomarFotoRonda = async function() {
+  const blob = await capturarFotoConSello(); if (!blob) return;
+  STATE.rondaFotoBlob = blob;
+  const slot = document.getElementById('fotoRondaSlot');
+  slot.innerHTML = `<img src="${blob}" alt="Ronda">`; slot.classList.add('filled');
+};
+
+window.guardarRonda = async function() {
+  if (!STATE.rondaFotoBlob) { showToast('La foto es obligatoria', 'error'); return; }
+  const idx = proximaRondaPendiente();
+  if (idx === -1) { showToast('Todas las rondas ya están registradas'); return; }
+  const btn = document.getElementById('btnGuardarRonda');
+  btn.disabled = true; btn.textContent = '⏳ Guardando...';
+  try {
+    const fotoUrl = await subirFoto(STATE.rondaFotoBlob);
+    await addDoc(collection(db, 'pool_operaciones'), {
+      tipo: 'ronda', numero_ronda: idx + 1,
+      operador_id: SESSION.uid, operador_nombre: SESSION.nombre,
+      fecha: fechaHoy(), hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      foto_url: fotoUrl,
+      aforo_momento: parseInt(document.getElementById('rondaAforo').value) || STATE.aforoActual,
+      observaciones: document.getElementById('rondaObs').value,
+      timestamp: serverTimestamp()
+    });
+    STATE.rondas[idx] = true;
+    await setDoc(doc(db, 'pool_estado', fechaHoy()), {
+      [`ronda_${idx+1}_completada`]: true,
+      rondas_completadas: STATE.rondas.filter(Boolean).length
+    }, { merge: true });
+    showToast(`✅ ${RONDA_VENTANAS[idx].label} guardada`);
+    await cargarHistorialRondas();
+    renderRondasDots();
+  } catch(e) { console.error(e); showToast('Error al guardar ronda', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Guardar ronda'; }
+};
+
+async function cargarHistorialRondas() {
+  const hist = document.getElementById('historialRondas');
+  const q = query(collection(db,'pool_operaciones'), where('fecha','==',fechaHoy()), where('tipo','==','ronda'), where('operador_id','==',SESSION.uid), orderBy('timestamp','asc'));
+  try {
+    const snap = await getDocs(q);
+    if (snap.empty) { hist.innerHTML = '<div class="empty-state"><p>Sin rondas registradas aún</p></div>'; return; }
+    hist.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      return `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--success);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">R${r.numero_ronda}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">Ronda ${r.numero_ronda} · ${formatHora(r.timestamp)}</div>
+          <div style="font-size:12px;color:var(--muted)">Aforo: ${r.aforo_momento} personas</div>
+          ${r.observaciones?`<div style="font-size:12px;margin-top:4px">${r.observaciones}</div>`:''}
+        </div>
+        ${r.foto_url?`<img src="${r.foto_url}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">`:''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error(e);
+    hist.innerHTML = '<div class="empty-state"><p>Error al cargar historial</p></div>';
+  }
+}
+
+// CIERRE
+function verificarLockCierre() {
+  const locked = document.getElementById('cierreLocked');
+  const form   = document.getElementById('cierreForm');
+  const yaHecho = document.getElementById('cierreYaHecho');
+  if (STATE.piscina_cerrada) {
+    yaHecho.style.display = 'block'; form.style.display = 'none'; locked.style.display = 'none';
+    document.getElementById('cierreHoraText').textContent = `Turno cerrado por ${SESSION.nombre}`;
+  } else if (!STATE.piscinaAbierta) {
+    locked.style.display = 'block'; form.style.display = 'none'; yaHecho.style.display = 'none';
+  } else {
+    locked.style.display = 'none'; form.style.display = 'block'; yaHecho.style.display = 'none';
+    const inp = document.getElementById('ci_totalPersonas');
+    if (inp) inp.value = STATE.totalPersonasDia || 0;
+  }
+}
+
+function renderQuimicosCierre() {
+  document.getElementById('quimicosCierreContainer').innerHTML = QUIMICOS_CIERRE.map((q, i) => `
+    <div class="quimico-cierre-item">
+      <div class="qc-nombre">${q.nombre}</div>
+      <div class="qc-inputs"><input type="number" step="0.1" min="0" class="qc-input" id="qc_${i}" placeholder="0"><span class="qc-unit">${q.unidad}</span></div>
+    </div>`).join('');
+}
+
+window.tomarFotoCierre = async function() {
+  const blob = await capturarFotoConSello(); if (!blob) return;
+  STATE.cierreFotoBlob = blob;
+  const slot = document.getElementById('fotoCierreSlot');
+  slot.innerHTML = `<img src="${blob}" alt="Cierre">`; slot.classList.add('filled');
+};
+
+window.cerrarPiscina = async function() {
+  if (!STATE.cierreFotoBlob) { showToast('La foto de cierre es obligatoria', 'error'); return; }
+  if (!document.getElementById('ci_ph').value) { showToast('Ingresa el pH de cierre', 'warning'); return; }
+  if (!document.getElementById('ci_cloro').value) { showToast('Ingresa el cloro de cierre', 'warning'); return; }
+  const btn = document.getElementById('btnCerrar');
+  btn.disabled = true; btn.textContent = '⏳ Cerrando...';
+  try {
+    const fotoUrl = await subirFoto(STATE.cierreFotoBlob);
+    const quimicosAgregados = QUIMICOS_CIERRE.map((q, i) => ({
+      nombre: q.nombre, cantidad: parseFloat(document.getElementById(`qc_${i}`).value)||0, unidad: q.unidad
+    })).filter(q => q.cantidad > 0);
+    await addDoc(collection(db, 'pool_operaciones'), {
+      tipo: 'cierre', operador_id: SESSION.uid, operador_nombre: SESSION.nombre,
+      fecha: fechaHoy(), hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      ph: parseFloat(document.getElementById('ci_ph').value),
+      cloro_libre: parseFloat(document.getElementById('ci_cloro').value),
+      foto_url: fotoUrl, quimicos_agregados: quimicosAgregados,
+      total_personas_dia: parseInt(document.getElementById('ci_totalPersonas').value)||STATE.totalPersonasDia,
+      observaciones: document.getElementById('ci_obs').value, timestamp: serverTimestamp()
+    });
+    await setDoc(doc(db, 'pool_estado', fechaHoy()), {
+      cerrada: true, abierta: false,
+      hora_cierre: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      cerrada_por: SESSION.nombre, aforo_actual: 0
+    }, { merge: true });
+    showToast('🔒 Piscina cerrada correctamente');
+  } catch(e) {
+    console.error(e); showToast('Error al cerrar piscina', 'error');
+    btn.disabled = false; btn.textContent = '🔒 Cerrar piscina';
+  }
+};
+
+// NOVEDADES
+window.selSeveridad = function(sev, btn) {
+  STATE.severidadNovedad = sev;
+  document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('alertaCriticoInfo').style.display = sev === 'CRÍTICO' ? 'block' : 'none';
+};
+
+window.guardarNovedad = function() {
+  const desc = document.getElementById('novedadDesc').value.trim();
+  if (!STATE.severidadNovedad) { showToast('Selecciona la severidad', 'warning'); return; }
+  if (!desc) { showToast('Escribe la descripción', 'warning'); return; }
+  if (STATE.severidadNovedad === 'CRÍTICO') document.getElementById('modalCritico').classList.add('show');
+  else ejecutarGuardarNovedad(false);
+};
+
+window.cerrarModalCritico = function() { document.getElementById('modalCritico').classList.remove('show'); };
+window.confirmarCritico   = function() { document.getElementById('modalCritico').classList.remove('show'); ejecutarGuardarNovedad(true); };
+
+async function ejecutarGuardarNovedad(esCritico) {
+  const btn = document.getElementById('btnGuardarNovedad');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  const desc = document.getElementById('novedadDesc').value.trim();
+  const area = document.getElementById('novArea').value;
+
+  // ── FIX 2: dual-write — escribe canónico + legacy ──────────
+  const sevLower = STATE.severidadNovedad.toUpperCase().includes('CRÍT') ? 'critica'
+                 : STATE.severidadNovedad.toUpperCase().includes('MEDI') ? 'media' : 'baja';
+  try {
+    await addDoc(collection(db, 'pool_novedades'), {
+      descripcion: desc,
+      // Canónicos (Coordinador los busca así)
+      nivel: sevLower,
+      estado: 'abierta',
+      tipo: 'Novedad de operación',
+      area: area,
+      // Legacy (retrocompatibilidad)
+      severidad: STATE.severidadNovedad,
+      area_afectada: area,
+      status: 'ABIERTO',
+      // Auditoría
+      creado_por_id: SESSION.uid,
+      creado_por: SESSION.nombre,
+      operador_nombre: SESSION.nombre,
+      fecha: fechaHoy(),
+      modulo_origen: 'B2',
+      operacion_suspendida: esCritico,
+      creado_en: serverTimestamp(),
+      timestamp: serverTimestamp()
+    });
+
+    if (esCritico) {
+      await setDoc(doc(db, 'pool_estado', fechaHoy()), {
+        suspendida: true, motivo: desc,
+        suspendida_por: SESSION.nombre, timestamp: serverTimestamp()
+      }, { merge: true });
+    }
+
+    document.getElementById('novedadDesc').value = '';
+    document.getElementById('novArea').value = '';
+    STATE.severidadNovedad = null;
+    document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('alertaCriticoInfo').style.display = 'none';
+    await cargarNovedades();
+    showToast(esCritico ? '⛔ Novedad crítica. Operación suspendida.' : '✅ Novedad registrada');
+  } catch(e) {
+    console.error(e); showToast('Error al guardar', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Registrar novedad';
+  }
+}
+
+async function cargarNovedades() {
+  const lista = document.getElementById('listaNov');
+  const q = query(collection(db,'pool_novedades'), where('fecha','==',fechaHoy()), orderBy('timestamp','desc'));
+  try {
+    const snap = await getDocs(q);
+    if (snap.empty) { lista.innerHTML = '<div class="empty-state"><p>Sin novedades registradas hoy</p></div>'; return; }
+    let abiertas = 0;
+    lista.innerHTML = snap.docs.map(d => {
+      const n = d.data();
+      // FIX 4 y 5: lee ambos formatos y normaliza clase CSS (sin tilde)
+      const estaAbierta = n.status === 'ABIERTO' || n.estado === 'abierta' || n.estado === 'en_atencion';
+      const estaCerrada = n.status === 'CERRADO' || n.estado === 'cerrada';
+      if (estaAbierta) abiertas++;
+      const sevRaw = (n.nivel || n.severidad || '').toLowerCase();
+      // FIX 4: normalizar "crítico" → "critico" para que la clase CSS funcione
+      const sevClass = sevRaw.includes('crit') ? 'critico' : sevRaw.includes('medi') ? 'medio' : 'bajo';
+      const sevDisp  = (n.nivel || n.severidad || '').toUpperCase();
+      const estadoDisp = estaCerrada ? 'CERRADA' : (n.estado === 'listo_cierre' ? 'LISTO CIERRE' : 'ABIERTA');
+      return `<div class="novedad-item ${sevClass}">
+        <div class="novedad-sev ${sevClass}">${sevDisp}${n.area||n.area_afectada?` · ${n.area||n.area_afectada}`:''}</div>
+        <div class="novedad-desc">${n.descripcion}</div>
+        <div class="novedad-meta">${formatHora(n.timestamp||n.creado_en)} · Módulo ${n.modulo_origen||'B2'} · ${estadoDisp}
+          ${estaCerrada?` · Cerrado por ${n.cerrado_por_nombre||n.cerrado_por||'—'}`:''}
+        </div>
+      </div>`;
+    }).join('');
+    const badge = document.getElementById('badgeNov');
+    if (abiertas > 0) { badge.textContent = abiertas; badge.classList.add('show'); }
+    else badge.classList.remove('show');
+  } catch(e) {
+    console.error(e);
+    lista.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+  }
+}
+
+// FOTOS CON SELLO
+function capturarFotoConSello() {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+    input.onchange = (e) => {
+      const file = e.target.files[0]; if (!file) { resolve(null); return; }
+      const img = new Image(); const objUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 400; let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+        const sello = new Date().toLocaleString('es-CO', { day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit' });
+        const texto = `PCO3 Ciudadela · Operador · ${sello}`;
+        const fh = Math.max(10, Math.round(h * 0.06));
+        ctx.font = `bold ${fh}px Arial, sans-serif`;
+        const tw = ctx.measureText(texto).width; const pad = 6;
+        ctx.fillStyle = 'rgba(30,58,95,0.78)'; ctx.fillRect(0, h - fh - pad*2, tw + pad*2, fh + pad*2);
+        ctx.fillStyle = '#ffffff'; ctx.fillText(texto, pad, h - pad);
+        URL.revokeObjectURL(objUrl); resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = () => { URL.revokeObjectURL(objUrl); resolve(null); };
+      img.src = objUrl;
+    };
+    input.oncancel = () => resolve(null); input.click();
+  });
+}
+
+async function subirFoto(base64) { return base64; }
+
+// RONDAS — cargar estado desde Firebase
+async function cargarEstadoRondas() {
+  const snap = await getDoc(doc(db, 'pool_estado', fechaHoy()));
+  if (snap.exists()) {
+    const d = snap.data();
+    STATE.rondas[0] = d.ronda_1_completada === true;
+    STATE.rondas[1] = d.ronda_2_completada === true;
+    STATE.rondas[2] = d.ronda_3_completada === true;
+    document.getElementById('txtRondas').textContent = `${STATE.rondas.filter(Boolean).length} / 3`;
+  }
+}
+
+async function init() {
+  escucharEstadoOperacion();
+  await cargarEstadoRondas();
+  initAperturaChecklist();
+  renderQuimicosCierre();
+  document.getElementById('ultimaAct').textContent = `Sesión activa: ${SESSION.nombre}`;
+}
+
+init().catch(console.error);
+</script>
+</body>
+</html>
