@@ -285,10 +285,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const VIG_TURNOS = [
+  {uid:'vig_turno_a', nombre:'Vigilante Turno A'},
+  {uid:'vig_turno_b', nombre:'Vigilante Turno B'},
+  {uid:'vig_turno_c', nombre:'Vigilante Turno C'},
+];
+
 const STATE = {
   uid:'', nombre:'SUPSEC',
   accesos:[], novSeg:[], novPool:[], novGym:[],
-  rondas:[], vigs:[],
+  rondas:[], vigs:[...VIG_TURNOS],
   tabModulo:'seg', filtroNov:'todas', filtroAcceso:'todos',
   novSeleccionada:null, segTareas:[]
 };
@@ -366,7 +372,13 @@ function iniciarListeners() {
   escuchar(query(collection(db,'seg_rondas'),where('fecha','==',hoy),orderBy('timestamp','desc')),
     s=>{STATE.rondas=s.docs.map(d=>({id:d.id,...d.data()}));actualizarStats();renderRondas();},'seg_rondas');
   escuchar(query(collection(db,'seg_turnos'),where('fecha','==',hoy)),
-    s=>{STATE.vigs=s.docs.map(d=>({id:d.id,...d.data()}));renderVigsInicio();poblarSelectVig();},'seg_turnos');
+    s=>{
+      const realVigs=s.docs.map(d=>({id:d.id,...d.data()}));
+      const merged=[...VIG_TURNOS];
+      realVigs.forEach(v=>{if(!merged.find(p=>p.uid===v.uid))merged.push(v);});
+      STATE.vigs=merged;
+      renderVigsInicio();poblarSelectVig();
+    },'seg_turnos');
   escuchar(query(collection(db,'seg_tareas'),where('fecha','==',hoy)),
     s=>{STATE.segTareas=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.creado_en?.toDate?.()?.getTime()||0)-(a.creado_en?.toDate?.()?.getTime()||0));renderSegTareasSupervision();},'seg_tareas');
 }
@@ -492,6 +504,7 @@ window.abrirAsignar = function(id,modulo) {
   STATE.novSeleccionada=n;
   document.getElementById('asig-titulo').textContent=`${n.nivel} · ${n.tipo} · ${n.area}`;
   document.getElementById('asig-comentario').value='';
+  poblarSelectVig();
   document.getElementById('modal-asignar').classList.add('open');
 };
 

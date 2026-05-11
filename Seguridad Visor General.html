@@ -192,9 +192,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const VIG_TURNOS = [
+  {uid:'vig_turno_a', nombre:'Vigilante Turno A'},
+  {uid:'vig_turno_b', nombre:'Vigilante Turno B'},
+  {uid:'vig_turno_c', nombre:'Vigilante Turno C'},
+];
+
 const STATE = {
   uid:'', nombre:'VISOR',
-  accesos:[], novedades:[], rondas:[], vigs:[],
+  accesos:[], novedades:[], rondas:[], vigs:[...VIG_TURNOS],
   filtroAcceso:'todos', filtroNov:'todas', novSeleccionada:null
 };
 
@@ -262,7 +268,13 @@ function iniciarListeners(){
     s=>{STATE.rondas=s.docs.map(d=>({id:d.id,...d.data()}));actualizarEstadisticas();renderRondas();},'seg_rondas');
 
   escuchar(query(collection(db,'seg_turnos'),where('fecha','==',hoy)),
-    s=>{STATE.vigs=s.docs.map(d=>({id:d.id,...d.data()}));renderVigs();poblarSelectVig();},'seg_turnos');
+    s=>{
+      const realVigs=s.docs.map(d=>({id:d.id,...d.data()}));
+      const merged=[...VIG_TURNOS];
+      realVigs.forEach(v=>{if(!merged.find(p=>p.uid===v.uid))merged.push(v);});
+      STATE.vigs=merged;
+      renderVigs();poblarSelectVig();
+    },'seg_turnos');
 }
 
 function actualizarEstadisticas(){
@@ -419,6 +431,7 @@ window.abrirReasignar=function(id){
   STATE.novSeleccionada=n;
   document.getElementById('reasig-titulo').textContent=`${n.nivel} · ${n.tipo} · ${n.area||n.ubicacion||''}`;
   document.getElementById('reasig-comentario').value='';
+  poblarSelectVig();
   document.getElementById('modal-reasignar').classList.add('open');
 };
 
