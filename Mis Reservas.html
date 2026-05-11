@@ -196,11 +196,8 @@
 
   function getPortalURL() {
     const p = getParams();
-    if (p.torre) {
-      const qs = new URLSearchParams({ torre:p.torre, apto:p.apto||'', tel:p.tel||'', nombre:p.nombre||'' });
-      return `https://my.innovasync.org/v2/preview/Vd2uWSeIIuPxUX95nQaO?${qs}`;
-    }
-    return 'https://my.innovasync.org/v2/preview/Vd2uWSeIIuPxUX95nQaO';
+    const qs = new URLSearchParams({ torre:p.torre||'', apto:p.apto||'', tel:p.tel||'', nombre:p.nombre||'' });
+    return p.torre ? `Portal%20Residente.html?${qs}` : 'Portal%20Residente.html';
   }
 
   function volver(e) { e.preventDefault(); window.location.href = getPortalURL(); }

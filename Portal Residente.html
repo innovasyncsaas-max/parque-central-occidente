@@ -410,12 +410,12 @@ window._getCorrespondencia=async(torre,apto)=>{
 <script>
 // ── CORRECCIÓN: URLs actualizadas con nuevos archivos de reserva ──────────
 const URLS = {
-  piscina:    'https://my.innovasync.org/v2/preview/mYely6JHUAllFNosPcpx',
-  gimnasio:   'https://my.innovasync.org/v2/preview/wd88QHrpea2402Ito17k',
-  bbq:        'https://my.innovasync.org/v2/preview/uZauoY7TUoZwGqOEiYWR',
-  salon:      'https://my.innovasync.org/v2/preview/pJ5ZJ6cu21f4IjvIOxH9',
-  historial:  'https://my.innovasync.org/v2/preview/oRK5TPWqzjY1UZa3zcu8',
-  comunicados:'https://my.innovasync.org/v2/preview/e94yMWKhv2agLDRXXyK3',
+  piscina:    'Reserva%20Piscina.html',
+  gimnasio:   'Reserva%20GYM.html',
+  bbq:        'Reservas%20BBQ.html',
+  salon:      'Reserva%20Salon%20Social.html',
+  historial:  'Mis%20Reservas.html',
+  comunicados:'Comunicados.html',
 };
 const WA_SUPERVISOR = '573204522322';
 const WA_ADMIN      = '573204522322';
@@ -535,20 +535,36 @@ function sendComentario() {
   closeComentario();
 }
 
-// CORRECCIÓN: auto-login también pasa params a piscina y gimnasio
+function _restorePortalScreen(nombre, torre, apto) {
+  document.getElementById('p-nombre').textContent = nombre;
+  document.getElementById('p-apto').textContent   = `Torre ${torre} — Apto ${apto}`;
+  const params = _buildParams(nombre);
+  document.getElementById('card-piscina').href     = URLS.piscina   + params;
+  document.getElementById('card-gym').href         = URLS.gimnasio  + params;
+  document.getElementById('card-bbq').href         = URLS.bbq       + params;
+  document.getElementById('card-salon').href       = URLS.salon     + params;
+  document.getElementById('link-historial').href   = URLS.historial + params;
+  document.getElementById('link-comunicados').href = URLS.comunicados;
+  document.getElementById('cmt-origen').textContent = `${nombre} · Torre ${torre} Apto ${apto}`;
+  showScreen('screen-portal');
+}
+
 window.addEventListener('load', () => {
+  // 1. Intentar restaurar sesión desde sessionStorage
   if (loadSession() && session.nombre) {
-    document.getElementById('p-nombre').textContent = session.nombre;
-    document.getElementById('p-apto').textContent   = `Torre ${session.torre} — Apto ${session.apto}`;
-    const params = _buildParams(session.nombre);
-    document.getElementById('card-piscina').href     = URLS.piscina   + params;
-    document.getElementById('card-gym').href         = URLS.gimnasio  + params;
-    document.getElementById('card-bbq').href         = URLS.bbq       + params;
-    document.getElementById('card-salon').href       = URLS.salon     + params;
-    document.getElementById('link-historial').href   = URLS.historial + params;
-    document.getElementById('link-comunicados').href = URLS.comunicados;
-    document.getElementById('cmt-origen').textContent = `${session.nombre} · Torre ${session.torre} Apto ${session.apto}`;
-    showScreen('screen-portal');
+    _restorePortalScreen(session.nombre, session.torre, session.apto);
+    return;
+  }
+  // 2. Fallback: restaurar desde URL params (al volver de una página de reserva)
+  const p = new URLSearchParams(window.location.search);
+  const torre  = p.get('torre');
+  const apto   = p.get('apto');
+  const nombre = p.get('nombre');
+  const tel    = p.get('tel') || '';
+  if (torre && apto && nombre) {
+    session = { torre, apto, nombre, tel };
+    try { sessionStorage.setItem('residente_pco3', JSON.stringify(session)); } catch(e) {}
+    _restorePortalScreen(nombre, torre, apto);
   }
 });
 
