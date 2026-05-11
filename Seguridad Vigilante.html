@@ -478,12 +478,13 @@ window.registrarAcceso = async function(tipo){
 };
 
 async function cargarAccesosSalida(){
-  const q=query(collection(db,'accesos'),where('fecha','==',fechaHoy()),where('estado','==','ingreso'),orderBy('timestamp','desc'));
+  const q=query(collection(db,'accesos'),where('fecha','==',fechaHoy()),where('estado','==','ingreso'));
   try{
     const snap=await getDocs(q);
-    STATE.accesosCacheHoy=snap.docs.map(d=>({id:d.id,...d.data()}));
+    STATE.accesosCacheHoy=snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.timestamp?.toMillis?.()??0)-(a.timestamp?.toMillis?.()??0));
     renderListaSalidas(STATE.accesosCacheHoy);
-  }catch(e){ document.getElementById('listaSalidas').innerHTML='<div class="empty-state">Error al cargar</div>'; }
+  }catch(e){ console.error('cargarAccesosSalida:',e.code,e.message); document.getElementById('listaSalidas').innerHTML='<div class="empty-state">Error al cargar</div>'; }
 }
 
 function renderListaSalidas(items){
