@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Informes — PCO3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary:#1e3a5f; --primary-light:#2d5a8e;
+  --accent:#2563eb; --gbtn:linear-gradient(135deg,#1e3a5f,#2563eb);
+  --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --purple:#7c3aed;
+  --bg:#f0f4f8; --card:#fff; --text:#1a202c; --muted:#64748b;
+  --border:#e2e8f0; --radius:12px;
+  --font:'DM Sans',sans-serif; --fd:'DM Serif Display',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* Header */
+.top-bar{
+  background:var(--gbtn);color:#fff;padding:16px 24px;
+  display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+.top-logo{
+  width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.top-title{font-family:var(--fd);font-size:19px}
+.top-sub{font-size:11px;opacity:.7;margin-top:1px}
+.top-actions{margin-left:auto;display:flex;gap:8px;flex-shrink:0}
+.btn-hdr{
+  padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.3);
+  background:rgba(255,255,255,.12);color:#fff;font-family:var(--font);
+  font-size:12px;font-weight:600;cursor:pointer;transition:.2s;white-space:nowrap;
+}
+.btn-hdr:hover{background:rgba(255,255,255,.25)}
+
+/* Main */
+.main{padding:24px 16px 60px;max-width:1200px;margin:0 auto}
+@media(min-width:768px){.main{padding:28px 28px 60px}}
+
+/* Section label */
+.sec-label{
+  font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--muted);margin:32px 0 14px;display:flex;align-items:center;gap:8px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Period card */
+.period-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.period-lbl{font-size:13px;font-weight:600;color:var(--primary);white-space:nowrap}
+.selects-row{display:flex;gap:10px;flex-wrap:wrap}
+.period-sel{
+  padding:9px 14px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:var(--font);font-size:14px;color:var(--text);background:#fff;
+  outline:none;cursor:pointer;transition:border-color .2s;
+}
+.period-sel:focus{border-color:var(--accent)}
+.btn-gen{
+  padding:10px 22px;background:var(--gbtn);border:none;border-radius:9px;
+  color:#fff;font-family:var(--font);font-size:14px;font-weight:700;
+  cursor:pointer;transition:.2s;box-shadow:0 3px 10px rgba(37,99,235,.3);white-space:nowrap;
+}
+.btn-gen:hover{opacity:.9;transform:translateY(-1px)}
+.btn-gen:disabled{background:var(--border);color:var(--muted);box-shadow:none;transform:none;cursor:not-allowed}
+.period-status{font-size:12px;color:var(--muted);margin-left:auto}
+
+/* KPI Grid */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(min-width:640px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1024px){.kpi-grid{grid-template-columns:repeat(6,1fr)}}
+
+.kpi-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 16px;position:relative;overflow:hidden;
+}
+.kpi-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--kpi-clr,var(--accent));
+}
+.kpi-ico{font-size:28px;margin-bottom:8px;display:block}
+.kpi-val{font-size:24px;font-weight:700;color:var(--text);line-height:1;word-break:break-all}
+.kpi-label{font-size:11px;font-weight:600;color:var(--text);margin-top:6px}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:768px){.charts-grid{grid-template-columns:1fr 1fr}}
+
+.chart-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;
+}
+.chart-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px}
+.chart-wrap{position:relative;height:240px}
+
+/* Tables */
+.table-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:20px;
+}
+.table-hdr{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.table-hdr-title{font-size:13px;font-weight:700;color:var(--text)}
+.table-cnt{font-size:11px;color:var(--muted);flex-shrink:0}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}
+th{
+  background:var(--bg);padding:10px 14px;text-align:left;
+  font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;
+}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.t-empty{padding:28px;text-align:center;color:var(--muted);font-size:13px}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.bg-green{background:#d1fae5;color:#065f46}
+.bg-red{background:#fee2e2;color:#b91c1c}
+.bg-yellow{background:#fef3c7;color:#92400e}
+.bg-blue{background:#dbeafe;color:#1e40af}
+.bg-purple{background:#f3e8ff;color:#6d28d9}
+.bg-gray{background:#f1f5f9;color:#475569}
+
+/* Export card */
+.export-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.export-lbl{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap}
+.btn-exp{
+  padding:10px 18px;border-radius:9px;border:none;font-family:var(--font);
+  font-size:13px;font-weight:600;cursor:pointer;transition:.2s;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.btn-exp:hover{filter:brightness(.94)}
+.exp-pdf{background:#fee2e2;color:#b91c1c}
+.exp-csv{background:#d1fae5;color:#065f46}
+.exp-all{background:#dbeafe;color:#1e40af}
+
+/* Loading overlay */
+#overlay{
+  position:fixed;inset:0;background:rgba(240,244,248,.92);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  z-index:999;gap:14px;
+}
+.spinner{
+  width:48px;height:48px;border:4px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay-txt{font-size:14px;font-weight:600;color:var(--primary)}
+
+/* Print */
+@media print{
+  .top-bar,.period-card,.export-card,#overlay,.no-print{display:none!important}
+  body{background:#fff}
+  .main{padding:0;max-width:100%}
+  .chart-card,.table-card,.kpi-card{break-inside:avoid}
+  .kpi-grid{grid-template-columns:repeat(3,1fr)}
+  .charts-grid{grid-template-columns:1fr 1fr}
+  .sec-label{color:#000;margin-top:20px}
+  .print-hdr{display:block!important}
+}
+.print-hdr{
+  display:none;text-align:center;margin-bottom:20px;
+  padding-bottom:16px;border-bottom:2px solid var(--border);
+}
+.print-hdr h1{font-family:var(--fd);font-size:22px;color:var(--primary)}
+.print-hdr p{font-size:12px;color:#666;margin-top:4px}
+</style>
+</head>
+<body>
+
+<div id="overlay">
+  <div class="spinner"></div>
+  <div class="overlay-txt" id="overlay-txt">Generando informe...</div>
+</div>
+
+<!-- HEADER -->
+<div class="top-bar">
+  <div class="top-logo">📊</div>
+  <div>
+    <div class="top-title">Panel de Informes</div>
+    <div class="top-sub">Ciudadela Parque Central de Occidente 3</div>
+  </div>
+  <div class="top-actions">
+    <button class="btn-hdr" onclick="exportarPDF()">🖨️ PDF</button>
+    <button class="btn-hdr" onclick="exportarCSV()">📥 Excel</button>
+    <button class="btn-hdr" onclick="exportarCompleto()">📦 Completo</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Print header (solo en impresión) -->
+  <div class="print-hdr" id="print-hdr">
+    <h1>📊 Informe Mensual — PCO3</h1>
+    <p id="print-periodo">Período: —</p>
+    <p id="print-fecha">Generado: —</p>
+  </div>
+
+  <!-- ── SECCIÓN 1: PERÍODO ── -->
+  <div class="sec-label no-print">📅 Período del informe</div>
+  <div class="period-card no-print">
+    <span class="period-lbl">Período:</span>
+    <div class="selects-row">
+      <select class="period-sel" id="sel-mes">
+        <option value="1">Enero</option><option value="2">Febrero</option>
+        <option value="3">Marzo</option><option value="4">Abril</option>
+        <option value="5">Mayo</option><option value="6">Junio</option>
+        <option value="7">Julio</option><option value="8">Agosto</option>
+        <option value="9">Septiembre</option><option value="10">Octubre</option>
+        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+      <select class="period-sel" id="sel-anio">
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+      </select>
+    </div>
+    <button class="btn-gen" id="btn-gen" onclick="generarInforme()">📊 Generar informe</button>
+    <span class="period-status" id="period-status">Sin datos — selecciona período</span>
+  </div>
+
+  <!-- ── SECCIÓN 2: KPIs ── -->
+  <div class="sec-label">📈 Resumen ejecutivo</div>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--kpi-clr:#2563eb">
+      <span class="kpi-ico">🚶</span>
+      <div class="kpi-val" id="kv-accesos">—</div>
+      <div class="kpi-label">Total accesos</div>
+      <div class="kpi-sub" id="ks-accesos">del período</div>
+    </div>
+    <div class="kpi-card" style="--kpi-clr:#10b981">
+      <span class="kpi-ico">📅</span>
+      <div class="kpi-val" id="kv-reservas">—</div>
+      <div class="kpi-label">Reservas</div>
+      <div class="kpi-sub" id="ks-reservas">del período</div>
+    </div>
+    <div class="kpi-card" style="--kpi-clr:#f59e0b">
+      <span class="kpi-ico">📋</span>
+      <div class="kpi-val" id="kv-pqr">—</div>
+      <div class="kpi-label">PQR abiertas</div>
+      <div class="kpi-sub" id="ks-pqr">del período</div>
+    </div>
+    <div class="kpi-card" style="--kpi-clr:#ef4444">
+      <span class="kpi-ico">💰</span>
+      <div class="kpi-val" id="kv-mora">—</div>
+      <div class="kpi-label">Mora total</div>
+      <div class="kpi-sub" id="ks-mora">en el conjunto</div>
+    </div>
+    <div class="kpi-card" style="--kpi-clr:#7c3aed">
+      <span class="kpi-ico">✅</span>
+      <div class="kpi-val" id="kv-tareas">—</div>
+      <div class="kpi-label">Tareas completadas</div>
+      <div class="kpi-sub" id="ks-tareas">del período</div>
+    </div>
+    <div class="kpi-card" style="--kpi-clr:#dc2626">
+      <span class="kpi-ico">🚨</span>
+      <div class="kpi-val" id="kv-novedades">—</div>
+      <div class="kpi-label">Novedades seg.</div>
+      <div class="kpi-sub" id="ks-novedades">del período</div>
+    </div>
+  </div>
+
+  <!-- ── SECCIÓN 3: GRÁFICAS ── -->
+  <div class="sec-label">📊 Análisis gráfico</div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">📈 Accesos por día del mes</div>
+      <div class="chart-wrap"><canvas id="ch-accesos"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🏊 Reservas por zona</div>
+      <div class="chart-wrap"><canvas id="ch-reservas"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📋 PQR por tipo</div>
+      <div class="chart-wrap"><canvas id="ch-pqr"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">💰 Mora por torre</div>
+      <div class="chart-wrap"><canvas id="ch-mora"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── SECCIÓN 4: TABLAS ── -->
+  <div class="sec-label">📋 Detalle PQR</div>
+  <div class="table-card">
+    <div class="table-hdr">
+      <span class="table-hdr-title">📋 PQR del período</span>
+      <span class="table-cnt" id="cnt-pqr">—</span>
+    </div>
+    <div class="tbl-wrap" id="tbl-pqr"><div class="t-empty">Genera un informe para ver los datos</div></div>
+  </div>
+
+  <div class="sec-label">🚨 Novedades de seguridad</div>
+  <div class="table-card">
+    <div class="table-hdr">
+      <span class="table-hdr-title">🚨 Novedades de seguridad</span>
+      <span class="table-cnt" id="cnt-nov">—</span>
+    </div>
+    <div class="tbl-wrap" id="tbl-nov"><div class="t-empty">Genera un informe para ver los datos</div></div>
+  </div>
+
+  <div class="sec-label">📅 Reservas del período</div>
+  <div class="table-card">
+    <div class="table-hdr">
+      <span class="table-hdr-title">📅 Reservas</span>
+      <span class="table-cnt" id="cnt-res">—</span>
+    </div>
+    <div class="tbl-wrap" id="tbl-res"><div class="t-empty">Genera un informe para ver los datos</div></div>
+  </div>
+
+  <div class="sec-label">💰 Mora por apartamento</div>
+  <div class="table-card">
+    <div class="table-hdr">
+      <span class="table-hdr-title">💰 Mora por apartamento</span>
+      <span class="table-cnt" id="cnt-mora">—</span>
+    </div>
+    <div class="tbl-wrap" id="tbl-mora"><div class="t-empty">Genera un informe para ver los datos</div></div>
+  </div>
+
+  <!-- ── SECCIÓN 5: EXPORTACIÓN ── -->
+  <div class="sec-label no-print">📤 Exportar informe</div>
+  <div class="export-card no-print">
+    <span class="export-lbl">Descargar:</span>
+    <button class="btn-exp exp-pdf" onclick="exportarPDF()">🖨️ Exportar PDF</button>
+    <button class="btn-exp exp-csv" onclick="exportarCSV()">📊 Exportar Excel (CSV)</button>
+    <button class="btn-exp exp-all" onclick="exportarCompleto()">📦 Exportar completo</button>
+  </div>
+
+</div><!-- /main -->
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:'AIzaSyD3fprcNthKNU8fguyxdHC60pQ2T0PH5Ek',
+  authDomain:'registro-residentes.firebaseapp.com',
+  projectId:'registro-residentes'
+});
+const db = getFirestore(app);
+
+// ── Chart instances ────────────────────────────────────────────────────────
+const CHARTS = {};
+
+// ── Data store ─────────────────────────────────────────────────────────────
+const D = { accesos:[], reservas:[], pqr:[], mora:[], tareas:[], novedades:[], periodo:'' };
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+const pad = n => String(n).padStart(2,'0');
+const diasEnMes = (m,y) => new Date(y,m,0).getDate();
+const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const cop = n => '$' + Number(n||0).toLocaleString('es-CO');
+
+function badge(estado) {
+  const m = {
+    abierta:['bg-red','ABIERTA'], en_gestion:['bg-yellow','EN GESTIÓN'],
+    listo_cierre:['bg-purple','LISTO CIERRE'], cerrada:['bg-green','CERRADA'],
+    pendiente:['bg-yellow','PENDIENTE'], completada:['bg-green','COMPLETADA'],
+    en_proceso:['bg-blue','EN PROCESO'], ingreso:['bg-blue','INGRESO'],
+    salida:['bg-gray','SALIDA'], confirmada:['bg-green','CONFIRMADA'],
+    activa:['bg-blue','ACTIVA'], cancelada:['bg-red','CANCELADA'],
+    pagada:['bg-green','PAGADA'],
+  };
+  const [cls,lbl] = m[estado] || ['bg-gray', estado||'—'];
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function badgeNivel(n) {
+  const v = (n||'').toLowerCase();
+  const cls = {critica:'bg-red',alta:'bg-yellow',media:'bg-blue',baja:'bg-gray'}[v]||'bg-gray';
+  return n ? `<span class="badge ${cls}">${n.toUpperCase()}</span>` : '—';
+}
+
+function destroyChart(k) { if(CHARTS[k]){ CHARTS[k].destroy(); delete CHARTS[k]; } }
+
+// ── Inicializar selector al mes/año actual ──────────────────────────────────
+(function initSelectors() {
+  const now = new Date();
+  document.getElementById('sel-mes').value = now.getMonth()+1;
+  document.getElementById('sel-anio').value = now.getFullYear();
+})();
+
+// ── GENERAR INFORME ─────────────────────────────────────────────────────────
+window.generarInforme = async function() {
+  const mes  = parseInt(document.getElementById('sel-mes').value);
+  const anio = parseInt(document.getElementById('sel-anio').value);
+  const dias = diasEnMes(mes, anio);
+  const d1   = `${anio}-${pad(mes)}-01`;
+  const d2   = `${anio}-${pad(mes)}-${pad(dias)}`;
+  D.periodo  = `${MESES[mes]} ${anio}`;
+
+  document.getElementById('btn-gen').disabled = true;
+  document.getElementById('overlay').style.display = 'flex';
+  document.getElementById('overlay-txt').textContent = 'Cargando datos de Firebase…';
+
+  try {
+    const [sAcc, sRes, sPqr, sMor, sTar, sNov] = await Promise.all([
+      getDocs(query(collection(db,'accesos'),       where('fecha','>=',d1), where('fecha','<=',d2))),
+      getDocs(query(collection(db,'reservas'),      where('fecha','>=',d1), where('fecha','<=',d2))),
+      getDocs(query(collection(db,'pqr'),           where('fecha','>=',d1), where('fecha','<=',d2))),
+      getDocs(collection(db,'mora')),
+      getDocs(query(collection(db,'tareas_mantenimiento'), where('fecha','>=',d1), where('fecha','<=',d2))),
+      getDocs(query(collection(db,'seg_novedades'), where('fecha','>=',d1), where('fecha','<=',d2))),
+    ]);
+
+    D.accesos   = sAcc.docs.map(d=>({id:d.id,...d.data()}));
+    D.reservas  = sRes.docs.map(d=>({id:d.id,...d.data()}));
+    D.pqr       = sPqr.docs.map(d=>({id:d.id,...d.data()}));
+    D.mora      = sMor.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.en_mora||d.mora);
+    D.tareas    = sTar.docs.map(d=>({id:d.id,...d.data()}));
+    D.novedades = sNov.docs.map(d=>({id:d.id,...d.data()}));
+
+    document.getElementById('overlay-txt').textContent = 'Construyendo informe…';
+
+    renderKPIs();
+    renderCharts(mes, anio, dias);
+    renderTablas();
+
+    document.getElementById('period-status').textContent = `✅ Período: ${D.periodo}`;
+    document.getElementById('print-periodo').textContent = `Período: ${D.periodo}`;
+    document.getElementById('print-fecha').textContent   = `Generado: ${new Date().toLocaleString('es-CO')}`;
+  } catch(e) {
+    console.error('Panel Informes error:', e.code, e.message);
+    document.getElementById('period-status').textContent = '❌ Error al cargar datos';
+    alert('Error al consultar Firebase: ' + (e.message||e));
+  } finally {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('btn-gen').disabled = false;
+  }
+};
+
+// ── KPIs ────────────────────────────────────────────────────────────────────
+function renderKPIs() {
+  // Accesos
+  document.getElementById('kv-accesos').textContent = D.accesos.length;
+  const ing  = D.accesos.filter(a=>a.estado==='ingreso').length;
+  const sal  = D.accesos.filter(a=>a.estado==='salida').length;
+  document.getElementById('ks-accesos').textContent = `${ing} ingresos · ${sal} salidas`;
+
+  // Reservas
+  document.getElementById('kv-reservas').textContent = D.reservas.length;
+  const conf = D.reservas.filter(r=>['confirmada','activa','pagada'].includes(r.estado)).length;
+  document.getElementById('ks-reservas').textContent = `${conf} confirmadas`;
+
+  // PQR
+  const pqrA = D.pqr.filter(p=>['abierta','en_gestion','listo_cierre'].includes(p.estado)).length;
+  const pqrC = D.pqr.filter(p=>p.estado==='cerrada').length;
+  document.getElementById('kv-pqr').textContent = pqrA;
+  document.getElementById('ks-pqr').textContent = `${D.pqr.length} total · ${pqrC} cerradas`;
+
+  // Mora — deduplicar por torre_apto
+  const moraDedup = {};
+  D.mora.forEach(m=>{ if(!moraDedup[m.torre_apto]||(m.valor_mora||0)>(moraDedup[m.torre_apto].valor_mora||0)) moraDedup[m.torre_apto]=m; });
+  const moraList = Object.values(moraDedup);
+  const totalMora = moraList.reduce((s,m)=>s+(m.valor_mora||0),0);
+  document.getElementById('kv-mora').textContent = cop(totalMora);
+  document.getElementById('ks-mora').textContent = `${moraList.length} apto${moraList.length!==1?'s':''} en mora`;
+
+  // Tareas
+  const tarComp = D.tareas.filter(t=>t.estado==='completada').length;
+  const tarPend = D.tareas.filter(t=>['pendiente','en_proceso'].includes(t.estado)).length;
+  document.getElementById('kv-tareas').textContent = tarComp;
+  document.getElementById('ks-tareas').textContent = `${tarPend} pendientes · ${D.tareas.length} total`;
+
+  // Novedades
+  const novA = D.novedades.filter(n=>['abierta','en_atencion','listo_cierre'].includes(n.estado)).length;
+  const novC = D.novedades.filter(n=>n.estado==='cerrada').length;
+  document.getElementById('kv-novedades').textContent = D.novedades.length;
+  document.getElementById('ks-novedades').textContent = `${novA} activas · ${novC} cerradas`;
+}
+
+// ── GRÁFICAS ────────────────────────────────────────────────────────────────
+const PALETTE = ['#2563eb','#10b981','#f59e0b','#ef4444','#7c3aed','#06b6d4','#ec4899','#84cc16'];
+const gridColor = '#f1f5f9';
+
+function renderCharts(mes, anio, dias) {
+  // 1. Accesos por día (línea)
+  destroyChart('acc');
+  const labels = Array.from({length:dias},(_,i)=>i+1);
+  const accData = labels.map(d => {
+    const f = `${anio}-${pad(mes)}-${pad(d)}`;
+    return D.accesos.filter(a=>a.fecha===f).length;
+  });
+  CHARTS.acc = new Chart(document.getElementById('ch-accesos'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Accesos', data:accData,
+        borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.08)',
+        fill:true, tension:.4, pointRadius:3, pointHoverRadius:5,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{title:([t])=>`Día ${t.label}`}}},
+      scales:{
+        x:{grid:{color:gridColor}, ticks:{font:{size:10}}},
+        y:{grid:{color:gridColor}, ticks:{font:{size:10},stepSize:1,beginAtZero:true}}
+      }
+    }
+  });
+
+  // 2. Reservas por zona (barras)
+  destroyChart('res');
+  const zonaMap = {};
+  D.reservas.forEach(r=>{ const z=r.espacio||r.zona||'Sin zona'; zonaMap[z]=(zonaMap[z]||0)+1; });
+  const zonas = Object.entries(zonaMap).sort((a,b)=>b[1]-a[1]);
+  CHARTS.res = new Chart(document.getElementById('ch-reservas'), {
+    type:'bar',
+    data:{
+      labels: zonas.length ? zonas.map(z=>z[0]) : ['Sin datos'],
+      datasets:[{
+        label:'Reservas',
+        data: zonas.length ? zonas.map(z=>z[1]) : [0],
+        backgroundColor: PALETTE, borderRadius:6,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:10}}},
+        y:{grid:{color:gridColor}, ticks:{font:{size:10},stepSize:1,beginAtZero:true}}
+      }
+    }
+  });
+
+  // 3. PQR por tipo (rosca)
+  destroyChart('pqr');
+  const tipoMap = {};
+  D.pqr.forEach(p=>{ const t=(p.tipo||'Otro'); tipoMap[t]=(tipoMap[t]||0)+1; });
+  const tipos = Object.entries(tipoMap).sort((a,b)=>b[1]-a[1]);
+  CHARTS.pqr = new Chart(document.getElementById('ch-pqr'), {
+    type:'doughnut',
+    data:{
+      labels: tipos.length ? tipos.map(t=>t[0]) : ['Sin datos'],
+      datasets:[{
+        data: tipos.length ? tipos.map(t=>t[1]) : [1],
+        backgroundColor: PALETTE, borderWidth:2, borderColor:'#fff',
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10}}}
+    }
+  });
+
+  // 4. Mora por torre (barras)
+  destroyChart('mora');
+  const moraDedup = {};
+  D.mora.forEach(m=>{
+    if(!moraDedup[m.torre_apto]||(m.valor_mora||0)>(moraDedup[m.torre_apto].valor_mora||0))
+      moraDedup[m.torre_apto]=m;
+  });
+  const torreMap = {};
+  Object.values(moraDedup).forEach(m=>{
+    const t=(m.torre_apto||'').split('-')[0]||'S/T';
+    torreMap[t]=(torreMap[t]||0)+(m.valor_mora||0);
+  });
+  const torres = Object.entries(torreMap).sort((a,b)=>b[1]-a[1]);
+  CHARTS.mora = new Chart(document.getElementById('ch-mora'), {
+    type:'bar',
+    data:{
+      labels: torres.length ? torres.map(t=>t[0]) : ['Sin mora'],
+      datasets:[{
+        label:'Mora ($)',
+        data: torres.length ? torres.map(t=>t[1]) : [0],
+        backgroundColor:'#ef4444', borderRadius:6,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' '+cop(ctx.raw)}}},
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:10}}},
+        y:{grid:{color:gridColor}, ticks:{font:{size:10},beginAtZero:true,
+          callback:v=>cop(v)}}
+      }
+    }
+  });
+}
+
+// ── TABLAS ──────────────────────────────────────────────────────────────────
+function cel(txt, bold) {
+  return `<td${bold?' style="font-weight:700"':''}>${txt||'—'}</td>`;
+}
+function truncate(s,n=60){ return s&&s.length>n ? s.substring(0,n)+'…' : (s||'—'); }
+
+function renderTablas() {
+  // PQR
+  const pqrS = [...D.pqr].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  document.getElementById('cnt-pqr').textContent = `${pqrS.length} registro${pqrS.length!==1?'s':''}`;
+  document.getElementById('tbl-pqr').innerHTML = pqrS.length
+    ? `<table><thead><tr><th>Fecha</th><th>Residente</th><th>Torre/Apto</th><th>Tipo</th><th>Estado</th><th>Descripción</th></tr></thead><tbody>
+      ${pqrS.map(p=>`<tr>${cel(p.fecha)}${cel(p.nombre_residente||p.nombre)}${cel(p.torre_apto||(p.torre?`T${p.torre}-${p.apto||''}`:null))}${cel(p.tipo)}
+        <td>${badge(p.estado)}</td><td title="${(p.descripcion||'').replace(/"/g,"'")}">${truncate(p.descripcion)}</td></tr>`).join('')}
+      </tbody></table>`
+    : '<div class="t-empty">Sin PQR en este período</div>';
+
+  // Novedades
+  const novS = [...D.novedades].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  document.getElementById('cnt-nov').textContent = `${novS.length} registro${novS.length!==1?'s':''}`;
+  document.getElementById('tbl-nov').innerHTML = novS.length
+    ? `<table><thead><tr><th>Fecha</th><th>Vigilante</th><th>Nivel</th><th>Área</th><th>Estado</th><th>Descripción</th></tr></thead><tbody>
+      ${novS.map(n=>`<tr>${cel(n.fecha)}${cel(n.vig_nombre||n.creado_por)}
+        <td>${badgeNivel(n.nivel||n.severidad)}</td>${cel(n.area||n.ubicacion)}
+        <td>${badge(n.estado)}</td><td title="${(n.descripcion||'').replace(/"/g,"'")}">${truncate(n.descripcion)}</td></tr>`).join('')}
+      </tbody></table>`
+    : '<div class="t-empty">Sin novedades en este período</div>';
+
+  // Reservas
+  const resS = [...D.reservas].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  document.getElementById('cnt-res').textContent = `${resS.length} registro${resS.length!==1?'s':''}`;
+  document.getElementById('tbl-res').innerHTML = resS.length
+    ? `<table><thead><tr><th>Fecha</th><th>Residente</th><th>Torre/Apto</th><th>Zona</th><th>Personas</th><th>Estado</th></tr></thead><tbody>
+      ${resS.map(r=>`<tr>${cel(r.fecha)}${cel(r.nombre_residente||r.nombre)}
+        ${cel(r.torre_apto||(r.torre?`T${r.torre||''}-${r.apartamento||''}`:null))}
+        ${cel(r.espacio||r.zona)}${cel(r.num_personas||r.numPersonas)}
+        <td>${badge(r.estado)}</td></tr>`).join('')}
+      </tbody></table>`
+    : '<div class="t-empty">Sin reservas en este período</div>';
+
+  // Mora
+  const moraDedup = {};
+  D.mora.forEach(m=>{
+    if(!moraDedup[m.torre_apto]||(m.valor_mora||0)>(moraDedup[m.torre_apto].valor_mora||0))
+      moraDedup[m.torre_apto]=m;
+  });
+  const moraList = Object.values(moraDedup).sort((a,b)=>(b.valor_mora||0)-(a.valor_mora||0));
+  const totalMora = moraList.reduce((s,m)=>s+(m.valor_mora||0),0);
+  document.getElementById('cnt-mora').textContent = `${moraList.length} apartamento${moraList.length!==1?'s':''}`;
+  document.getElementById('tbl-mora').innerHTML = moraList.length
+    ? `<table><thead><tr><th>Torre/Apto</th><th>Residente</th><th>Meses mora</th><th>Cuotas pend.</th><th>Valor mora</th></tr></thead><tbody>
+      ${moraList.map(m=>`<tr>
+        <td><strong>${m.torre_apto||'—'}</strong></td>${cel(m.nombre_residente)}
+        ${cel(m.meses_mora)}${cel(m.cuotas_pendientes)}
+        <td style="color:#ef4444;font-weight:700">${cop(m.valor_mora)}</td></tr>`).join('')}
+      <tr style="background:#fef2f2">
+        <td colspan="4" style="font-weight:700">TOTAL MORA</td>
+        <td style="color:#ef4444;font-weight:700;font-size:14px">${cop(totalMora)}</td>
+      </tr></tbody></table>`
+    : '<div class="t-empty">Sin mora registrada actualmente</div>';
+}
+
+// ── EXPORTACIONES ────────────────────────────────────────────────────────────
+function toCSV(headers, rows) {
+  const e = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  return [headers.map(e), ...rows.map(r=>r.map(e))].map(r=>r.join(',')).join('\n');
+}
+
+function downloadCSV(name, content) {
+  const blob = new Blob(['﻿'+content], {type:'text/csv;charset=utf-8;'});
+  const a = Object.assign(document.createElement('a'), {
+    href:URL.createObjectURL(blob), download:name
+  });
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+window.exportarPDF = function() { window.print(); };
+
+window.exportarCSV = function() {
+  if (!D.periodo) { alert('Genera un informe primero'); return; }
+  const p = D.periodo.replace(' ','_');
+  const moraDedup = {};
+  D.mora.forEach(m=>{ if(!moraDedup[m.torre_apto]||(m.valor_mora||0)>(moraDedup[m.torre_apto].valor_mora||0)) moraDedup[m.torre_apto]=m; });
+  const moraList = Object.values(moraDedup).sort((a,b)=>(b.valor_mora||0)-(a.valor_mora||0));
+
+  downloadCSV(`PQR_${p}.csv`, toCSV(
+    ['Fecha','Residente','Torre/Apto','Tipo','Estado','Descripción'],
+    D.pqr.map(x=>[x.fecha,x.nombre_residente||x.nombre,x.torre_apto||(x.torre?`T${x.torre}-${x.apto}`:''),x.tipo,x.estado,x.descripcion])
+  ));
+  setTimeout(()=>downloadCSV(`Reservas_${p}.csv`, toCSV(
+    ['Fecha','Residente','Torre/Apto','Zona','Personas','Estado'],
+    D.reservas.map(x=>[x.fecha,x.nombre_residente||x.nombre,x.torre_apto,x.espacio||x.zona,x.num_personas||x.numPersonas,x.estado])
+  )),400);
+  setTimeout(()=>downloadCSV(`Mora_${p}.csv`, toCSV(
+    ['Torre/Apto','Residente','Meses mora','Cuotas pend.','Valor mora'],
+    moraList.map(x=>[x.torre_apto,x.nombre_residente,x.meses_mora,x.cuotas_pendientes,x.valor_mora])
+  )),800);
+};
+
+window.exportarCompleto = function() {
+  if (!D.periodo) { alert('Genera un informe primero'); return; }
+  const p = D.periodo.replace(' ','_');
+  const moraDedup = {};
+  D.mora.forEach(m=>{ if(!moraDedup[m.torre_apto]||(m.valor_mora||0)>(moraDedup[m.torre_apto].valor_mora||0)) moraDedup[m.torre_apto]=m; });
+  const moraList = Object.values(moraDedup).sort((a,b)=>(b.valor_mora||0)-(a.valor_mora||0));
+
+  const secciones = [
+    `INFORME COMPLETO PCO3 — ${D.periodo}\nGenerado: ${new Date().toLocaleString('es-CO')}`,
+    'RESUMEN\n' + [
+      `Accesos,${D.accesos.length}`,
+      `Reservas,${D.reservas.length}`,
+      `PQR,${D.pqr.length}`,
+      `Mora total,${moraList.reduce((s,m)=>s+(m.valor_mora||0),0)}`,
+      `Tareas,${D.tareas.length}`,
+      `Novedades,${D.novedades.length}`,
+    ].join('\n'),
+    'ACCESOS\n'+toCSV(['Fecha','Tipo','Estado','Nombre','Torre/Apto'],
+      D.accesos.map(x=>[x.fecha,x.tipo,x.estado,x.nombre,x.torre_apto||(x.torre?`T${x.torre}-${x.apto}`:'')])),
+    'RESERVAS\n'+toCSV(['Fecha','Residente','Torre/Apto','Zona','Personas','Estado'],
+      D.reservas.map(x=>[x.fecha,x.nombre_residente||x.nombre,x.torre_apto,x.espacio||x.zona,x.num_personas||x.numPersonas,x.estado])),
+    'PQR\n'+toCSV(['Fecha','Residente','Torre/Apto','Tipo','Estado','Descripción'],
+      D.pqr.map(x=>[x.fecha,x.nombre_residente||x.nombre,x.torre_apto,x.tipo,x.estado,x.descripcion])),
+    'MORA\n'+toCSV(['Torre/Apto','Residente','Meses','Cuotas','Valor mora'],
+      moraList.map(x=>[x.torre_apto,x.nombre_residente,x.meses_mora,x.cuotas_pendientes,x.valor_mora])),
+    'TAREAS\n'+toCSV(['Fecha','Título','Área','Estado','Asignado a','Prioridad'],
+      D.tareas.map(x=>[x.fecha,x.titulo,x.area,x.estado,x.asignado_a,x.prioridad])),
+    'NOVEDADES SEGURIDAD\n'+toCSV(['Fecha','Vigilante','Nivel','Área','Estado','Descripción'],
+      D.novedades.map(x=>[x.fecha,x.vig_nombre||x.creado_por,x.nivel||x.severidad,x.area||x.ubicacion,x.estado,x.descripcion])),
+  ];
+  downloadCSV(`Informe_Completo_PCO3_${p}.csv`, secciones.join('\n\n'));
+};
+</script>
+</body>
+</html>
