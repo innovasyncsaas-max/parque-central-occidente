@@ -270,7 +270,7 @@ select.field-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:/
     </div>
     <div class="success-text" id="success-detalle"></div>
     <a id="btn-wa-confirm" href="#" target="_blank" class="btn-wa-success">💬 Notificar a Administración</a>
-    <a href="https://my.innovasync.org/v2/preview/Vd2uWSeIIuPxUX95nQaO" class="btn-portal">← Volver al Portal</a>
+    <a href="#" onclick="event.preventDefault();window.location.href=getPortalURL();" class="btn-portal">🏠 Volver al Portal</a>
   </div>
 </div>
 
@@ -479,6 +479,20 @@ async function submitForm(){
 }
 
 updateProgress(1);
+
+function getPortalURL(){
+  const p=new URLSearchParams(window.location.search);
+  const q=new URLSearchParams();
+  const torre=p.get('torre')||v('s1-torre')||'';
+  const apto=p.get('apto')||v('s1-apto')||'';
+  const nombre=p.get('nombre')||v('s1-nombre')||'';
+  const tel=p.get('tel')||v('s1-tel')||'';
+  if(torre)q.set('torre',torre);
+  if(apto)q.set('apto',apto);
+  if(nombre)q.set('nombre',nombre);
+  if(tel)q.set('tel',tel);
+  return'Portal%20Residente.html'+(q.toString()?'?'+q.toString():'');
+}
 </script>
 </body>
 </html>

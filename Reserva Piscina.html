@@ -66,6 +66,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .error-msg{background:var(--red-light);border:1px solid var(--red);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-top:8px;display:none}
 .error-msg.show{display:block}
 .success-screen{text-align:center;padding:40px 20px}
+.btn-portal{display:block;margin-top:12px;padding:13px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;color:var(--text2);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;text-align:center}
 .success-icon{width:80px;height:80px;background:var(--gbtn);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;animation:popIn .4s ease;box-shadow:0 8px 24px rgba(37,99,235,.3)}
 @keyframes popIn{0%{transform:scale(.5);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
 .success-title{font-family:var(--fd);font-size:28px;color:var(--accent);margin-bottom:12px}
@@ -342,7 +343,8 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
     <div class="success-icon">🏊</div>
     <div class="success-title">¡Reserva confirmada!</div>
     <div class="success-text">Tu reserva fue registrada exitosamente en el sistema.<br>El operador de piscina ya puede verla. ¡Hasta pronto!</div>
-    <button class="btn-next" onclick="window.location.href=window.location.href.split('?')[0]" style="max-width:260px;margin:0 auto">← Hacer otra reserva</button>
+    <button class="btn-next" onclick="hacerOtraReserva()" style="max-width:260px;margin:0 auto">← Hacer otra reserva</button>
+    <a href="#" onclick="event.preventDefault();window.location.href=getPortalURL();" class="btn-portal" style="max-width:260px;margin:8px auto 0;display:block">🏠 Volver al Portal</a>
   </div>
 </div>
 
@@ -815,6 +817,34 @@ async function nextStep(f){
     })(30);
   }else{uP('1');}
 })();
+
+function getPortalURL(){
+  const p=new URLSearchParams(window.location.search);
+  const q=new URLSearchParams();
+  const torre=p.get('torre')||v('torre')||'';
+  const apto=p.get('apto')||v('apto')||'';
+  const nombre=p.get('nombre')||D.nombre||'';
+  const tel=p.get('tel')||'';
+  if(torre)q.set('torre',torre);
+  if(apto)q.set('apto',apto);
+  if(nombre)q.set('nombre',nombre);
+  if(tel)q.set('tel',tel);
+  return'Portal%20Residente.html'+(q.toString()?'?'+q.toString():'');
+}
+
+function hacerOtraReserva(){
+  const p=new URLSearchParams(window.location.search);
+  const q=new URLSearchParams();
+  const torre=p.get('torre')||v('torre')||'';
+  const apto=p.get('apto')||v('apto')||'';
+  const nombre=p.get('nombre')||D.nombre||'';
+  const tel=p.get('tel')||'';
+  if(torre)q.set('torre',torre);
+  if(apto)q.set('apto',apto);
+  if(nombre)q.set('nombre',nombre);
+  if(tel)q.set('tel',tel);
+  window.location.href=window.location.pathname+(q.toString()?'?'+q.toString():'');
+}
 </script>
 </body>
 </html>
